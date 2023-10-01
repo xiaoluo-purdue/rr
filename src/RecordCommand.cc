@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <sysexits.h>
 #include <time.h>
+#include <chrono>
 
 #include "preload/preload_interface.h"
 
@@ -651,6 +652,8 @@ static void* repeat_SIGTERM(__attribute__((unused)) void* p) {
 static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   LOG(info) << "Start recording...";
 
+  auto begin_record = chrono::steady_clock::now();
+
   auto session = RecordSession::create(
       args, flags.extra_env, flags.disable_cpuid_features,
       flags.use_syscall_buffer, flags.syscallbuf_desched_sig,
@@ -661,11 +664,19 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
 
   static_session = session.get();
 
+  auto after_session_get = chrono::steady_clock::now();
+  cout << "[record] create and get record session: " << chrono::duration <double, milli> (after_session_get - begin_record).count() << " ms" << endl;
+
+
   if (flags.print_trace_dir >= 0) {
     const string& dir = session->trace_writer().dir();
     write_all(flags.print_trace_dir, dir.c_str(), dir.size());
     write_all(flags.print_trace_dir, "\n", 1);
   }
+
+  auto after_print_trace_dir = chrono::steady_clock::now();
+  cout << "[record] print_trace_dir: " << chrono::duration <double, milli> (after_print_trace_dir - after_session_get).count() << " ms" << endl;
+
 
   if (flags.copy_preload_src) {
     const string& dir = session->trace_writer().dir();
@@ -673,22 +684,56 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
     save_rr_git_revision(dir);
   }
 
+  auto after_copy_preload_src = chrono::steady_clock::now();
+  cout << "[record] copy preload src: " << chrono::duration <double, milli> (after_copy_preload_src - after_print_trace_dir).count() << " ms" << endl;
+
   // Install signal handlers after creating the session, to ensure they're not
   // inherited by the tracee.
   install_signal_handlers();
+
+  auto after_install_signal_handlers = chrono::steady_clock::now();
+  cout << "[record] copy install signal handlers: " << chrono::duration <double, milli> (after_install_signal_handlers - after_copy_preload_src).count() << " ms" << endl;
 
   RecordSession::RecordResult step_result;
   bool did_forward_SIGTERM = false;
   bool did_term_detached_tasks = false;
   pthread_t term_repeater_thread;
+  int step_count = 0;
+  int check_termination_count = 0;
+
+  double initial_exec_time = 0;
+  double record_step_time = 0;
+  double make_latest_trace_time = 0;
+  double check_termination_time = 0;
+
   do {
+    step_count++;
+    // cout << "begin record step " << ++step_count << ":" << endl;
+    auto record_loop_begin = chrono::steady_clock::now();
+    
     bool done_initial_exec = session->done_initial_exec();
+    
+    auto after_initial_exec = chrono::steady_clock::now();
+    initial_exec_time += chrono::duration <double, milli> (after_initial_exec - record_loop_begin).count();
+    // cout << "[record] initial exec: " << chrono::duration <double, milli> (after_initial_exec - record_loop_begin).count() << " ms" << endl;
+    
     step_result = session->record_step();
+    
+    auto after_record_step = chrono::steady_clock::now();
+    record_step_time += chrono::duration <double, milli> (after_record_step - after_initial_exec).count();
+    // cout << "[record] record step: " << chrono::duration <double, milli> (after_record_step - after_initial_exec).count() << " ms" << endl;
+
     // Only create latest-trace symlink if --output-trace-dir is not being used
     if (!done_initial_exec && session->done_initial_exec() && flags.output_trace_dir.empty()) {
       session->trace_writer().make_latest_trace();
     }
+
+    auto after_latest_trace = chrono::steady_clock::now();
+    make_latest_trace_time += chrono::duration <double, milli> (after_latest_trace - after_record_step).count();
+    // cout << "[record] make latest trace: " << chrono::duration <double, milli> (after_latest_trace - after_record_step).count() << " ms" << endl;
+
     if (term_requested) {
+      auto begin_term = chrono::steady_clock::now();
       if (monotonic_now_sec() - term_requested > TRACEE_SIGTERM_RESPONSE_MAX_TIME) {
         /* time ran out for the tracee to respond to SIGTERM; kill everything */
         session->terminate_tracees();
@@ -704,11 +749,29 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
         session->term_detached_tasks();
         did_term_detached_tasks = true;
       }
+      check_termination_count++;
+      auto end_term = chrono::steady_clock::now();
+      check_termination_time += chrono::duration <double, milli> (end_term - begin_term).count();
+      // cout << "[record] terminate traces: " << chrono::duration <double, milli> (end_term - begin_term).count() << " ms" << endl;
+
     }
   } while (step_result.status == RecordSession::STEP_CONTINUE);
 
+  auto after_record_loop = chrono::steady_clock::now();
+  cout << "[record] get record result: " << chrono::duration <double, milli> (after_record_loop - after_install_signal_handlers).count() << " ms" << endl;
+
+  cout << "Execute " << step_count << " steps to get the record result" << endl;
+  cout << "[record loop] initial exec: " << initial_exec_time / step_count << " ms" << endl;
+  cout << "[record loop] record step: " << record_step_time / step_count << " ms" << endl;
+  cout << "[record loop] create latest-trace symlink: " << make_latest_trace_time / step_count << " ms" << endl;
+  cout << "[record loop] check termination: " << check_termination_time / check_termination_count << " ms" << endl;
+  cout << "[record loop] check termination count: " << check_termination_count << endl;
+
   session->close_trace_writer(TraceWriter::CLOSE_OK);
   static_session = nullptr;
+
+  auto after_close_trace_writer = chrono::steady_clock::now();
+  cout << "[record] close trace writer: " << chrono::duration <double, milli> (after_close_trace_writer - after_record_loop).count() << " ms" << endl;
 
   switch (step_result.status) {
     case RecordSession::STEP_CONTINUE:
@@ -781,11 +844,16 @@ static void reset_uid_sudo() {
 }
 
 int RecordCommand::run(vector<string>& args) {
+  auto record_run_start = chrono::steady_clock::now();
+
   RecordFlags flags;
   while (parse_record_arg(args, flags)) {
   }
 
+  auto parse_record_arg = chrono::steady_clock::now();
+  cout << "parse_record_arg: " << chrono::duration <double, milli> (parse_record_arg - record_run_start).count() << " ms" << endl;
   if (running_under_rr()) {
+    cout << "running under rr" << endl;
     switch (flags.nested) {
       case NESTED_IGNORE:
         exec_child(args);
@@ -817,6 +885,9 @@ int RecordCommand::run(vector<string>& args) {
     }
   }
 
+  auto after_check_running_under_rr = chrono::steady_clock::now();
+  cout << "check_running_under_rr: " << chrono::duration <double, milli> (after_check_running_under_rr - parse_record_arg).count() << " ms" << endl;
+
   if (!verify_not_option(args) || args.size() == 0) {
     print_help(stderr);
     return 1;
@@ -824,6 +895,8 @@ int RecordCommand::run(vector<string>& args) {
 
   assert_prerequisites(flags.use_syscall_buffer);
 
+  auto assert_prereq = chrono::steady_clock::now();
+  cout << "assert_prerequisites: " << chrono::duration <double, milli> (assert_prereq - after_check_running_under_rr).count() << " ms" << endl;
   if (flags.setuid_sudo) {
     if (geteuid() != 0 || getenv("SUDO_UID") == NULL) {
       fprintf(stderr, "rr: --setuid-sudo option may only be used under sudo.\n"
@@ -838,18 +911,29 @@ int RecordCommand::run(vector<string>& args) {
   if (flags.chaos) {
     // Add up to one page worth of random padding to the environment to induce
     // a variety of possible stack pointer offsets
+    auto begin_chaos = chrono::steady_clock::now();
     vector<char> chars;
     chars.resize(random() % page_size());
     memset(chars.data(), '0', chars.size());
     chars.push_back(0);
     string padding = string("RR_CHAOS_PADDING=") + chars.data();
     flags.extra_env.push_back(padding);
+    auto end_chaos = chrono::steady_clock::now();
+    cout << "chaos: " << chrono::duration <double, milli> (end_chaos - begin_chaos).count() << " ms" << endl;
   }
+  auto before_record = chrono::steady_clock::now();
+  // cout << "record preprocess: " << chrono::duration <double, milli> (before_record - record_run_start).count() << " ms" << endl;
 
   WaitStatus status = record(args, flags);
 
+  auto after_record = chrono::steady_clock::now();
+  cout << "record: " << chrono::duration <double, milli> (after_record - before_record).count() << " ms" << endl;
+
   // Everything should have been cleaned up by now.
   check_for_leaks();
+
+  auto after_check_for_leaks = chrono::steady_clock::now();
+  cout << "check for leaks: " << chrono::duration <double, milli> (after_check_for_leaks - after_record).count() << " ms" << endl;
 
   switch (status.type()) {
     case WaitStatus::EXIT:
@@ -867,3 +951,4 @@ int RecordCommand::run(vector<string>& args) {
 }
 
 } // namespace rr
+ 

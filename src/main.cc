@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/utsname.h>
+#include <chrono>
 
 #include <sstream>
 
@@ -233,12 +234,16 @@ size_t saved_argv0_space() {
 using namespace rr;
 
 int main(int argc, char* argv[]) {
+  auto main_start = chrono::steady_clock::now();
   rr::saved_argv0_ = argv[0];
   rr::saved_argv0_space_ = argv[argc - 1] + strlen(argv[argc - 1]) + 1 - rr::saved_argv0_;
 
   init_random();
+  auto after_init_rand = chrono::steady_clock::now();
+  cout << "[main] init_random: " << chrono::duration <double, milli> (after_init_rand - main_start).count() << " ms" << endl;
   raise_resource_limits();
-
+  auto after_raise_resource_limits = chrono::steady_clock::now();
+  cout << "[main] raise_resource_limits: " << chrono::duration <double, milli> (after_raise_resource_limits - after_init_rand).count() << " ms" << endl;
   vector<string> args;
   for (int i = 1; i < argc; ++i) {
     args.push_back(argv[i]);
@@ -246,6 +251,10 @@ int main(int argc, char* argv[]) {
 
   while (parse_global_option(args)) {
   }
+  auto after_parse_global_option = chrono::steady_clock::now();
+  cout << "[main] parse_global_option: " << chrono::duration <double, milli> (after_parse_global_option - after_raise_resource_limits).count() << " ms" << endl;
+  // auto parse_end = chrono::steady_clock::now();
+  // cout << "parsing arguments: " << chrono::duration <double, milli> (parse_end - main_start).count() << " ms" << endl;
 
   if (show_version) {
     print_version(stdout);
@@ -267,12 +276,18 @@ int main(int argc, char* argv[]) {
     if (!Command::verify_not_option(args)) {
       print_usage(stderr);
     }
+    auto before_get_cmd = chrono::steady_clock::now();
     if (is_directory(args[0].c_str())) {
       command = ReplayCommand::get();
     } else {
       command = RecordCommand::get();
     }
+    auto after_get_cmd = chrono::steady_clock::now();
+    cout << "[main] get record cmd: " << chrono::duration <double, milli> (after_get_cmd - before_get_cmd).count() << " ms" << endl;
   }
-
-  return command->run(args);
+  auto before_cmd_run = chrono::steady_clock::now();
+  int res = command->run(args);
+  auto after_cmd_run = chrono::steady_clock::now();
+  cout << "[main] record_cmd::run: " << chrono::duration <double, milli> (after_cmd_run - before_cmd_run).count() << " ms" << endl;
+  return res;
 }
