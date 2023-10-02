@@ -16,6 +16,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <chrono>
 #include <algorithm>
 
 #include "Flags.h"
@@ -98,9 +99,12 @@ Scheduler::Scheduler(RecordSession& session)
       enable_poll(false),
       last_reschedule_in_high_priority_only_interval(false),
       unlimited_ticks_mode(false) {
+  auto begin_scheduler = chrono::steady_clock::now();
   std::random_device rd;
   random.seed(rd());
   regenerate_affinity_mask();
+  auto end_scheduler = chrono::steady_clock::now();
+  cout << "[Scheduler] new Scheduler body: " << chrono::duration <double, milli> (end_scheduler - begin_scheduler).count() << " ms" << endl;
 }
 
 /**

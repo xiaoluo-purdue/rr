@@ -692,7 +692,7 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   install_signal_handlers();
 
   auto after_install_signal_handlers = chrono::steady_clock::now();
-  cout << "[record] copy install signal handlers: " << chrono::duration <double, milli> (after_install_signal_handlers - after_copy_preload_src).count() << " ms" << endl;
+  cout << "[record] install signal handlers: " << chrono::duration <double, milli> (after_install_signal_handlers - after_copy_preload_src).count() << " ms" << endl;
 
   RecordSession::RecordResult step_result;
   bool did_forward_SIGTERM = false;

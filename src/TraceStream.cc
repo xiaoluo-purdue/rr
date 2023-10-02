@@ -12,6 +12,7 @@
 #include <sysexits.h>
 #include <dirent.h>
 
+#include <chrono>
 #include <algorithm>
 #include <fstream>
 #include <sstream>
@@ -1334,6 +1335,8 @@ TraceWriter::TraceWriter(const std::string& file_name,
       xsave_fip_fdp_quirk_(false),
       fdp_exception_only_quirk_(false),
       clear_fip_fdp_(false) {
+  auto begin_tracewriter = chrono::steady_clock::now();
+
   this->ticks_semantics_ = ticks_semantics_;
 
   for (Substream s = SUBSTREAM_FIRST; s < SUBSTREAM_COUNT; ++s) {
@@ -1341,16 +1344,24 @@ TraceWriter::TraceWriter(const std::string& file_name,
         path(s), substream(s).block_size, substream(s).threads));
   }
 
+  auto after_create_writer = chrono::steady_clock::now();
+
+  cout << "[TraceWriter] create Compressed Writer: " << chrono::duration <double, milli> (after_create_writer - begin_tracewriter).count() << " ms" << endl;
+
   string ver_path = incomplete_version_path();
   version_fd = ScopedFd(ver_path.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0600);
   if (!version_fd.is_open()) {
     FATAL() << "Unable to create " << ver_path;
   }
+  auto after_create_tracefile = chrono::steady_clock::now();
+  cout << "[TraceWriter] create trace file: " << chrono::duration <double, milli> (after_create_tracefile - after_create_writer).count() << " ms" << endl;
   // Take an exclusive lock and hold it until we rename the file at
   // the end of recording and then close our file descriptor.
   if (flock(version_fd, LOCK_EX | LOCK_NB) != 0) {
     FATAL() << "Unable to lock " << ver_path;
   }
+  auto after_lock_tracefile = chrono::steady_clock::now();
+  cout << "[TraceWriter] lock trace file: " << chrono::duration <double, milli> (after_lock_tracefile - after_create_tracefile).count() << " ms" << endl;
   static const char buf[] = STR(TRACE_VERSION) "\n";
   size_t buf_len = sizeof(buf) - 1;
   if (write(version_fd, buf, buf_len) != (ssize_t)buf_len) {
@@ -1374,10 +1385,16 @@ TraceWriter::TraceWriter(const std::string& file_name,
   }
   unlink(version_clone_path.c_str());
 
+  auto after_test_data_cloning = chrono::steady_clock::now();
+  cout << "[TraceWriter] test if data cloning is supported: " << chrono::duration <double, milli> (after_test_data_cloning - after_lock_tracefile).count() << " ms" << endl; 
+
   if (!probably_not_interactive(STDOUT_FILENO)) {
     printf("rr: Saving execution to trace directory `%s'.\n",
            trace_dir.c_str());
   }
+
+  auto end_tracewriter = chrono::steady_clock::now();
+  cout << "[TraceWriter] new TraceWriter body: " << chrono::duration <double, milli> (end_tracewriter - begin_tracewriter).count() << " ms" << endl;
 }
 
 void TraceWriter::setup_cpuid_records(bool has_cpuid_faulting,
