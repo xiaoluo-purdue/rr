@@ -2330,8 +2330,9 @@ static string lookup_by_path(const string& name) {
   env.insert(env.end(), extra_env.begin(), extra_env.end());
 
   auto after_setup_env = chrono::steady_clock::now();
-  std::cout << "[RecordSession::create] setup_env: " << chrono::duration <double, milli> (after_setup_env - start_create_session).count() << " ms" << endl;
-
+  #if XDEBUG
+    std::cout << "[RecordSession::create] setup_env: " << chrono::duration <double, milli> (after_setup_env - start_create_session).count() << " ms" << endl;
+  #endif
   string full_path = lookup_by_path(argv[0]);
   struct stat st;
   if (stat(full_path.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
@@ -2347,8 +2348,9 @@ static string lookup_by_path(const string& name) {
   }
 
   auto after_read_exe_info = chrono::steady_clock::now();
-  std::cout << "[RecordSession::create] read_exe_info: " << chrono::duration <double, milli> (after_read_exe_info - after_setup_env).count() << " ms" << endl;
-
+  #if XDEBUG
+    std::cout << "[RecordSession::create] read_exe_info: " << chrono::duration <double, milli> (after_read_exe_info - after_setup_env).count() << " ms" << endl;
+  #endif
   // Strip any LD_PRELOAD that an outer rr may have inserted
   strip_outer_ld_preload(env);
 
@@ -2375,8 +2377,9 @@ static string lookup_by_path(const string& name) {
   }
 
   auto after_inject_ld_helper_lib = chrono::steady_clock::now();
-  std::cout << "[RecordSession::create] inject_ld_helper_library: " << chrono::duration <double, milli> (after_inject_ld_helper_lib - after_read_exe_info).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[RecordSession::create] inject_ld_helper_library: " << chrono::duration <double, milli> (after_inject_ld_helper_lib - after_read_exe_info).count() << " ms" << endl;
+  #endif
   env.push_back("RUNNING_UNDER_RR=1");
   // Stop Mesa using the GPU
   env.push_back("LIBGL_ALWAYS_SOFTWARE=1");
@@ -2403,29 +2406,36 @@ static string lookup_by_path(const string& name) {
   }
 
   auto after_push_args_to_env = chrono::steady_clock::now();
-  std::cout << "[RecordSession::create] push_args_to_env: " << chrono::duration <double, milli> (after_push_args_to_env - after_inject_ld_helper_lib).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[RecordSession::create] push_args_to_env: " << chrono::duration <double, milli> (after_push_args_to_env - after_inject_ld_helper_lib).count() << " ms" << endl;
+  #endif
 
   shr_ptr session(
       new RecordSession(full_path, argv, env, disable_cpuid_features,
                         syscallbuf, syscallbuf_desched_sig, bind_cpu,
                         output_trace_dir, trace_id, use_audit, unmap_vdso));
-  cout << "size of RecordSession: " << sizeof(session) << " bytes" << endl;
-
+  #if XDEBUG
+    cout << "size of RecordSession: " << sizeof(session) << " bytes" << endl;
+  #endif
   auto after_create_session = chrono::steady_clock::now();
-  cout << "[RecordSession::create] new RecordSession: " << chrono::duration <double, milli> (after_create_session - after_push_args_to_env).count() << " ms" << endl;
+  #if XDEBUG
+    cout << "[RecordSession::create] new RecordSession: " << chrono::duration <double, milli> (after_create_session - after_push_args_to_env).count() << " ms" << endl;
+  #endif
 
   session->excluded_ranges_ = std::move(exe_info.sanitizer_exclude_memory_ranges);
 
   auto after_move_excluded_ranges = chrono::steady_clock::now();
-  cout << "[RecordSession::create] move excluded_ranges: " << chrono::duration <double, milli> (after_move_excluded_ranges - after_create_session).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[RecordSession::create] move excluded_ranges: " << chrono::duration <double, milli> (after_move_excluded_ranges - after_create_session).count() << " ms" << endl;
+  #endif
   session->fixed_global_exclusion_range_ = std::move(exe_info.fixed_global_exclusion_range);
   auto after_fixed_global_exclusion_range = chrono::steady_clock::now();
 
+  #if XDEBUG
   cout << "[RecordSession::create] move fixed_global_exclusion_range: " << chrono::duration <double, milli> (after_fixed_global_exclusion_range - after_move_excluded_ranges).count() << " ms" << endl;
-
   cout << "[RecordSession::create] create_update_session: " << chrono::duration <double, milli> (after_fixed_global_exclusion_range - after_push_args_to_env).count() << " ms" << endl;
+  #endif
+
   return session;
 }
 
@@ -2466,19 +2476,22 @@ RecordSession::RecordSession(const std::string& exe_path,
     FATAL() << "RR_CALL_BASE is incorrect";
   }
   auto finish_check = chrono::steady_clock::now();
-  cout << "[new RecordSession] entry testing: " << chrono::duration <double, milli> (finish_check - begin_create).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[new RecordSession] entry testing: " << chrono::duration <double, milli> (finish_check - begin_create).count() << " ms" << endl;
+  #endif
   trace_out.set_bound_cpu(choose_cpu(bind_cpu, cpu_lock));
   do_bind_cpu();
 
   auto finish_bind_cpu = chrono::steady_clock::now();
-  cout << "[new RecordSession] binding cpu: " << chrono::duration <double, milli> (finish_bind_cpu - finish_check).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[new RecordSession] binding cpu: " << chrono::duration <double, milli> (finish_bind_cpu - finish_check).count() << " ms" << endl;
+  #endif
   ScopedFd error_fd = create_spawn_task_error_pipe();
 
   auto finish_error_fd = chrono::steady_clock::now();
-  cout << "[new RecordSession] create error pipe: " << chrono::duration <double, milli> (finish_error_fd - finish_bind_cpu).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[new RecordSession] create error pipe: " << chrono::duration <double, milli> (finish_error_fd - finish_bind_cpu).count() << " ms" << endl;
+  #endif
   RecordTask* t = static_cast<RecordTask*>(
       Task::spawn(*this, error_fd, &tracee_socket_fd(),
                   &tracee_socket_receiver_fd(),
@@ -2486,8 +2499,9 @@ RecordSession::RecordSession(const std::string& exe_path,
                   exe_path, argv, envp));
 
   auto finish_spawn_task = chrono::steady_clock::now();
-  cout << "[new RecordSession] spawn record task: " << chrono::duration <double, milli> (finish_spawn_task - finish_error_fd).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[new RecordSession] spawn record task: " << chrono::duration <double, milli> (finish_spawn_task - finish_error_fd).count() << " ms" << endl;
+  #endif
   if (NativeArch::is_x86ish()) {
     // CPU affinity has been set.
     trace_out.setup_cpuid_records(has_cpuid_faulting(), disable_cpuid_features_);
@@ -2503,17 +2517,21 @@ RecordSession::RecordSession(const std::string& exe_path,
   }
 
   auto finish_handle_x86ish = chrono::steady_clock::now();
-  cout << "[new RecordSession] handle x86ish: " << chrono::duration <double, milli> (finish_handle_x86ish - finish_spawn_task).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[new RecordSession] handle x86ish: " << chrono::duration <double, milli> (finish_handle_x86ish - finish_spawn_task).count() << " ms" << endl;
+  #endif
   initial_thread_group = t->thread_group();
 
   auto finish_init_thread_group = chrono::steady_clock::now();
-  cout << "[new RecordSession] init initial_thread_group: " << chrono::duration <double, milli> (finish_init_thread_group - finish_handle_x86ish).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[new RecordSession] init initial_thread_group: " << chrono::duration <double, milli> (finish_init_thread_group - finish_handle_x86ish).count() << " ms" << endl;
+  #endif
   on_create(t);
 
   auto finish_on_create = chrono::steady_clock::now();
-  cout << "[new RecordSession] on_create: " << chrono::duration <double, milli> (finish_on_create - finish_init_thread_group).count() << " ms" << endl;
+  #if XDEBUG
+    cout << "[new RecordSession] on_create: " << chrono::duration <double, milli> (finish_on_create - finish_init_thread_group).count() << " ms" << endl;
+  #endif
 }
 
 RecordSession::RecordResult RecordSession::record_step() {
@@ -2533,9 +2551,9 @@ RecordSession::RecordResult RecordSession::record_step() {
   }
 
   auto after_term_determ = chrono::steady_clock::now();
-
-  cout << "[record step] determine tracees termination: " << chrono::duration <double, milli> (after_term_determ - begin_record_step).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[record step] determine tracees termination: " << chrono::duration <double, milli> (after_term_determ - begin_record_step).count() << " ms" << endl;
+  #endif
   result.status = STEP_CONTINUE;
 
   TaskUid prev_task_tuid;
@@ -2545,9 +2563,9 @@ RecordSession::RecordResult RecordSession::record_step() {
   auto start_reschedule = chrono::steady_clock::now();
   auto rescheduled = scheduler().reschedule(last_task_switchable);
   auto end_reschedule = chrono::steady_clock::now();
-
-  cout << "[record step] reschedule: " << chrono::duration <double, milli> (end_reschedule - start_reschedule).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[record step] reschedule: " << chrono::duration <double, milli> (end_reschedule - start_reschedule).count() << " ms" << endl;
+  #endif
   if (rescheduled.interrupted_by_signal) {
     // The scheduler was waiting for some task to become active, but was
     // interrupted by a signal. Yield to our caller now to give the caller
@@ -2563,7 +2581,6 @@ RecordSession::RecordResult RecordSession::record_step() {
   }
 
   auto after_reschedule = chrono::steady_clock::now();
-  // cout << "[record step] schedule and reschedule: " << chrono::duration <double, milli> (after_reschedule - after_term_determ).count() << " ms" << endl;
 
   RecordTask* prev_task = find_task(prev_task_tuid);
   if (prev_task && prev_task->ev().type() == EV_SCHED) {
@@ -2573,13 +2590,12 @@ RecordSession::RecordResult RecordSession::record_step() {
       auto begin_record_current_event = chrono::steady_clock::now();
       prev_task->record_current_event();
       auto after_record_current_event = chrono::steady_clock::now();
-      cout << "[record step] record current event: " << chrono::duration <double, milli> (after_record_current_event - begin_record_current_event).count() << " ms" << endl;
+      #if XDEBUG
+        cout << "[record step] record current event: " << chrono::duration <double, milli> (after_record_current_event - begin_record_current_event).count() << " ms" << endl;
+      #endif
     }
     prev_task->pop_event(EV_SCHED);
   }
-
-  // auto after_record_pop_event = chrono::steady_clock::now();
-  // cout << "[record step] find, record and pop current event: " << chrono::duration <double, milli> (after_record_pop_event - after_reschedule).count() << " ms" << endl;
 
   if (rescheduled.started_new_timeslice) {
     t->registers_at_start_of_last_timeslice = t->regs();
@@ -2603,7 +2619,9 @@ RecordSession::RecordResult RecordSession::record_step() {
     return result;
   }
   auto after_handle_exit_event_1 = chrono::steady_clock::now();
-  cout << "[record step] handle_ptrace_exit_event 1: " << chrono::duration <double, milli> (after_handle_exit_event_1 - after_pop_event).count() << " ms" << endl;
+  #if XDEBUG
+    cout << "[record step] handle_ptrace_exit_event 1: " << chrono::duration <double, milli> (after_handle_exit_event_1 - after_pop_event).count() << " ms" << endl;
+  #endif
 
   StepState step_state(CONTINUE);
 
@@ -2611,7 +2629,9 @@ RecordSession::RecordResult RecordSession::record_step() {
   if (rescheduled.by_waitpid &&
       handle_ptrace_event(&t, &step_state, &result, &did_enter_syscall)) {
         auto after_handle_ptrace_event = chrono::steady_clock::now();
-        cout << "[record step] handle_ptrace_event: " << chrono::duration <double, milli> (after_handle_ptrace_event - after_handle_exit_event_1).count() << " ms" << endl;
+        #if XDEBUG
+          cout << "[record step] handle_ptrace_event: " << chrono::duration <double, milli> (after_handle_ptrace_event - after_handle_exit_event_1).count() << " ms" << endl;
+        #endif
     if (result.status != STEP_CONTINUE ||
         step_state.continue_type == DONT_CONTINUE) {
       last_task_switchable = ALLOW_SWITCH;
@@ -2622,15 +2642,21 @@ RecordSession::RecordResult RecordSession::record_step() {
       auto before_syscall_state_changed = chrono::steady_clock::now();
       syscall_state_changed(t, &step_state);
       auto after_syscall_state_changed = chrono::steady_clock::now();
-      cout << "[record step] syscall_state_changed: " << chrono::duration <double, milli> (after_syscall_state_changed - before_syscall_state_changed).count() << " ms" << endl;
+      #if XDEBUG
+        cout << "[record step] syscall_state_changed: " << chrono::duration <double, milli> (after_syscall_state_changed - before_syscall_state_changed).count() << " ms" << endl;
+      #endif
     }
   } else if (rescheduled.by_waitpid && handle_signal_event(t, &step_state)) {
     auto after_handle_signal_event = chrono::steady_clock::now();
-    cout << "[record step] handle_signal_event: " << chrono::duration <double, milli> (after_handle_signal_event - after_handle_exit_event_1).count() << " ms" << endl;
+    #if XDEBUG
+      cout << "[record step] handle_signal_event: " << chrono::duration <double, milli> (after_handle_signal_event - after_handle_exit_event_1).count() << " ms" << endl;
+    #endif
     // Tracee may have exited while processing descheds; handle that.
     if (handle_ptrace_exit_event(t)) {
       auto after_handle_exit_event_2 = chrono::steady_clock::now();
-      cout << "[record step] handle_ptrace_exit_event 2: " << chrono::duration <double, milli> (after_handle_exit_event_2 - after_handle_signal_event).count() << " ms" << endl; 
+      #if XDEBUG
+        cout << "[record step] handle_ptrace_exit_event 2: " << chrono::duration <double, milli> (after_handle_exit_event_2 - after_handle_signal_event).count() << " ms" << endl; 
+      #endif
       // t may have been deleted.
       last_task_switchable = ALLOW_SWITCH;
       return result;
@@ -2638,8 +2664,9 @@ RecordSession::RecordResult RecordSession::record_step() {
   } else {
     runnable_state_changed(t, &step_state, &result, rescheduled.by_waitpid);
     auto after_runnable_state_changed = chrono::steady_clock::now();
-    cout << "[record step] runnable_state_changed: " << chrono::duration <double, milli> (after_runnable_state_changed - after_handle_exit_event_1).count() << " ms" << endl;
-
+    #if XDEBUG
+      cout << "[record step] runnable_state_changed: " << chrono::duration <double, milli> (after_runnable_state_changed - after_handle_exit_event_1).count() << " ms" << endl;
+    #endif
     if (result.status != STEP_CONTINUE ||
         step_state.continue_type == DONT_CONTINUE) {
       return result;
@@ -2665,21 +2692,21 @@ RecordSession::RecordResult RecordSession::record_step() {
   }
 
   auto before_verify_signal_statue = chrono::steady_clock::now();
-  // cout << "[record step] exit determine and change state: " << chrono::duration <double, milli> (before_verify_signal_statue - after_record_pop_event).count() << " ms" << endl;
-
 
   t->verify_signal_states();
 
   auto after_verify_signal_states = chrono::steady_clock::now();
-  cout << "[record step] verify signal states: " << chrono::duration <double, milli> (after_verify_signal_states - before_verify_signal_statue).count() << " ms" << endl;
-
+  #if XDEBUG
+    cout << "[record step] verify signal states: " << chrono::duration <double, milli> (after_verify_signal_states - before_verify_signal_statue).count() << " ms" << endl;
+  #endif
   // We try to inject a signal if there's one pending; otherwise we continue
   // task execution.
   bool inject_success = prepare_to_inject_signal(t, &step_state);
 
   auto after_inject_signal = chrono::steady_clock::now();
-  cout << "[record step] try_to_inject_signal: " << chrono::duration <double, milli> (after_inject_signal - after_verify_signal_states).count() <<" ms" << endl;
-
+  #if XDEBUG
+    cout << "[record step] try_to_inject_signal: " << chrono::duration <double, milli> (after_inject_signal - after_verify_signal_states).count() <<" ms" << endl;
+  #endif
   if (!inject_success &&
       step_state.continue_type != DONT_CONTINUE) {
     // Ensure that we aren't allowing switches away from a running task.
@@ -2694,11 +2721,10 @@ RecordSession::RecordResult RecordSession::record_step() {
     auto before_task_continue = chrono::steady_clock::now();
     task_continue(step_state);
     auto after_task_continue = chrono::steady_clock::now();
-    cout << "[record step] task continue: " << chrono::duration <double, milli> (after_task_continue - before_task_continue).count() << " ms" << endl;
+    #if XDEBUG
+      cout << "[record step] task continue: " << chrono::duration <double, milli> (after_task_continue - before_task_continue).count() << " ms" << endl;
+    #endif
   }
-
-  // auto after_signal_injection = chrono::steady_clock::now();
-  // cout << "[record step] signal injection: " << chrono::duration <double, milli> (after_signal_injection - after_verify_signal_states).count() << " ms" << endl << endl;
 
   return result;
 }
@@ -2759,12 +2785,15 @@ void RecordSession::on_create(Task* t) {
   Session::on_create(t);
 
   auto after_session_on_create = chrono::steady_clock::now();
-  cout << "[on_create] Session::on_create: " << chrono::duration <double, milli> (after_session_on_create - begin_on_create).count() << " ms" << endl;
-  
+  #if XDEBUG
+    cout << "[on_create] Session::on_create: " << chrono::duration <double, milli> (after_session_on_create - begin_on_create).count() << " ms" << endl;
+  #endif
   scheduler().on_create(static_cast<RecordTask*>(t));
   
   auto after_scheduler_on_create = chrono::steady_clock::now();
-  cout << "[on_create] scheduler.on_create: " << chrono::duration <double, milli> (after_scheduler_on_create - begin_on_create).count() << " ms" << endl;
+  #if XDEBUG
+    cout << "[on_create] scheduler.on_create: " << chrono::duration <double, milli> (after_scheduler_on_create - begin_on_create).count() << " ms" << endl;
+  #endif
 }
 
 void RecordSession::on_destroy(Task* t) {

@@ -240,10 +240,14 @@ int main(int argc, char* argv[]) {
 
   init_random();
   auto after_init_rand = chrono::steady_clock::now();
-  cout << "[main] init_random: " << chrono::duration <double, milli> (after_init_rand - main_start).count() << " ms" << endl;
+  #if XDEBUG
+    cout << "[main] init_random: " << chrono::duration <double, milli> (after_init_rand - main_start).count() << " ms" << endl;
+  #endif
   raise_resource_limits();
   auto after_raise_resource_limits = chrono::steady_clock::now();
-  cout << "[main] raise_resource_limits: " << chrono::duration <double, milli> (after_raise_resource_limits - after_init_rand).count() << " ms" << endl;
+  #if XDEBUG
+    cout << "[main] raise_resource_limits: " << chrono::duration <double, milli> (after_raise_resource_limits - after_init_rand).count() << " ms" << endl;
+  #endif
   vector<string> args;
   for (int i = 1; i < argc; ++i) {
     args.push_back(argv[i]);
@@ -252,9 +256,9 @@ int main(int argc, char* argv[]) {
   while (parse_global_option(args)) {
   }
   auto after_parse_global_option = chrono::steady_clock::now();
-  cout << "[main] parse_global_option: " << chrono::duration <double, milli> (after_parse_global_option - after_raise_resource_limits).count() << " ms" << endl;
-  // auto parse_end = chrono::steady_clock::now();
-  // cout << "parsing arguments: " << chrono::duration <double, milli> (parse_end - main_start).count() << " ms" << endl;
+  #if XDEBUG
+    cout << "[main] parse_global_option: " << chrono::duration <double, milli> (after_parse_global_option - after_raise_resource_limits).count() << " ms" << endl;
+  #endif
 
   if (show_version) {
     print_version(stdout);
@@ -283,11 +287,15 @@ int main(int argc, char* argv[]) {
       command = RecordCommand::get();
     }
     auto after_get_cmd = chrono::steady_clock::now();
-    cout << "[main] get record cmd: " << chrono::duration <double, milli> (after_get_cmd - before_get_cmd).count() << " ms" << endl;
+    #if XDEBUG
+      cout << "[main] get record cmd: " << chrono::duration <double, milli> (after_get_cmd - before_get_cmd).count() << " ms" << endl;
+    #endif
   }
   auto before_cmd_run = chrono::steady_clock::now();
   int res = command->run(args);
   auto after_cmd_run = chrono::steady_clock::now();
-  cout << "[main] record_cmd::run: " << chrono::duration <double, milli> (after_cmd_run - before_cmd_run).count() << " ms" << endl;
+  #if XDEBUG
+    cout << "[main] record_cmd::run: " << chrono::duration <double, milli> (after_cmd_run - before_cmd_run).count() << " ms" << endl;
+  #endif
   return res;
 }

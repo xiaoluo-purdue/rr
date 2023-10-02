@@ -104,7 +104,9 @@ Scheduler::Scheduler(RecordSession& session)
   random.seed(rd());
   regenerate_affinity_mask();
   auto end_scheduler = chrono::steady_clock::now();
-  cout << "[Scheduler] new Scheduler body: " << chrono::duration <double, milli> (end_scheduler - begin_scheduler).count() << " ms" << endl;
+  #if XDEBUG
+    cout << "[Scheduler] new Scheduler body: " << chrono::duration <double, milli> (end_scheduler - begin_scheduler).count() << " ms" << endl;
+  #endif
 }
 
 /**
