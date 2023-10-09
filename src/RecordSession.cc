@@ -2101,6 +2101,9 @@ static void inject_ld_helper_library(vector<string>& env,
   //
   // We supply a placeholder which is then mutated to the correct filename in
   // Monkeypatcher::patch_after_exec.
+
+  cout << "[inject_ld_helper_library] ld_preload_lib_path: " << value << endl;
+
   auto env_assignment = env_var + "=";
   auto it = env.begin();
   for (; it != env.end(); ++it) {
