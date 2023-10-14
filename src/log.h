@@ -231,6 +231,10 @@ template <typename T> inline void* HEX(T v) {
 
 extern std::chrono::time_point<std::chrono::steady_clock> setupenv_start;
 extern std::chrono::time_point<std::chrono::steady_clock> setupenv_end;
+extern std::chrono::time_point<std::chrono::steady_clock> createattach_start;
+extern std::chrono::time_point<std::chrono::steady_clock> createattach_end;
+extern std::chrono::time_point<std::chrono::steady_clock> stopall_start;
+extern std::chrono::time_point<std::chrono::steady_clock> stopall_end;
 
 } // namespace rr
 

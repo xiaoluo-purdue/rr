@@ -26,6 +26,7 @@
 #include <limits>
 #include <set>
 #include <sstream>
+#include <chrono>
 
 #include <rr/rr.h>
 
@@ -3461,6 +3462,8 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
                              const std::vector<std::string>& argv,
                              const std::vector<std::string>& envp,
                              pid_t rec_tid) {
+  createattach_start = chrono::steady_clock::now();
+
   DEBUG_ASSERT(session.tasks().size() == 0);
 
   int sockets[2];
@@ -3540,6 +3543,10 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
     FATAL() << "PTRACE_SEIZE failed for tid " << tid << hint;
   }
 
+  createattach_end = chrono::steady_clock::now();
+  LOG(debug) << "[workflow] create and attach process: " << chrono::duration <double, milli> (createattach_end - createattach_start).count() << " ms";
+
+
   Task* t = session.new_task(tid, rec_tid, session.next_task_serial(),
                              NativeArch::arch());
   auto tg = session.create_initial_tg(t);
@@ -3557,6 +3564,7 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
   sa.sa_flags = 0; // No SA_RESTART, so waitpid() will be interrupted
   sigaction(SIGALRM, &sa, nullptr);
 
+  rr::stopall_start = chrono::steady_clock::now();
   t->wait();
   if (t->ptrace_event() == PTRACE_EVENT_EXIT) {
     t->proceed_to_exit();
@@ -3574,6 +3582,9 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
             << "\nChild's message: "
             << session.read_spawned_task_error();
   }
+
+  rr::stopall_end = chrono::steady_clock::now();
+  LOG(debug) << "[workflow] stop all threads: " << chrono::duration <double, milli> (stopall_end - stopall_start).count() << " ms";
 
   t->clear_wait_status();
   t->open_mem_fd();

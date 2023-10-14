@@ -26,6 +26,11 @@ namespace rr {
 
 std::chrono::time_point<std::chrono::steady_clock> setupenv_start;
 std::chrono::time_point<std::chrono::steady_clock> setupenv_end;
+std::chrono::time_point<std::chrono::steady_clock> createattach_start;
+std::chrono::time_point<std::chrono::steady_clock> createattach_end;
+std::chrono::time_point<std::chrono::steady_clock> stopall_start;
+std::chrono::time_point<std::chrono::steady_clock> stopall_end;
+
 
 // Show version and quit.
 static bool show_version = false;
