@@ -9,6 +9,7 @@
 #include <iostream>
 #include <type_traits>
 #include <vector>
+#include <chrono>
 
 /**
  * Print siginfo on ostream.
@@ -227,6 +228,9 @@ template <typename T> inline void* HEX(T v) {
 
 #define XDEBUG 1
 #define DEBUG_RECORD_STEP 0
+
+extern std::chrono::time_point<std::chrono::steady_clock> setupenv_start;
+extern std::chrono::time_point<std::chrono::steady_clock> setupenv_end;
 
 } // namespace rr
 

@@ -24,6 +24,9 @@ using namespace std;
 
 namespace rr {
 
+std::chrono::time_point<std::chrono::steady_clock> setupenv_start;
+std::chrono::time_point<std::chrono::steady_clock> setupenv_end;
+
 // Show version and quit.
 static bool show_version = false;
 static bool show_cmd_list = false;
@@ -234,6 +237,7 @@ size_t saved_argv0_space() {
 using namespace rr;
 
 int main(int argc, char* argv[]) {
+  setupenv_start = chrono::steady_clock::now();
   auto main_start = chrono::steady_clock::now();
   rr::saved_argv0_ = argv[0];
   rr::saved_argv0_space_ = argv[argc - 1] + strlen(argv[argc - 1]) + 1 - rr::saved_argv0_;
