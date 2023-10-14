@@ -698,6 +698,12 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   #if XDEBUG
     cout << "[record] install signal handlers: " << chrono::duration <double, milli> (after_install_signal_handlers - after_copy_preload_src).count() << " ms" << endl;
   #endif
+
+  setupenv_end = chrono::steady_clock::now();
+  #if XDEBUG
+    cout << "[workflow] set up env: " << chrono::duration <double, milli> (setupenv_end - setupenv_start).count() << " ms" << endl;
+  #endif
+
   RecordSession::RecordResult step_result;
   bool did_forward_SIGTERM = false;
   bool did_term_detached_tasks = false;

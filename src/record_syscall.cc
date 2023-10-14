@@ -2593,6 +2593,7 @@ static int non_negative_command(int command) { return command < 0 ? INT32_MAX : 
 template <typename Arch>
 static Switchable prepare_ptrace(RecordTask* t,
                                  TaskSyscallState& syscall_state) {
+  LOG(debug) << "prepare_ptrace was called";
   pid_t pid = (pid_t)t->regs().arg2_signed();
   bool emulate = true;
   int command = (int)t->regs().arg1_signed();
@@ -2617,6 +2618,8 @@ static Switchable prepare_ptrace(RecordTask* t,
       break;
     }
     case PTRACE_TRACEME: {
+      LOG(debug) << "PTRACE_TRACEME was called";
+      cout << "PTRACE_TRACEME was called" << endl;
       RecordTask* tracer = prepare_ptrace_traceme(t, syscall_state);
       if (!tracer) {
         break;
@@ -3578,6 +3581,8 @@ template <typename Arch>
 static Switchable rec_prepare_syscall_arch(RecordTask* t,
                                            TaskSyscallState& syscall_state,
                                            const Registers& regs) {
+
+  LOG(debug) << "rec_prepare_syscall_arch was called";
   int syscallno = t->ev().Syscall().number;
 
   if (t->regs().original_syscallno() == SECCOMP_MAGIC_SKIP_ORIGINAL_SYSCALLNO) {
@@ -6281,6 +6286,7 @@ static void fake_gcrypt_file(RecordTask* t, Registers* r) {
 template <typename Arch>
 static void rec_process_syscall_arch(RecordTask* t,
                                      TaskSyscallState& syscall_state) {
+  LOG(debug) << "rec_process_syscall_arch was called";
   int syscallno = t->ev().Syscall().number;
 
   if (t->regs().original_syscallno() == SECCOMP_MAGIC_SKIP_ORIGINAL_SYSCALLNO) {
