@@ -2554,7 +2554,7 @@ RecordSession::RecordResult RecordSession::record_step() {
   }
 
   auto after_term_determ = chrono::steady_clock::now();
-  #if XDEBUG
+  #if DEBUG_RECORD_STEP
     cout << "[record step] determine tracees termination: " << chrono::duration <double, milli> (after_term_determ - begin_record_step).count() << " ms" << endl;
   #endif
   result.status = STEP_CONTINUE;
@@ -2566,7 +2566,7 @@ RecordSession::RecordResult RecordSession::record_step() {
   auto start_reschedule = chrono::steady_clock::now();
   auto rescheduled = scheduler().reschedule(last_task_switchable);
   auto end_reschedule = chrono::steady_clock::now();
-  #if XDEBUG
+  #if DEBUG_RECORD_STEP
     cout << "[record step] reschedule: " << chrono::duration <double, milli> (end_reschedule - start_reschedule).count() << " ms" << endl;
   #endif
   if (rescheduled.interrupted_by_signal) {
@@ -2593,7 +2593,7 @@ RecordSession::RecordResult RecordSession::record_step() {
       auto begin_record_current_event = chrono::steady_clock::now();
       prev_task->record_current_event();
       auto after_record_current_event = chrono::steady_clock::now();
-      #if XDEBUG
+      #if DEBUG_RECORD_STEP
         cout << "[record step] record current event: " << chrono::duration <double, milli> (after_record_current_event - begin_record_current_event).count() << " ms" << endl;
       #endif
     }
@@ -2622,7 +2622,7 @@ RecordSession::RecordResult RecordSession::record_step() {
     return result;
   }
   auto after_handle_exit_event_1 = chrono::steady_clock::now();
-  #if XDEBUG
+  #if DEBUG_RECORD_STEP
     cout << "[record step] handle_ptrace_exit_event 1: " << chrono::duration <double, milli> (after_handle_exit_event_1 - after_pop_event).count() << " ms" << endl;
   #endif
 
@@ -2632,7 +2632,7 @@ RecordSession::RecordResult RecordSession::record_step() {
   if (rescheduled.by_waitpid &&
       handle_ptrace_event(&t, &step_state, &result, &did_enter_syscall)) {
         auto after_handle_ptrace_event = chrono::steady_clock::now();
-        #if XDEBUG
+        #if DEBUG_RECORD_STEP
           cout << "[record step] handle_ptrace_event: " << chrono::duration <double, milli> (after_handle_ptrace_event - after_handle_exit_event_1).count() << " ms" << endl;
         #endif
     if (result.status != STEP_CONTINUE ||
@@ -2645,19 +2645,19 @@ RecordSession::RecordResult RecordSession::record_step() {
       auto before_syscall_state_changed = chrono::steady_clock::now();
       syscall_state_changed(t, &step_state);
       auto after_syscall_state_changed = chrono::steady_clock::now();
-      #if XDEBUG
+      #if DEBUG_RECORD_STEP
         cout << "[record step] syscall_state_changed: " << chrono::duration <double, milli> (after_syscall_state_changed - before_syscall_state_changed).count() << " ms" << endl;
       #endif
     }
   } else if (rescheduled.by_waitpid && handle_signal_event(t, &step_state)) {
     auto after_handle_signal_event = chrono::steady_clock::now();
-    #if XDEBUG
+    #if DEBUG_RECORD_STEP
       cout << "[record step] handle_signal_event: " << chrono::duration <double, milli> (after_handle_signal_event - after_handle_exit_event_1).count() << " ms" << endl;
     #endif
     // Tracee may have exited while processing descheds; handle that.
     if (handle_ptrace_exit_event(t)) {
       auto after_handle_exit_event_2 = chrono::steady_clock::now();
-      #if XDEBUG
+      #if DEBUG_RECORD_STEP
         cout << "[record step] handle_ptrace_exit_event 2: " << chrono::duration <double, milli> (after_handle_exit_event_2 - after_handle_signal_event).count() << " ms" << endl; 
       #endif
       // t may have been deleted.
@@ -2667,7 +2667,7 @@ RecordSession::RecordResult RecordSession::record_step() {
   } else {
     runnable_state_changed(t, &step_state, &result, rescheduled.by_waitpid);
     auto after_runnable_state_changed = chrono::steady_clock::now();
-    #if XDEBUG
+    #if DEBUG_RECORD_STEP
       cout << "[record step] runnable_state_changed: " << chrono::duration <double, milli> (after_runnable_state_changed - after_handle_exit_event_1).count() << " ms" << endl;
     #endif
     if (result.status != STEP_CONTINUE ||
@@ -2699,7 +2699,7 @@ RecordSession::RecordResult RecordSession::record_step() {
   t->verify_signal_states();
 
   auto after_verify_signal_states = chrono::steady_clock::now();
-  #if XDEBUG
+  #if DEBUG_RECORD_STEP
     cout << "[record step] verify signal states: " << chrono::duration <double, milli> (after_verify_signal_states - before_verify_signal_statue).count() << " ms" << endl;
   #endif
   // We try to inject a signal if there's one pending; otherwise we continue
@@ -2707,7 +2707,7 @@ RecordSession::RecordResult RecordSession::record_step() {
   bool inject_success = prepare_to_inject_signal(t, &step_state);
 
   auto after_inject_signal = chrono::steady_clock::now();
-  #if XDEBUG
+  #if DEBUG_RECORD_STEP
     cout << "[record step] try_to_inject_signal: " << chrono::duration <double, milli> (after_inject_signal - after_verify_signal_states).count() <<" ms" << endl;
   #endif
   if (!inject_success &&
@@ -2724,7 +2724,7 @@ RecordSession::RecordResult RecordSession::record_step() {
     auto before_task_continue = chrono::steady_clock::now();
     task_continue(step_state);
     auto after_task_continue = chrono::steady_clock::now();
-    #if XDEBUG
+    #if DEBUG_RECORD_STEP
       cout << "[record step] task continue: " << chrono::duration <double, milli> (after_task_continue - before_task_continue).count() << " ms" << endl;
     #endif
   }

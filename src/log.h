@@ -225,6 +225,9 @@ template <typename T> inline void* HEX(T v) {
       static_cast<typename std::make_unsigned<T>::type>(v));
 }
 
+#define XDEBUG 1
+#define DEBUG_RECORD_STEP 0
+
 } // namespace rr
 
 #endif // RR_LOG_H
