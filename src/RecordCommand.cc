@@ -942,6 +942,21 @@ int RecordCommand::run(vector<string>& args) {
 
   WaitStatus status = record(args, flags);
 
+  double total_sched_time = 0;
+  for (double time : scheduling_time) {
+    total_sched_time += time;
+  }
+  LOG(debug) << "[workflow] avg scheduling time: " << total_sched_time / scheduling_time.size() << " ms";
+
+  cout << "patching time: ";
+  double total_patching_time = 0;
+  for (double time : patching_time) {
+    total_patching_time += time;
+    cout << time << " ";
+  }
+  cout << endl;
+  LOG(debug) << "[workflow] avg patching time: " << total_patching_time / patching_time.size() << " ms";
+
   auto after_record = chrono::steady_clock::now();
   #if XDEBUG
     cout << "record: " << chrono::duration <double, milli> (after_record - before_record).count() << " ms" << endl;

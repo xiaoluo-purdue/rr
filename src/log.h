@@ -226,7 +226,7 @@ template <typename T> inline void* HEX(T v) {
       static_cast<typename std::make_unsigned<T>::type>(v));
 }
 
-#define XDEBUG 1
+#define XDEBUG 0
 #define DEBUG_RECORD_STEP 0
 
 extern std::chrono::time_point<std::chrono::steady_clock> setupenv_start;
@@ -235,6 +235,15 @@ extern std::chrono::time_point<std::chrono::steady_clock> createattach_start;
 extern std::chrono::time_point<std::chrono::steady_clock> createattach_end;
 extern std::chrono::time_point<std::chrono::steady_clock> stopall_start;
 extern std::chrono::time_point<std::chrono::steady_clock> stopall_end;
+extern std::chrono::time_point<std::chrono::steady_clock> scheduling_start;
+extern std::chrono::time_point<std::chrono::steady_clock> scheduling_end;
+extern std::chrono::time_point<std::chrono::steady_clock> patching_start;
+extern std::chrono::time_point<std::chrono::steady_clock> patching_end;
+extern std::chrono::time_point<std::chrono::steady_clock> preload_start;
+extern std::chrono::time_point<std::chrono::steady_clock> preload_end;
+
+extern std::vector<double> scheduling_time;
+extern std::vector<double> patching_time;
 
 } // namespace rr
 

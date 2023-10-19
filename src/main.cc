@@ -30,7 +30,15 @@ std::chrono::time_point<std::chrono::steady_clock> createattach_start;
 std::chrono::time_point<std::chrono::steady_clock> createattach_end;
 std::chrono::time_point<std::chrono::steady_clock> stopall_start;
 std::chrono::time_point<std::chrono::steady_clock> stopall_end;
+std::chrono::time_point<std::chrono::steady_clock> scheduling_start;
+std::chrono::time_point<std::chrono::steady_clock> scheduling_end;
+std::chrono::time_point<std::chrono::steady_clock> patching_start;
+std::chrono::time_point<std::chrono::steady_clock> patching_end;
+std::chrono::time_point<std::chrono::steady_clock> preload_start;
+std::chrono::time_point<std::chrono::steady_clock> preload_end;
 
+vector<double> scheduling_time;
+vector<double> patching_time;
 
 // Show version and quit.
 static bool show_version = false;

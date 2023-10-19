@@ -1109,6 +1109,7 @@ static bool is_in_privileged_syscall(RecordTask* t) {
 
 void RecordSession::syscall_state_changed(RecordTask* t,
                                           StepState* step_state) {
+  LOG(debug) << "syscall_state_changed() was called";
   switch (t->ev().Syscall().state) {
     case ENTERING_SYSCALL_PTRACE:
       debug_exec_state("EXEC_SYSCALL_ENTRY_PTRACE", t);
@@ -1910,6 +1911,7 @@ static bool is_ptrace_any_sysemu(SupportedArch arch, int command)
 bool RecordSession::process_syscall_entry(RecordTask* t, StepState* step_state,
                                           RecordResult* step_result,
                                           SupportedArch syscall_arch) {
+  LOG(debug) << "process_syscall_entry() was called";
   if (const RecordTask::StashedSignal* sig = t->stashed_sig_not_synthetic_SIGCHLD()) {
     // The only four cases where we allow a stashed signal to be pending on
     // syscall entry are:
@@ -1953,6 +1955,7 @@ bool RecordSession::process_syscall_entry(RecordTask* t, StepState* step_state,
     if (!is_sigreturn(t->regs().original_syscallno(), t->arch())) {
       if (t->vm()->monkeypatcher().try_patch_syscall(t)) {
         // Syscall was patched. Emit event and continue execution.
+        LOG(debug) << "syscall has been patched";
         t->record_event(Event::patch_syscall());
         return true;
       }
@@ -1992,6 +1995,7 @@ bool RecordSession::process_syscall_entry(RecordTask* t, StepState* step_state,
 void RecordSession::runnable_state_changed(RecordTask* t, StepState* step_state,
                                            RecordResult* step_result,
                                            bool can_consume_wait_status) {
+  LOG(debug) << "runnable_state_changed() was called";
   switch (t->ev().type()) {
     case EV_NOOP:
       t->pop_noop();
@@ -2538,6 +2542,7 @@ RecordSession::RecordSession(const std::string& exe_path,
 }
 
 RecordSession::RecordResult RecordSession::record_step() {
+  LOG(debug) << "record_step() was called";
   auto begin_record_step = chrono::steady_clock::now();
 
   RecordResult result;
@@ -2564,7 +2569,12 @@ RecordSession::RecordResult RecordSession::record_step() {
     prev_task_tuid = scheduler().current()->tuid();
   }
   auto start_reschedule = chrono::steady_clock::now();
+  scheduling_start = chrono::steady_clock::now();
   auto rescheduled = scheduler().reschedule(last_task_switchable);
+  scheduling_end = chrono::steady_clock::now();
+  double curr_sched_time = chrono::duration <double, milli> (scheduling_end - scheduling_start).count();
+  scheduling_time.push_back(curr_sched_time);
+  // LOG(debug) << "[workflow] scheduling: " << curr_sched_time << " ms";
   auto end_reschedule = chrono::steady_clock::now();
   #if DEBUG_RECORD_STEP
     cout << "[record step] reschedule: " << chrono::duration <double, milli> (end_reschedule - start_reschedule).count() << " ms" << endl;
@@ -2590,6 +2600,7 @@ RecordSession::RecordResult RecordSession::record_step() {
     if (prev_task != t) {
       // We did do a context switch, so record the SCHED event. Otherwise
       // we'll just discard it.
+      LOG(debug) << "Did do a context switch";
       auto begin_record_current_event = chrono::steady_clock::now();
       prev_task->record_current_event();
       auto after_record_current_event = chrono::steady_clock::now();
@@ -2729,6 +2740,7 @@ RecordSession::RecordResult RecordSession::record_step() {
     #endif
   }
 
+  LOG(debug) << "record_step() was exited";
   return result;
 }
 

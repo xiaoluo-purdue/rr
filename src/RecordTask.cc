@@ -417,6 +417,7 @@ static void do_preload_init(RecordTask* t) {
 }
 
 void RecordTask::at_preload_init() {
+  LOG(debug) << "at_preload_init() was called";
   Task::at_preload_init();
   do_preload_init(this);
 }

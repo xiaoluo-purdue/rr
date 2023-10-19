@@ -6868,6 +6868,7 @@ void rec_did_sigreturn(RecordTask *t) {
 }
 
 void rec_process_syscall(RecordTask* t) {
+  LOG(debug) << "rec_process_syscall() was called";
   auto& syscall_state = TaskSyscallState::get(t);
   const SyscallEvent& sys_ev = t->ev().Syscall();
   if (sys_ev.arch() != t->arch()) {

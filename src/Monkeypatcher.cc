@@ -140,6 +140,8 @@ template <typename Arch> static void setup_audit_library_path(RecordTask* t) {
 void Monkeypatcher::init_dynamic_syscall_patching(
     RecordTask* t, int syscall_patch_hook_count,
     remote_ptr<struct syscall_patch_hook> syscall_patch_hooks) {
+  LOG(debug) << "init_dynamic_syscalll_patching() was called";
+  LOG(debug) << "syscall_patch_hook_count: " << syscall_patch_hook_count;
   if (syscall_patch_hook_count && syscall_hooks.empty()) {
     syscall_hooks = t->read_mem(syscall_patch_hooks, syscall_patch_hook_count);
   }
@@ -1075,6 +1077,7 @@ const syscall_patch_hook* Monkeypatcher::find_syscall_hook(RecordTask* t,
 // set a flag on the RecordTask telling it to try again after syscall exit.
 bool Monkeypatcher::try_patch_syscall_x86ish(RecordTask* t, bool entering_syscall,
                                              SupportedArch arch) {
+  LOG(debug) << "try_patch_syscall_x86ish() was called";
   Registers r = t->regs();
   remote_code_ptr ip = r.ip();
 
@@ -1174,7 +1177,12 @@ bool Monkeypatcher::try_patch_syscall_aarch64(RecordTask* t, bool entering_sysca
 }
 
 bool Monkeypatcher::try_patch_syscall(RecordTask* t, bool entering_syscall) {
+  patching_start = chrono::steady_clock::now();
+
+  LOG(debug) << "try_patch_syscall() was called";
+  LOG(debug) << "syscall_hooks.size(): " << syscall_hooks.size();
   if (syscall_hooks.empty()) {
+    LOG(debug) << "syscall hooks not set up yet, DO NOT PATCH";
     // Syscall hooks not set up yet. Don't spew warnings, and don't
     // fill tried_to_patch_syscall_addresses with addresses that we might be
     // able to patch later.
@@ -1184,10 +1192,12 @@ bool Monkeypatcher::try_patch_syscall(RecordTask* t, bool entering_syscall) {
     // Syscall patching can confuse ptracers, which may be surprised to see
     // a syscall instruction at the current IP but then when running
     // forwards, that the syscall occurs deep in the preload library instead.
+    LOG(debug) << "emulated ptracer, DO NOT PATCH";
     return false;
   }
   if (t->is_in_traced_syscall()) {
     // Never try to patch the traced-syscall in our preload library!
+    LOG(debug) << "is in traced syscall, DO NOT PATCH";
     return false;
   }
 
@@ -1200,6 +1210,7 @@ bool Monkeypatcher::try_patch_syscall(RecordTask* t, bool entering_syscall) {
   DEBUG_ASSERT(ip.to_data_ptr<void>() < AddressSpace::rr_page_start() ||
                ip.to_data_ptr<void>() >= AddressSpace::rr_page_end());
   if (tried_to_patch_syscall_addresses.count(ip) || is_jump_stub_instruction(ip, true)) {
+    LOG(debug) << "tried to patch || is jump stub inst, DO NOT PATCH";
     return false;
   }
 
@@ -1227,10 +1238,17 @@ bool Monkeypatcher::try_patch_syscall(RecordTask* t, bool entering_syscall) {
   // event, not a FLUSH_SYSCALLBUF event.
   t->maybe_flush_syscallbuf();
 
+  bool res;
+
   if (arch == aarch64) {
-    return try_patch_syscall_aarch64(t, entering_syscall);
+    res = try_patch_syscall_aarch64(t, entering_syscall);
   }
-  return try_patch_syscall_x86ish(t, entering_syscall, arch);
+  else {
+    res = try_patch_syscall_x86ish(t, entering_syscall, arch);
+  }
+  patching_end = chrono::steady_clock::now();
+  patching_time.push_back(chrono::duration <double, milli> (patching_end - patching_start).count());
+  return res;
 }
 
 bool Monkeypatcher::try_patch_trapping_instruction(RecordTask* t, size_t instruction_length) {
@@ -1393,6 +1411,7 @@ void Monkeypatcher::patch_at_preload_init(RecordTask* t) {
   // NB: the tracee can't be interrupted with a signal while
   // we're processing the rrcall, because it's masked off all
   // signals.
+  LOG(debug) << "patch_at_preload_init() was called";
   RR_ARCH_FUNCTION(patch_at_preload_init_arch, t->arch(), t, *this);
 }
 

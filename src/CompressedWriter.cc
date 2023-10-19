@@ -51,9 +51,11 @@ CompressedWriter::CompressedWriter(const string& filename, size_t block_size,
   auto after_thread_pos_resize = chrono::steady_clock::now();
   LOG(debug) << "thread_pos resize: " << chrono::duration <double, milli> (after_thread_pos_resize - after_thread_pos_resize).count() << " ms";
 
+  LOG(debug) << "buffer before resizing:\tsize = " << buffer.size() << "\tcapacity = " << buffer.capacity();
   buffer.resize(block_size * (num_threads + 2));
 
   auto after_resize = chrono::steady_clock::now();
+  LOG(debug) << "buffer after resizing:\tsize = " << buffer.size() << "\tcapacity = " << buffer.capacity();
   LOG(debug) << "buffer resize: " << chrono::duration <double, milli> (after_resize - start_new).count() << " ms";
 
   pthread_mutex_init(&mutex, nullptr);
