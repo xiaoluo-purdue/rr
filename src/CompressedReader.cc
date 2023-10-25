@@ -16,12 +16,17 @@
 #include "core.h"
 #include "util.h"
 
+#include "log.h"
+
 using namespace std;
 
 namespace rr {
 
 CompressedReader::CompressedReader(const string& filename)
     : fd(new ScopedFd(filename.c_str(), O_CLOEXEC | O_RDONLY | O_LARGEFILE)) {
+  #if XDEBUG_TRACE
+    cout << "[CompressedReader::CompressedReader] filename: " << filename << endl; 
+  #endif
   fd_offset = 0;
   error = !fd->is_open();
   if (error) {
@@ -32,6 +37,9 @@ CompressedReader::CompressedReader(const string& filename)
   }
   buffer_read_pos = 0;
   have_saved_state = false;
+  #if XDEBUG_TRACE
+    this->filename = filename;
+  #endif
 }
 
 CompressedReader::CompressedReader(const CompressedReader& other) {
@@ -104,6 +112,10 @@ bool CompressedReader::skip(size_t size) {
 }
 
 bool CompressedReader::read(void* data, size_t size) {
+  #if XDEBUG_TRACE
+    char *buf = static_cast<char*>(data);
+    int buf_size = static_cast<int>(size);
+  #endif
   while (size > 0) {
     if (error) {
       return false;
@@ -122,6 +134,14 @@ bool CompressedReader::read(void* data, size_t size) {
       return false;
     }
   }
+  #if XDEBUG_TRACE
+    cout << "[CompressedReader::read] reader[" << this->filename << "]:" << endl;
+    cout << " data: ";
+    for(int i = 0; i < buf_size; i++) {
+      cout << buf[i];
+    }
+    cout << endl;
+  #endif
   return true;
 }
 
@@ -156,6 +176,14 @@ bool CompressedReader::refill_buffer() {
     return false;
   }
 
+  #if XDEBUG_TRACE
+    cout << "[CompressedReader::refill_buffer] reader[" << this->filename << "]:" << endl;
+    cout << " buffer: ";
+    for(int i = 0; i < buffer.size(); i++) {
+      cout << buffer[i];
+    }
+    cout << endl;
+  #endif
   return true;
 }
 

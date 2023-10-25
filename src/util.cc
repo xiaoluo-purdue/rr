@@ -730,7 +730,7 @@ bool should_copy_mmap_region(const KernelMapping& mapping,
   // file_name may point into proc, since we may not have direct access to
   // the file. Open it, so we can perform the various queries we'd like to ask.
   ScopedFd fd(file_name.c_str(), O_RDONLY);
-
+  LOG(debug) << "[Rui] filename: " << file_name;
   // TODO: handle mmap'd files that are unlinked during
   // recording or otherwise not available.
   if (!fd.is_open()) {

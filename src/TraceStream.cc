@@ -1110,7 +1110,7 @@ KernelMapping TraceReader::read_mapped_region(MappedData* data, bool* found,
     }
     mmaps.discard_state();
   }
-
+  LOG(debug) << "[Rui] data: " << data;
   if (data) {
     data->time = map.getFrameTime();
     if (data->time <= 0) {
@@ -1213,6 +1213,13 @@ TraceReader::RawData TraceReader::read_raw_data() {
   if (!read_raw_data_for_frame(d)) {
     FATAL() << "Expected raw data, found none";
   }
+  #if XDEBUG_TRACE
+    cout << "[TraceReader::read_raw_data] RawData d = ";
+    for (int i = 0; i < d.data.size(); i++) {
+      cout << d.data[i];
+    }
+    cout << endl;
+  #endif
   return d;
 }
 
@@ -1349,6 +1356,7 @@ TraceWriter::TraceWriter(const std::string& file_name,
     cout << "[TraceWriter] create Compressed Writer: " << chrono::duration <double, milli> (after_create_writer - begin_tracewriter).count() << " ms" << endl;
   #endif
   string ver_path = incomplete_version_path();
+  LOG(debug) << "ver_path: " << ver_path;
   version_fd = ScopedFd(ver_path.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0600);
   if (!version_fd.is_open()) {
     FATAL() << "Unable to create " << ver_path;

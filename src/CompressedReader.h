@@ -105,6 +105,9 @@ protected:
   uint64_t saved_fd_offset;
   std::vector<uint8_t> saved_buffer;
   size_t saved_buffer_read_pos;
+  #if XDEBUG_TRACE
+    std::string filename;
+  #endif
 };
 
 } // namespace rr

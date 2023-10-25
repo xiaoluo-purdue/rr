@@ -756,6 +756,7 @@ KernelMapping AddressSpace::map(Task* t, remote_ptr<void> addr,
                                 shared_ptr<MonitoredSharedMemory>&& monitored) {
   LOG(debug) << "mmap(" << addr << ", " << num_bytes << ", " << HEX(prot)
              << ", " << HEX(flags) << ", " << HEX(offset_bytes) << ")";
+  LOG(debug) << "[Rui] Address::map()";
   num_bytes = ceil_page_size(num_bytes);
   KernelMapping m(addr, addr + num_bytes, fsname, device, inode, prot, flags,
                   offset_bytes);

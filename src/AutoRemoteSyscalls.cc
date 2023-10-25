@@ -743,6 +743,8 @@ void AutoRemoteSyscalls::finish_direct_mmap(
                                int backing_file_open_flags,
                                off64_t backing_offset_bytes,
                                struct stat& real_file, string& real_file_name) {
+  LOG(debug) << "[Rui] backing_file_name: " << backing_file_name;
+  LOG(debug) << "[Rui] real_file_name: " << real_file_name;
   int fd;
 
   LOG(debug) << "directly mmap'ing " << length << " bytes of "
@@ -776,6 +778,7 @@ void AutoRemoteSyscalls::finish_direct_mmap(
   // While it's open, grab the link reference.
   real_file = task()->stat_fd(fd);
   real_file_name = task()->file_name_of_fd(fd);
+  LOG(debug) << "[Rui] real_file_name: " << real_file_name;
 
   /* Don't leak the tmp fd.  The mmap doesn't need the fd to
    * stay open. */
