@@ -967,6 +967,10 @@ int RecordCommand::run(vector<string>& args) {
     #endif
   LOG(debug) << "[workflow] avg patching time: " << total_patching_time / patching_time.size() << " ms";
 
+  #if XDEBUG_PATCHING
+  cout << "avg patching time: " << total_patching_time / patching_time.size() << " ms";
+  #endif
+
   auto after_record = chrono::steady_clock::now();
   #if XDEBUG
     cout << "record: " << chrono::duration <double, milli> (after_record - before_record).count() << " ms" << endl;
