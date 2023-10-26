@@ -876,6 +876,9 @@ bool TraceWriter::try_clone_file(RecordTask* t,
   int ret = ioctl(dest, BTRFS_IOC_CLONE, src.get());
   LOG(debug) << "ioctl(dest, BTRFS_IOC_CLONE, src) = " << ret;
   if (ret < 0) {
+    #if XDEBUG_CLONING
+    cout << "try file cloning failed!" << endl;
+    #endif
     LOG(debug) << "try file cloning falied!";
     LOG(debug) << "errno: " << errno;
     LOG(debug) << "error reason: " << strerror(errno);
@@ -883,6 +886,9 @@ bool TraceWriter::try_clone_file(RecordTask* t,
     unlink(dest_path.c_str());
     return false;
   }
+  #if XDEBUG_CLONING
+  cout << "try file cloning success!";
+  #endif
   LOG(debug) << "try file cloning success!";
   *new_name = path;
   return true;

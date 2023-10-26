@@ -480,6 +480,9 @@ template <typename Arch> void RecordTask::init_buffers_arch() {
     LOG(debug) << "test if support file data cloning and enabled read cloing...";
     if (trace_writer().supports_file_data_cloning() &&
         session().use_read_cloning()) {
+      #if XDEBUG_CLONING
+      cout << "SUCCESS: use read cloning!" << endl;
+      #endif
       LOG(debug) << "SUCCESS: use read cloning";
       cloned_file_data_fname = trace_writer().file_data_clone_file_name(tuid());
       LOG(debug) << "cloned_file_data_fname: " << cloned_file_data_fname;
