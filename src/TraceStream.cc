@@ -17,6 +17,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <cerrno>
 
 #include "AddressSpace.h"
 #include "AutoRemoteSyscalls.h"
@@ -848,6 +849,8 @@ bool TraceWriter::try_hardlink_file(const string& real_file_name,
 bool TraceWriter::try_clone_file(RecordTask* t,
     const string& real_file_name, const string& access_file_name,
     string* new_name) {
+  LOG(debug) << "real_file_name: " << real_file_name;
+  LOG(debug) << "access_file_name: " << access_file_name;
   if (!t->session().use_file_cloning()) {
     return false;
   }
@@ -863,18 +866,24 @@ bool TraceWriter::try_clone_file(RecordTask* t,
     return false;
   }
   string dest_path = dir() + "/" + path;
+
   ScopedFd dest(dest_path.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0700);
   if (!dest.is_open()) {
     return false;
   }
 
+  LOG(debug) << "dest path: " << dest_path;
   int ret = ioctl(dest, BTRFS_IOC_CLONE, src.get());
+  LOG(debug) << "ioctl(dest, BTRFS_IOC_CLONE, src) = " << ret;
   if (ret < 0) {
+    LOG(debug) << "try file cloning falied!";
+    LOG(debug) << "errno: " << errno;
+    LOG(debug) << "error reason: " << strerror(errno);
     // maybe not on the same filesystem, or filesystem doesn't support clone?
     unlink(dest_path.c_str());
     return false;
   }
-
+  LOG(debug) << "try file cloning success!";
   *new_name = path;
   return true;
 }

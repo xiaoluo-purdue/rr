@@ -406,6 +406,8 @@ void dump(const string& trace_dir, const DumpFlags& flags,
     task_events.insert(make_pair(time, r));
     last_time = time;
   }
+  
+  LOG(debug) << "task_events initialized: size = " << task_events.size();
 
   if (specs.size() > 0) {
     for (size_t i = 0; i < specs.size(); ++i) {

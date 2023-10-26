@@ -477,10 +477,12 @@ template <typename Arch> void RecordTask::init_buffers_arch() {
     // Prevent the child from closing this fd
     fds->add_monitor(this, desched_fd_child, new PreserveFileMonitor());
     desched_fd = remote.retrieve_fd(desched_fd_child);
-
+    LOG(debug) << "test if support file data cloning and enabled read cloing...";
     if (trace_writer().supports_file_data_cloning() &&
         session().use_read_cloning()) {
+      LOG(debug) << "SUCCESS: use read cloning";
       cloned_file_data_fname = trace_writer().file_data_clone_file_name(tuid());
+      LOG(debug) << "cloned_file_data_fname: " << cloned_file_data_fname;
       ScopedFd clone_file(cloned_file_data_fname.c_str(), O_RDWR | O_CREAT, 0600);
       int cloned_file_data = remote.infallible_send_fd_if_alive(clone_file);
       if (cloned_file_data >= 0) {

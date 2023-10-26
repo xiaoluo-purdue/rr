@@ -861,6 +861,10 @@ int RecordCommand::run(vector<string>& args) {
   #if XDEBUG
     cout << "parse_record_arg: " << chrono::duration <double, milli> (parse_record_arg - record_run_start).count() << " ms" << endl;
   #endif
+
+  LOG(debug) << "use_file_cloning: " << (flags.use_file_cloning ? "true" : "false");
+  LOG(debug) << "use_read_cloning: " << (flags.use_read_cloning ? "true" : "false");
+
   if (running_under_rr()) {
     #if XDEBUG
       cout << "running under rr" << endl;
@@ -948,13 +952,19 @@ int RecordCommand::run(vector<string>& args) {
   }
   LOG(debug) << "[workflow] avg scheduling time: " << total_sched_time / scheduling_time.size() << " ms";
 
+  #if XDEBUG
   cout << "patching time: ";
-  double total_patching_time = 0;
-  for (double time : patching_time) {
-    total_patching_time += time;
-    cout << time << " ";
-  }
-  cout << endl;
+  #endif
+    double total_patching_time = 0;
+    for (double time : patching_time) {
+      total_patching_time += time;
+      #if XDEBUG
+      cout << time << " ";
+      #endif
+    }
+    #if XDEBUG
+    cout << endl;
+    #endif
   LOG(debug) << "[workflow] avg patching time: " << total_patching_time / patching_time.size() << " ms";
 
   auto after_record = chrono::steady_clock::now();
