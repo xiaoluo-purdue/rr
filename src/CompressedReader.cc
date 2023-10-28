@@ -114,7 +114,7 @@ bool CompressedReader::skip(size_t size) {
 }
 
 bool CompressedReader::read(void* data, size_t size) {
-  LOG(debug) << "read() was called";
+  LOG(debug) << "read(" << data << ", " << size << ") was called";
   #if XDEBUG_TRACE
     char *buf = static_cast<char*>(data);
     int buf_size = static_cast<int>(size);
