@@ -700,10 +700,9 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   #endif
 
   setupenv_end = chrono::steady_clock::now();
-  #if XDEBUG
+  #if XDEBUG_WORKFLOW
     cout << "[workflow] set up env: " << chrono::duration <double, milli> (setupenv_end - setupenv_start).count() << " ms" << endl;
   #endif
-
   RecordSession::RecordResult step_result;
   bool did_forward_SIGTERM = false;
   bool did_term_detached_tasks = false;
@@ -950,7 +949,9 @@ int RecordCommand::run(vector<string>& args) {
   for (double time : scheduling_time) {
     total_sched_time += time;
   }
-  LOG(debug) << "[workflow] avg scheduling time: " << total_sched_time / scheduling_time.size() << " ms";
+  #if XDEBUG_WORKFLOW
+    cout << "[workflow] avg scheduling time: " << total_sched_time / scheduling_time.size() << " ms" << endl;
+  #endif
 
   #if XDEBUG
   cout << "patching time: ";
@@ -965,10 +966,9 @@ int RecordCommand::run(vector<string>& args) {
     #if XDEBUG
     cout << endl;
     #endif
-  LOG(debug) << "[workflow] avg patching time: " << total_patching_time / patching_time.size() << " ms";
 
-  #if XDEBUG_PATCHING
-  cout << "avg patching time: " << total_patching_time / patching_time.size() << " ms" << endl;
+  #if XDEBUG_WORKFLOW
+    cout << "[workflow] avg patching time: " << total_patching_time / patching_time.size() << " ms" << endl;
   #endif
 
   auto after_record = chrono::steady_clock::now();

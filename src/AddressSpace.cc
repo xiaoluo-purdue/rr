@@ -821,7 +821,9 @@ template <typename Arch> void AddressSpace::at_preload_init_arch(Task* t) {
     preload_start = chrono::steady_clock::now();
     monkeypatch_state->patch_at_preload_init(static_cast<RecordTask*>(t));
     preload_end = chrono::steady_clock::now();
-    LOG(debug) << "[workflow] preload hooks: " << chrono::duration <double, milli> (preload_end - preload_start).count() << " ms";
+    #if XDEBUG_WORKFLOW
+      cout << "[workflow] preload hooks: " << chrono::duration <double, milli> (preload_end - preload_start).count() << " ms" << endl;
+    #endif
   }
 }
 

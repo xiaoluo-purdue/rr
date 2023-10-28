@@ -75,7 +75,7 @@ static bool do_decompress(std::vector<uint8_t>& compressed,
 }
 
 bool CompressedReader::get_buffer(const uint8_t** data, size_t* size) {
-  LOG(debug) << "get_buffer(" << data << ", " << size << ") was called";
+  // LOG(debug) << "get_buffer(" << data << ", " << size << ") was called";
   if (error) {
     return false;
   }
@@ -93,7 +93,7 @@ bool CompressedReader::get_buffer(const uint8_t** data, size_t* size) {
 }
 
 bool CompressedReader::skip(size_t size) {
-  LOG(debug) << "skip(" << size << ") was called";
+  // LOG(debug) << "skip(" << size << ") was called";
   while (size > 0) {
     if (error) {
       return false;
@@ -114,7 +114,7 @@ bool CompressedReader::skip(size_t size) {
 }
 
 bool CompressedReader::read(void* data, size_t size) {
-  LOG(debug) << "read(" << data << ", " << size << ") was called";
+  // LOG(debug) << "read(" << data << ", " << size << ") was called";
   #if XDEBUG_TRACE
     char *buf = static_cast<char*>(data);
     int buf_size = static_cast<int>(size);

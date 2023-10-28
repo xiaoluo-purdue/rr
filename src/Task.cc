@@ -3544,8 +3544,9 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
   }
 
   createattach_end = chrono::steady_clock::now();
-  LOG(debug) << "[workflow] create and attach process: " << chrono::duration <double, milli> (createattach_end - createattach_start).count() << " ms";
-
+  #if XDEBUG_WORKFLOW
+    cout << "[workflow] create and attach process: " << chrono::duration <double, milli> (createattach_end - createattach_start).count() << " ms" << endl;
+  #endif
 
   Task* t = session.new_task(tid, rec_tid, session.next_task_serial(),
                              NativeArch::arch());
@@ -3584,7 +3585,9 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
   }
 
   rr::stopall_end = chrono::steady_clock::now();
-  LOG(debug) << "[workflow] stop all threads: " << chrono::duration <double, milli> (stopall_end - stopall_start).count() << " ms";
+  #if XDEBUG_WORKFLOW
+    cout << "[workflow] stop all threads: " << chrono::duration <double, milli> (stopall_end - stopall_start).count() << " ms" << endl;
+  #endif
 
   t->clear_wait_status();
   t->open_mem_fd();
