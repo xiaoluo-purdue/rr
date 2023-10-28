@@ -1749,6 +1749,14 @@ uint64_t TraceReader::compressed_bytes() const {
   return total;
 }
 
+uint64_t TraceReader::data_uncompressed_bytes() const {
+  return static_cast<uint64_t>(reader(RAW_DATA).uncompressed_bytes());
+}
+
+uint64_t TraceReader::data_compressed_bytes() const {
+  return static_cast<uint64_t>(reader(RAW_DATA).compressed_bytes());
+}
+
 uint64_t TraceReader::xcr0() const {
   if (xcr0_) {
     return xcr0_;

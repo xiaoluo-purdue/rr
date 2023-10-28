@@ -430,6 +430,8 @@ public:
 
   uint64_t uncompressed_bytes() const;
   uint64_t compressed_bytes() const;
+  uint64_t data_uncompressed_bytes() const;
+  uint64_t data_compressed_bytes() const;
 
   /**
    * Open the trace in 'dir'. When 'dir' is the empty string, open the

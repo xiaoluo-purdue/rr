@@ -382,6 +382,14 @@ static void dump_statistics(const TraceReader& trace, FILE* out) {
           uncompressed, compressed, double(uncompressed) / compressed);
 }
 
+static void dump_data_stats(const TraceReader& trace, FILE* out) {
+  uint64_t data_uncompressed = trace.data_uncompressed_bytes();
+  uint64_t data_compressed = trace.data_compressed_bytes();
+  fprintf(out, "// Data file uncompressed bytes %" PRIu64 ", compressed bytes %" PRIu64
+                ", ratio %.2fx\n",
+          data_uncompressed, data_compressed, double(data_uncompressed) / data_compressed);
+}
+
 void dump(const string& trace_dir, const DumpFlags& flags,
           const vector<string>& specs, FILE* out) {
   TraceReader trace(trace_dir);
@@ -420,6 +428,7 @@ void dump(const string& trace_dir, const DumpFlags& flags,
 
   if (flags.dump_statistics) {
     dump_statistics(trace, out);
+    dump_data_stats(trace, out);
   }
 }
 
