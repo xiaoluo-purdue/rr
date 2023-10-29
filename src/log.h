@@ -231,6 +231,7 @@ template <typename T> inline void* HEX(T v) {
 #define XDEBUG_TRACE 0
 #define XDEBUG_CLONING 0
 #define XDEBUG_WORKFLOW 1
+#define XDEBUG_PATCHING 1
 
 extern std::chrono::time_point<std::chrono::steady_clock> setupenv_start;
 extern std::chrono::time_point<std::chrono::steady_clock> setupenv_end;
@@ -246,7 +247,10 @@ extern std::chrono::time_point<std::chrono::steady_clock> preload_start;
 extern std::chrono::time_point<std::chrono::steady_clock> preload_end;
 
 extern std::vector<double> scheduling_time;
-extern std::vector<double> patching_time;
+extern std::vector<double> patching_times;
+#if XDEBUG_PATCHING
+extern std::vector<std::string> patching_names;
+#endif
 
 } // namespace rr
 

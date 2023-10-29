@@ -38,7 +38,10 @@ std::chrono::time_point<std::chrono::steady_clock> preload_start;
 std::chrono::time_point<std::chrono::steady_clock> preload_end;
 
 vector<double> scheduling_time;
-vector<double> patching_time;
+vector<double> patching_times;
+#if XDEBUG_PATCHING
+vector<string> patching_names;
+#endif
 
 // Show version and quit.
 static bool show_version = false;

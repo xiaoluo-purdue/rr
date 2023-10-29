@@ -953,22 +953,22 @@ int RecordCommand::run(vector<string>& args) {
     cout << "[workflow] avg scheduling time: " << total_sched_time / scheduling_time.size() << " ms" << endl;
   #endif
 
-  #if XDEBUG
-  cout << "patching time: ";
+  #if XDEBUG_PATCHING
+  assert(patching_names.size() == patching_times.size());
+  cout << "patching time: " << endl;
   #endif
     double total_patching_time = 0;
-    for (double time : patching_time) {
+    for (int i = 0; i < patching_times.size(); i++) {
+      double time = patching_times[i];
+      string syscall = patching_names[i];
       total_patching_time += time;
-      #if XDEBUG
-      cout << time << " ";
+      #if XDEBUG_PATCHING
+      cout << "\t" << syscall << ": " << time << " ms" << endl;
       #endif
     }
-    #if XDEBUG
-    cout << endl;
-    #endif
 
   #if XDEBUG_WORKFLOW
-    cout << "[workflow] avg patching time: " << total_patching_time / patching_time.size() << " ms" << endl;
+    cout << "[workflow] avg patching time: " << total_patching_time / patching_times.size() << " ms" << endl;
   #endif
 
   auto after_record = chrono::steady_clock::now();
