@@ -945,6 +945,8 @@ int RecordCommand::run(vector<string>& args) {
 
   WaitStatus status = record(args, flags);
 
+  auto after_record = chrono::steady_clock::now();
+
   double total_sched_time = 0;
   for (double time : scheduling_time) {
     total_sched_time += time;
@@ -960,9 +962,10 @@ int RecordCommand::run(vector<string>& args) {
     double total_patching_time = 0;
     for (int i = 0; i < patching_times.size(); i++) {
       double time = patching_times[i];
-      string syscall = patching_names[i];
       total_patching_time += time;
+      
       #if XDEBUG_PATCHING
+      string syscall = patching_names[i];
       cout << "\t" << syscall << ": " << time << " ms" << endl;
       #endif
     }
@@ -971,16 +974,15 @@ int RecordCommand::run(vector<string>& args) {
     cout << "[workflow] avg patching time: " << total_patching_time / patching_times.size() << " ms" << endl;
   #endif
 
-  auto after_record = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "record: " << chrono::duration <double, milli> (after_record - before_record).count() << " ms" << endl;
+  #if XDEBUG_WORKFLOW
+    cout << "[workflow]record: " << chrono::duration <double, milli> (after_record - before_record).count() << " ms" << endl;
   #endif
   // Everything should have been cleaned up by now.
   check_for_leaks();
 
   auto after_check_for_leaks = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "check for leaks: " << chrono::duration <double, milli> (after_check_for_leaks - after_record).count() << " ms" << endl;
+  #if XDEBUG_WORKFLOW
+    cout << "check for leaks and exit: " << chrono::duration <double, milli> (after_check_for_leaks - after_record).count() << " ms" << endl;
   #endif
   switch (status.type()) {
     case WaitStatus::EXIT:
