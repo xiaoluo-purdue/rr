@@ -761,10 +761,15 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   } while (step_result.status == RecordSession::STEP_CONTINUE);
 
   auto after_record_loop = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[record] get record result: " << chrono::duration <double, milli> (after_record_loop - after_install_signal_handlers).count() << " ms" << endl;
-
+  #if XDEBUG_WORKFLOW
+    cout << "[workflow] get record result: " << chrono::duration <double, milli> (after_record_loop - after_install_signal_handlers).count() << " ms" << endl;
     cout << "Execute " << step_count << " steps to get the record result" << endl;
+  #endif
+
+  #if XDEBUG_RECORDLOOP
+    // cout << "[record] get record result: " << chrono::duration <double, milli> (after_record_loop - after_install_signal_handlers).count() << " ms" << endl;
+
+    // cout << "Execute " << step_count << " steps to get the record result" << endl;
     cout << "[record loop] initial exec: " << initial_exec_time / step_count << " ms" << endl;
     cout << "[record loop] record step: " << record_step_time / step_count << " ms" << endl;
     cout << "[record loop] create latest-trace symlink: " << make_latest_trace_time / step_count << " ms" << endl;
@@ -974,15 +979,15 @@ int RecordCommand::run(vector<string>& args) {
     cout << "[workflow] avg patching time: " << total_patching_time / patching_times.size() << " ms" << endl;
   #endif
 
-  #if XDEBUG_WORKFLOW
-    cout << "[workflow]record: " << chrono::duration <double, milli> (after_record - before_record).count() << " ms" << endl;
-  #endif
+  // #if XDEBUG_WORKFLOW
+  //   cout << "[workflow] record time: " << chrono::duration <double, milli> (after_record - before_record).count() << " ms" << endl;
+  // #endif
   // Everything should have been cleaned up by now.
   check_for_leaks();
 
   auto after_check_for_leaks = chrono::steady_clock::now();
   #if XDEBUG_WORKFLOW
-    cout << "check for leaks and exit: " << chrono::duration <double, milli> (after_check_for_leaks - after_record).count() << " ms" << endl;
+    cout << "[workflow] check for leaks and exit: " << chrono::duration <double, milli> (after_check_for_leaks - after_record).count() << " ms" << endl;
   #endif
   switch (status.type()) {
     case WaitStatus::EXIT:

@@ -232,6 +232,7 @@ template <typename T> inline void* HEX(T v) {
 #define XDEBUG_CLONING 0
 #define XDEBUG_WORKFLOW 1
 #define XDEBUG_PATCHING 0
+#define XDEBUG_RECORDLOOP 0
 
 extern std::chrono::time_point<std::chrono::steady_clock> setupenv_start;
 extern std::chrono::time_point<std::chrono::steady_clock> setupenv_end;
