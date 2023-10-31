@@ -230,7 +230,7 @@ template <typename T> inline void* HEX(T v) {
 #define DEBUG_RECORD_STEP 0
 #define XDEBUG_TRACE 0
 #define XDEBUG_CLONING 0
-#define XDEBUG_WORKFLOW 1
+#define XDEBUG_WORKFLOW 0
 #define XDEBUG_PATCHING 0
 #define XDEBUG_RECORDLOOP 0
 

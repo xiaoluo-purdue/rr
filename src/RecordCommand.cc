@@ -957,6 +957,8 @@ int RecordCommand::run(vector<string>& args) {
     total_sched_time += time;
   }
   #if XDEBUG_WORKFLOW
+    cout << "[workflow] scheduling count: " << scheduling_time.size() << endl;
+    cout << "[workflow] total scheduling time: " << total_sched_time << " ms" << endl;
     cout << "[workflow] avg scheduling time: " << total_sched_time / scheduling_time.size() << " ms" << endl;
   #endif
 
@@ -976,6 +978,8 @@ int RecordCommand::run(vector<string>& args) {
     }
 
   #if XDEBUG_WORKFLOW
+    cout << "[workflow] patching count: " << patching_times.size() << endl;
+    cout << "[workflow] total patching time: " << total_patching_time << " ms" << endl;
     cout << "[workflow] avg patching time: " << total_patching_time / patching_times.size() << " ms" << endl;
   #endif
 
