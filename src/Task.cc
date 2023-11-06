@@ -3506,7 +3506,9 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
     // fork() can fail with EAGAIN due to temporary load issues. In such
     // cases, retry the fork().
   } while (0 > tid && errno == EAGAIN);
-
+  #if XDEBUG_WORKFLOW
+    start_execve = chrono::steady_clock::now();
+  #endif
   if (0 == tid) {
     run_initial_child(session, error_fd, *sock_fd_receiver_out, fd_number, exe_path.c_str(),
                       argv_array.get(), envp_array.get(), prog);

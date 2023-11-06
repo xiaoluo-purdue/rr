@@ -1,6 +1,6 @@
 /* -*- Mode: C++; tab-width: 8; c-basic-offset: 2; indent-tabs-mode: nil; -*- */
 
-//#define MONITOR_UNSWITCHABLE_WAITS
+// #define MONITOR_UNSWITCHABLE_WAITS
 
 #include "Scheduler.h"
 
@@ -295,7 +295,10 @@ bool Scheduler::is_task_runnable(RecordTask* t, bool* by_waitpid) {
     // These syscalls never really block but the kernel may report that
     // the task is not stopped yet if we pass WNOHANG. To make them
     // behave predictably, do a blocking wait.
+    auto start_time = chrono::steady_clock::now();
     t->wait();
+    auto end_time = chrono::steady_clock::now();
+    waiting_times.push_back(chrono::duration <double, milli> (end_time - start_time).count());
     ntasks_running--;
     *by_waitpid = true;
     must_run_task = t;
@@ -471,6 +474,7 @@ void Scheduler::validate_scheduled_task() {
  * (by timeout or some other signal).
  */
 static bool wait_any(pid_t& tid, WaitStatus& status, double timeout) {
+  auto start_waiting = chrono::steady_clock::now();
   int raw_status;
   if (timeout > 0) {
     struct itimerval timer = { { 0, 0 }, to_timeval(timeout) };
@@ -488,6 +492,10 @@ static bool wait_any(pid_t& tid, WaitStatus& status, double timeout) {
     LOG(debug) << "  Disarming one-second timer for polling";
   }
   status = WaitStatus(raw_status);
+
+  auto end_waiting = chrono::steady_clock::now();
+  waiting_times.push_back(chrono::duration <double, milli> (end_waiting - start_waiting).count());
+
   if (-1 == tid) {
     if (EINTR == errno) {
       LOG(debug) << "  waitpid(-1) interrupted";
@@ -549,7 +557,10 @@ static RecordTask* find_waited_task(RecordSession& session, pid_t tid, WaitStatu
       LOG(debug) << "        ... sending SIGKILL to detached process " << waited->rec_tid;;
       ::kill(waited->rec_tid, SIGKILL);
       int raw_status;
+      auto start_wait = chrono::steady_clock::now();
       pid_t npid = ::waitpid(waited->rec_tid, &raw_status, __WALL | WUNTRACED);
+      auto end_wait = chrono::steady_clock::now();
+      waiting_times.push_back(chrono::duration <double, milli> (end_wait - start_wait).count());
       ASSERT(waited, npid == waited->rec_tid);
       status = WaitStatus(raw_status);
       ASSERT(waited, status.type() == WaitStatus::EXIT ||
@@ -657,7 +668,10 @@ Scheduler::Rescheduled Scheduler::reschedule(Switchable switchable) {
           timeout = elapsed > 0.05 ? 0.0 : 0.05 - elapsed;
           LOG(debug) << "  But that's not our current task...";
         } else {
+          auto start_time = chrono::steady_clock::now();
           current_->wait(timeout);
+          auto end_time = chrono::steady_clock::now();
+          waiting_times.push_back(chrono::duration <double, milli> (end_time - start_time).count());
           ntasks_running--;
           break;
         }

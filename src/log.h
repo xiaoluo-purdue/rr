@@ -233,6 +233,10 @@ template <typename T> inline void* HEX(T v) {
 #define XDEBUG_WORKFLOW 0
 #define XDEBUG_PATCHING 0
 #define XDEBUG_RECORDLOOP 0
+#define XDEBUG_SCHEDULING 0
+
+extern std::chrono::time_point<std::chrono::steady_clock> start_rr;
+extern std::chrono::time_point<std::chrono::steady_clock> end_rr;
 
 extern std::chrono::time_point<std::chrono::steady_clock> setupenv_start;
 extern std::chrono::time_point<std::chrono::steady_clock> setupenv_end;
@@ -247,8 +251,18 @@ extern std::chrono::time_point<std::chrono::steady_clock> patching_end;
 extern std::chrono::time_point<std::chrono::steady_clock> preload_start;
 extern std::chrono::time_point<std::chrono::steady_clock> preload_end;
 
+extern std::chrono::time_point<std::chrono::steady_clock> start_execve;
+extern std::chrono::time_point<std::chrono::steady_clock> end_execve;
+
 extern std::vector<double> scheduling_time;
 extern std::vector<double> patching_times;
+// extern std::vector<double> unswitchable_waits;
+// extern std::vector<double> switchable_waits;
+extern std::vector<double> waiting_times;
+extern std::vector<double> record_event_times;
+extern std::vector<double> write_frame_times;
+extern std::vector<double> write_raw_data_times;
+extern std::vector<double> write_task_event_times;
 #if XDEBUG_PATCHING
 extern std::vector<std::string> patching_names;
 #endif

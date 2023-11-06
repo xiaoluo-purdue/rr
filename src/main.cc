@@ -24,6 +24,9 @@ using namespace std;
 
 namespace rr {
 
+std::chrono::time_point<std::chrono::steady_clock> start_rr;
+std::chrono::time_point<std::chrono::steady_clock> end_rr;
+
 std::chrono::time_point<std::chrono::steady_clock> setupenv_start;
 std::chrono::time_point<std::chrono::steady_clock> setupenv_end;
 std::chrono::time_point<std::chrono::steady_clock> createattach_start;
@@ -37,8 +40,16 @@ std::chrono::time_point<std::chrono::steady_clock> patching_end;
 std::chrono::time_point<std::chrono::steady_clock> preload_start;
 std::chrono::time_point<std::chrono::steady_clock> preload_end;
 
+std::chrono::time_point<std::chrono::steady_clock> start_execve;
+std::chrono::time_point<std::chrono::steady_clock> end_execve;
+
 vector<double> scheduling_time;
 vector<double> patching_times;
+vector<double> waiting_times;
+vector<double> record_event_times;
+vector<double> write_frame_times;
+vector<double> write_raw_data_times;
+vector<double> write_task_event_times;
 #if XDEBUG_PATCHING
 vector<string> patching_names;
 #endif
@@ -253,6 +264,8 @@ size_t saved_argv0_space() {
 using namespace rr;
 
 int main(int argc, char* argv[]) {
+  start_rr = chrono::steady_clock::now();
+
   setupenv_start = chrono::steady_clock::now();
   auto main_start = chrono::steady_clock::now();
   rr::saved_argv0_ = argv[0];
@@ -317,5 +330,12 @@ int main(int argc, char* argv[]) {
   #if XDEBUG
     cout << "[main] record_cmd::run: " << chrono::duration <double, milli> (after_cmd_run - before_cmd_run).count() << " ms" << endl;
   #endif
+
+  #if XDEBUG_WORKFLOW
+  end_rr = chrono::steady_clock::now();
+  cout << "rr total time: " << chrono::duration <double, milli> (end_rr - start_rr).count() << " ms" << endl;
+  cout << "from end execve to end rr: " << chrono::duration <double, milli> (end_rr - end_execve).count() << " ms" << endl;
+  #endif 
+
   return res;
 }

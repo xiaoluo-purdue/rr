@@ -715,6 +715,9 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   double make_latest_trace_time = 0;
   double check_termination_time = 0;
 
+  #if XDEBUG_WORKFLOW
+    cout << "from begin execve to begin record: " << chrono::duration <double, milli> (setupenv_end - start_execve).count() << " ms" << endl;
+  #endif
   do {
     step_count++;
     auto record_loop_begin = chrono::steady_clock::now();
@@ -760,15 +763,16 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
     }
   } while (step_result.status == RecordSession::STEP_CONTINUE);
 
-  auto after_record_loop = chrono::steady_clock::now();
   #if XDEBUG_WORKFLOW
+    end_execve = chrono::steady_clock::now();
+    cout << "[tracee execution time] " << chrono::duration <double, milli> (end_execve - start_execve).count() << " ms" << endl;
+
+    auto after_record_loop = chrono::steady_clock::now();
     cout << "[workflow] get record result: " << chrono::duration <double, milli> (after_record_loop - after_install_signal_handlers).count() << " ms" << endl;
     cout << "Execute " << step_count << " steps to get the record result" << endl;
   #endif
 
   #if XDEBUG_RECORDLOOP
-    // cout << "[record] get record result: " << chrono::duration <double, milli> (after_record_loop - after_install_signal_handlers).count() << " ms" << endl;
-
     // cout << "Execute " << step_count << " steps to get the record result" << endl;
     cout << "[record loop] initial exec: " << initial_exec_time / step_count << " ms" << endl;
     cout << "[record loop] record step: " << record_step_time / step_count << " ms" << endl;
@@ -779,8 +783,8 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   session->close_trace_writer(TraceWriter::CLOSE_OK);
   static_session = nullptr;
 
-  auto after_close_trace_writer = chrono::steady_clock::now();
   #if XDEBUG
+    auto after_close_trace_writer = chrono::steady_clock::now();
     cout << "[record] close trace writer: " << chrono::duration <double, milli> (after_close_trace_writer - after_record_loop).count() << " ms" << endl;
   #endif
 
@@ -952,20 +956,62 @@ int RecordCommand::run(vector<string>& args) {
 
   auto after_record = chrono::steady_clock::now();
 
-  double total_sched_time = 0;
-  for (double time : scheduling_time) {
-    total_sched_time += time;
-  }
-  #if XDEBUG_WORKFLOW
-    cout << "[workflow] scheduling count: " << scheduling_time.size() << endl;
-    cout << "[workflow] total scheduling time: " << total_sched_time << " ms" << endl;
-    cout << "[workflow] avg scheduling time: " << total_sched_time / scheduling_time.size() << " ms" << endl;
-  #endif
 
-  #if XDEBUG_PATCHING
-  assert(patching_names.size() == patching_times.size());
-  cout << "patching time: " << endl;
-  #endif
+  #if XDEBUG_WORKFLOW
+    double total_sched_time = 0;
+    for (double time : scheduling_time) {
+      total_sched_time += time;
+    }
+
+    double total_waiting = 0;
+    for (auto wait_time : waiting_times) {
+      total_waiting += wait_time;
+    }
+    cout << "[workflow] scheduling count: " << scheduling_time.size() << endl;
+    cout << "[workflow] total scheduling time (include waiting): " << total_sched_time << " ms" << endl;
+    cout << "[workflow] avg scheduling time (including waiting): " << total_sched_time / scheduling_time.size() << " ms" << endl;
+
+    cout << "[workflow] total waiting time: " << total_waiting << " ms" << endl;
+    cout << "[workflow] avg waiting time: " << total_waiting / waiting_times.size() << " ms" << endl;
+
+
+    double total_record_event_time = 0;
+    for(auto t : record_event_times) {
+      total_record_event_time += t;
+    }
+
+    double total_write_frame_time = 0;
+    for(auto t: write_frame_times) {
+      total_write_frame_time += t;
+    }
+
+    double total_write_raw_data_time = 0;
+    for(auto t : write_raw_data_times) {
+      total_write_raw_data_time += t;
+    }
+
+    double total_write_task_event_time = 0;
+    for(auto t : write_task_event_times) {
+      total_write_task_event_time += t;
+    }
+
+    cout << "[workflow] total write frame time: " << total_write_frame_time << " ms" << endl;
+    cout << "[workflow] write frame count: " << write_frame_times.size() << endl;
+    cout << "[workflow] avg write frame time: " << total_write_frame_time / write_frame_times.size() << " ms" << endl;
+  
+    cout << "[workflow] total write raw data time: " << total_write_raw_data_time << " ms" << endl;
+    cout << "[workflow] write raw data count: " << write_raw_data_times.size() << endl;
+    cout << "[workflow] avg write raw data time: " << total_write_raw_data_time / write_raw_data_times.size() << " ms" << endl;
+
+    cout << "[workflow] total write task event time: " << total_write_task_event_time << " ms" << endl;
+    cout << "[workflow] write task event count: " << write_task_event_times.size() << endl;
+    cout << "[workflow] avg write task event time: " << total_write_task_event_time / write_task_event_times.size() << " ms" << endl;
+
+
+    #if XDEBUG_PATCHING
+    assert(patching_names.size() == patching_times.size());
+    cout << "patching time: " << endl;
+    #endif
     double total_patching_time = 0;
     for (int i = 0; i < patching_times.size(); i++) {
       double time = patching_times[i];
@@ -977,20 +1023,16 @@ int RecordCommand::run(vector<string>& args) {
       #endif
     }
 
-  #if XDEBUG_WORKFLOW
     cout << "[workflow] patching count: " << patching_times.size() << endl;
     cout << "[workflow] total patching time: " << total_patching_time << " ms" << endl;
     cout << "[workflow] avg patching time: " << total_patching_time / patching_times.size() << " ms" << endl;
   #endif
 
-  // #if XDEBUG_WORKFLOW
-  //   cout << "[workflow] record time: " << chrono::duration <double, milli> (after_record - before_record).count() << " ms" << endl;
-  // #endif
   // Everything should have been cleaned up by now.
   check_for_leaks();
 
-  auto after_check_for_leaks = chrono::steady_clock::now();
   #if XDEBUG_WORKFLOW
+    auto after_check_for_leaks = chrono::steady_clock::now();
     cout << "[workflow] check for leaks and exit: " << chrono::duration <double, milli> (after_check_for_leaks - after_record).count() << " ms" << endl;
   #endif
   switch (status.type()) {

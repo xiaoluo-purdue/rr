@@ -400,6 +400,8 @@ static const size_t reasonable_frame_message_words = 64;
 void TraceWriter::write_frame(RecordTask* t, const Event& ev,
                               const Registers* registers,
                               const ExtraRegisters* extra_registers) {
+  auto write_frame_start = chrono::steady_clock::now();
+
   // Use an on-stack first segment that should be adequate for most cases. A
   // simple syscall event takes 320 bytes currently. The default Capnproto
   // implementation does a calloc(8192) for the first segment.
@@ -532,6 +534,9 @@ void TraceWriter::write_frame(RecordTask* t, const Event& ev,
   }
 
   tick_time();
+
+  auto write_frame_end = chrono::steady_clock::now();
+  write_frame_times.push_back(chrono::duration <double, milli> (write_frame_end - write_frame_start).count());
 }
 
 TraceFrame TraceReader::read_frame() {
@@ -722,6 +727,7 @@ TraceFrame TraceReader::read_frame() {
 }
 
 void TraceWriter::write_task_event(const TraceTaskEvent& event) {
+  auto write_task_event_start = chrono::steady_clock::now();
   MallocMessageBuilder task_msg;
   trace::TaskEvent::Builder task = task_msg.initRoot<trace::TaskEvent>();
   task.setFrameTime(global_time);
@@ -766,6 +772,8 @@ void TraceWriter::write_task_event(const TraceTaskEvent& event) {
   } catch (...) {
     FATAL() << "Unable to write tasks";
   }
+  auto write_task_event_end = chrono::steady_clock::now();
+  write_task_event_times.push_back(chrono::duration <double, milli> (write_task_event_end - write_task_event_start).count());
 }
 
 TraceTaskEvent TraceReader::read_task_event(FrameTime* time) {
@@ -1219,8 +1227,11 @@ void TraceWriter::write_raw_header(pid_t rec_tid, size_t total_len,
 }
 
 void TraceWriter::write_raw_data(const void* d, size_t len) {
+  auto write_raw_data_start = chrono::steady_clock::now();
   auto& data = writer(RAW_DATA);
   data.write(d, len);
+  auto write_raw_data_end = chrono::steady_clock::now();
+  write_raw_data_times.push_back(chrono::duration <double, milli> (write_raw_data_end - write_raw_data_start).count());
 }
 
 TraceReader::RawData TraceReader::read_raw_data() {
