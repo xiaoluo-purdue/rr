@@ -3545,8 +3545,8 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
     FATAL() << "PTRACE_SEIZE failed for tid " << tid << hint;
   }
 
-  createattach_end = chrono::steady_clock::now();
   #if XDEBUG_WORKFLOW
+    createattach_end = chrono::steady_clock::now();
     cout << "[workflow] create and attach process: " << chrono::duration <double, milli> (createattach_end - createattach_start).count() << " ms" << endl;
   #endif
 
