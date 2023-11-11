@@ -1372,10 +1372,17 @@ TraceWriter::TraceWriter(const std::string& file_name,
 
   this->ticks_semantics_ = ticks_semantics_;
 
+  #if XDEBUG_LATENCY
+    start_new_compressed_writer = chrono::steady_clock::now();
+  #endif
   for (Substream s = SUBSTREAM_FIRST; s < SUBSTREAM_COUNT; ++s) {
     writers[s] = unique_ptr<CompressedWriter>(new CompressedWriter(
         path(s), substream(s).block_size, substream(s).threads));
   }
+  #if XDEBUG_LATENCY
+    end_new_compressed_writer = chrono::steady_clock::now();
+    cout << "create compressed writer: " << chrono::duration <double, milli> (end_new_compressed_writer - start_new_compressed_writer).count() << " ms" << endl;
+  #endif
 
   auto after_create_writer = chrono::steady_clock::now();
   #if XDEBUG

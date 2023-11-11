@@ -24,6 +24,16 @@ using namespace std;
 
 namespace rr {
 
+#if XDEBUG_LATENCY
+// Used in calc latency added by RR record
+std::chrono::time_point<std::chrono::steady_clock> RR_start;
+std::chrono::time_point<std::chrono::steady_clock> tracee_execve;
+std::chrono::time_point<std::chrono::steady_clock> start_new_compressed_writer;
+std::chrono::time_point<std::chrono::steady_clock> end_new_compressed_writer; 
+std::chrono::time_point<std::chrono::steady_clock> tracee_exit;
+std::chrono::time_point<std::chrono::steady_clock> RR_exit;
+#endif
+
 std::chrono::time_point<std::chrono::steady_clock> start_rr;
 std::chrono::time_point<std::chrono::steady_clock> end_rr;
 
@@ -264,8 +274,12 @@ size_t saved_argv0_space() {
 using namespace rr;
 
 int main(int argc, char* argv[]) {
-  start_rr = chrono::steady_clock::now();
-
+  #if XDEBUG_LATENCY
+    RR_start = chrono::steady_clock::now();
+  #endif
+  #if XDEBUG_WORKFLOW
+    start_rr = chrono::steady_clock::now();
+  #endif
   setupenv_start = chrono::steady_clock::now();
   auto main_start = chrono::steady_clock::now();
   rr::saved_argv0_ = argv[0];
@@ -336,6 +350,10 @@ int main(int argc, char* argv[]) {
   cout << "rr total time: " << chrono::duration <double, milli> (end_rr - start_rr).count() << " ms" << endl;
   cout << "from end execve to end rr: " << chrono::duration <double, milli> (end_rr - end_execve).count() << " ms" << endl;
   #endif 
+  #if XDEBUG_LATENCY
+    RR_exit = chrono::steady_clock::now();
+    cout << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms" << endl;
+  #endif
 
   return res;
 }

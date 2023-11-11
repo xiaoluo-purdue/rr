@@ -782,6 +782,14 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
         // Skip past the ptrace event.
         step_state->continue_type = CONTINUE_SYSCALL;
       }
+
+      #if XDEBUG_LATENCY
+        if (t->ev().Syscall().is_exec()) {
+          tracee_execve = chrono::steady_clock::now();
+          cout << "RR start - resume at tracee execve exit: " << chrono::duration <double, milli> (tracee_execve - RR_start).count() << " ms" << endl;
+        }
+      #endif
+
       break;
     }
 
@@ -2630,6 +2638,10 @@ RecordSession::RecordResult RecordSession::record_step() {
   if (handle_ptrace_exit_event(t)) {
     // t may have been deleted.
     last_task_switchable = ALLOW_SWITCH;
+    #if XDEBUG_LATENCY
+      tracee_exit = chrono::steady_clock::now();
+      cout << "tracee execve - tracee exit: " << chrono::duration <double, milli> (tracee_exit - tracee_execve).count() << " ms" << endl;
+    #endif
     return result;
   }
   auto after_handle_exit_event_1 = chrono::steady_clock::now();

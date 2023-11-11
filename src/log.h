@@ -235,6 +235,17 @@ template <typename T> inline void* HEX(T v) {
 #define XDEBUG_RECORDLOOP 0
 #define XDEBUG_SCHEDULING 0
 
+#define XDEBUG_LATENCY 1
+
+#if XDEBUG_LATENCY
+extern std::chrono::time_point<std::chrono::steady_clock> RR_start;
+extern std::chrono::time_point<std::chrono::steady_clock> tracee_execve;
+extern std::chrono::time_point<std::chrono::steady_clock> start_new_compressed_writer;
+extern std::chrono::time_point<std::chrono::steady_clock> end_new_compressed_writer; 
+extern std::chrono::time_point<std::chrono::steady_clock> tracee_exit;
+extern std::chrono::time_point<std::chrono::steady_clock> RR_exit;
+#endif
+
 extern std::chrono::time_point<std::chrono::steady_clock> start_rr;
 extern std::chrono::time_point<std::chrono::steady_clock> end_rr;
 
