@@ -719,6 +719,8 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
             // PTRACE_CONT might kick us out of the PTRACE_EVENT_EXIT before
             // we can process it.
             t->wait();
+            // TODO: delete
+            wait1_counter++;
             break;
           default:
             ASSERT(t, false) << "Seccomp result not handled";
@@ -2791,6 +2793,8 @@ void RecordSession::term_detached_tasks() {
     }
     int status;
     pid_t ret = ::waitpid(t->rec_tid, &status, WEXITED);
+    // TODO: delete
+    waitpid3_counter++;
     if (ret != t->rec_tid) {
       LOG(warn) << "Unexpected wait status " << WaitStatus(status) << " while waiting for detached child " << t->rec_tid;
     }

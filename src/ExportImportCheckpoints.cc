@@ -261,6 +261,8 @@ CommandForCheckpoint export_checkpoints(ReplaySession::shr_ptr session, int coun
   for (size_t i = 0; i < children.size(); ++i) {
     int status;
     int ret = waitpid(children[i], &status, 0);
+    // TODO: delete
+    waitpid1_counter++;
     if (ret < 0) {
       FATAL() << "Failed to wait for child " << children[i];
     }

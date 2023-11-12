@@ -244,6 +244,25 @@ extern std::chrono::time_point<std::chrono::steady_clock> start_new_compressed_w
 extern std::chrono::time_point<std::chrono::steady_clock> end_new_compressed_writer; 
 extern std::chrono::time_point<std::chrono::steady_clock> tracee_exit;
 extern std::chrono::time_point<std::chrono::steady_clock> RR_exit;
+
+extern int wait1_counter;
+extern int wait2_counter;
+extern int wait3_counter;
+extern int wait4_counter;
+extern int wait5_counter;
+extern int wait6_counter;
+
+extern int waitpid1_counter;
+extern int waitpid2_counter;
+extern int waitpid3_counter;
+extern int waitpid4_counter;
+extern int waitpid5_counter;
+extern int waitpid6_counter;
+extern int waitpid7_counter;
+extern int waitpid8_counter;
+extern int waitpid9_counter;
+extern int waitpid10_counter;
+
 #endif
 
 extern std::chrono::time_point<std::chrono::steady_clock> start_rr;

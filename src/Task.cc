@@ -201,6 +201,8 @@ WaitStatus Task::kill() {
   ASSERT(this, ret == 0);
   int raw_status = -1;
   int wait_ret = ::waitpid(tid, &raw_status, __WALL | WUNTRACED);
+  // TODO: delete
+  waitpid6_counter++;
   WaitStatus status = WaitStatus(raw_status);
   LOG(debug) << " -> " << status;
   bool is_exit_event = status.ptrace_event() == PTRACE_EVENT_EXIT;
@@ -234,6 +236,8 @@ WaitStatus Task::kill() {
       * do its reaping. */
       raw_status = 0;
       wait_ret = ::waitpid(tid, &raw_status, __WALL | WUNTRACED);
+      // TODO: delete
+      waitpid7_counter++;
       status = WaitStatus(raw_status);
       LOG(debug) << " --> " << status;
       DEBUG_ASSERT(wait_ret == tid && status.fatal_sig() == SIGKILL);
@@ -253,6 +257,8 @@ Task::~Task() {
     if (!session().is_recording() && !already_reaped()) {
       // Reap the zombie.
       int ret = waitpid(tid, NULL, __WALL);
+      // TOOD: delete
+      waitpid8_counter++;
       if (ret == -1) {
         ASSERT(this, errno == ECHILD || errno == ESRCH);
       } else {
@@ -1474,6 +1480,8 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
      */
     int raw_status = 0;
     wait_ret = waitpid(tid, &raw_status, WNOHANG | __WALL);
+    // TODO: delete
+    waitpid9_counter++;
     ASSERT(this, 0 <= wait_ret)
         << "waitpid(" << tid << ", NOHANG) failed with " << wait_ret;
     WaitStatus status(raw_status);
@@ -1505,6 +1513,8 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
     extra_registers_known = false;
     if (RESUME_WAIT == wait_how) {
       wait();
+      // TODO: delete this
+      wait4_counter++;
     }
   }
 }
@@ -2360,6 +2370,8 @@ Task* Task::clone(CloneReason reason, int flags, remote_ptr<void> stack,
   // wait() before trying to do anything that might need to
   // use ptrace to access memory
   t->wait();
+  // TODO: delete this
+  wait5_counter++;
 
   t->post_wait_clone(this, flags);
   if (CLONE_SHARE_THREAD_GROUP & flags) {
@@ -3569,6 +3581,8 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
 
   rr::stopall_start = chrono::steady_clock::now();
   t->wait();
+  // TODO: delete this
+  wait6_counter++;
   if (t->ptrace_event() == PTRACE_EVENT_EXIT) {
     t->proceed_to_exit();
     FATAL() << "Tracee died before reaching SIGSTOP\n"
@@ -3867,6 +3881,8 @@ static void __ptrace_cont(Task* t, ResumeRequest resume_how,
     // Passing the original tid seems to cause a hang in some kernels
     // (e.g. 4.10.0-19-generic) if the tid change races with our waitpid
     int ret = waitpid(new_tid >= 0 ? -1 : t->tid, &raw_status, __WALL);
+    // TODO: delete
+    waitpid10_counter++;
     ASSERT(t, ret >= 0);
     ASSERT(t, ret == (new_tid >= 0 ? new_tid : t->tid));
     if (new_tid >= 0) {

@@ -32,6 +32,24 @@ std::chrono::time_point<std::chrono::steady_clock> start_new_compressed_writer;
 std::chrono::time_point<std::chrono::steady_clock> end_new_compressed_writer; 
 std::chrono::time_point<std::chrono::steady_clock> tracee_exit;
 std::chrono::time_point<std::chrono::steady_clock> RR_exit;
+
+int wait1_counter = 0;
+int wait2_counter = 0;
+int wait3_counter = 0;
+int wait4_counter = 0;
+int wait5_counter = 0;
+int wait6_counter = 0;
+
+int waitpid1_counter = 0;
+int waitpid2_counter = 0;
+int waitpid3_counter = 0;
+int waitpid4_counter = 0;
+int waitpid5_counter = 0;
+int waitpid6_counter = 0;
+int waitpid7_counter = 0;
+int waitpid8_counter = 0;
+int waitpid9_counter = 0;
+int waitpid10_counter = 0;
 #endif
 
 std::chrono::time_point<std::chrono::steady_clock> start_rr;
@@ -353,6 +371,26 @@ int main(int argc, char* argv[]) {
   #if XDEBUG_LATENCY
     RR_exit = chrono::steady_clock::now();
     cout << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms" << endl;
+  
+    cout << "wait() call times distribution:" << endl;
+    cout << "\twait 1: " << wait1_counter << endl;
+    cout << "\twait 2: " << wait2_counter << endl;
+    cout << "\twait 3: " << rr::wait3_counter << endl;
+    cout << "\twait 4: " << rr::wait4_counter << endl;
+    cout << "\twait 5: " << wait5_counter << endl;
+    cout << "\twait 6: " << wait6_counter << endl;
+  
+    cout << "waitpid() call times distribution:" << endl;
+    cout << "\twaitpid 1: " << waitpid1_counter << endl;
+    cout << "\twaitpid 2: " << waitpid2_counter << endl;
+    cout << "\twaitpid 3: " << waitpid3_counter << endl;
+    cout << "\twaitpid 4: " << waitpid4_counter << endl;
+    cout << "\twaitpid 5: " << waitpid5_counter << endl;
+    cout << "\twaitpid 6: " << waitpid6_counter << endl;
+    cout << "\twaitpid 7: " << waitpid7_counter << endl;
+    cout << "\twaitpid 8: " << waitpid8_counter << endl;
+    cout << "\twaitpid 9: " << waitpid9_counter << endl;
+    cout << "\twaitpid 10: " << waitpid10_counter << endl;
   #endif
 
   return res;

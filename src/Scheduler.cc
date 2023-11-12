@@ -297,6 +297,8 @@ bool Scheduler::is_task_runnable(RecordTask* t, bool* by_waitpid) {
     // behave predictably, do a blocking wait.
     auto start_time = chrono::steady_clock::now();
     t->wait();
+    // TODO: delete
+    wait2_counter++;
     auto end_time = chrono::steady_clock::now();
     waiting_times.push_back(chrono::duration <double, milli> (end_time - start_time).count());
     ntasks_running--;
@@ -484,6 +486,8 @@ static bool wait_any(pid_t& tid, WaitStatus& status, double timeout) {
     LOG(debug) << "  Arming one-second timer for polling";
   }
   tid = waitpid(-1, &raw_status, __WALL | WUNTRACED);
+  // TODO: delete
+  waitpid4_counter++;
   if (timeout > 0) {
     struct itimerval timer = { { 0, 0 }, { 0, 0 } };
     if (setitimer(ITIMER_REAL, &timer, nullptr) < 0) {
@@ -559,6 +563,8 @@ static RecordTask* find_waited_task(RecordSession& session, pid_t tid, WaitStatu
       int raw_status;
       auto start_wait = chrono::steady_clock::now();
       pid_t npid = ::waitpid(waited->rec_tid, &raw_status, __WALL | WUNTRACED);
+      // TODO: delete
+      waitpid5_counter++;
       auto end_wait = chrono::steady_clock::now();
       waiting_times.push_back(chrono::duration <double, milli> (end_wait - start_wait).count());
       ASSERT(waited, npid == waited->rec_tid);
@@ -670,6 +676,8 @@ Scheduler::Rescheduled Scheduler::reschedule(Switchable switchable) {
         } else {
           auto start_time = chrono::steady_clock::now();
           current_->wait(timeout);
+          // TODO: delete
+          wait3_counter++;
           auto end_time = chrono::steady_clock::now();
           waiting_times.push_back(chrono::duration <double, milli> (end_time - start_time).count());
           ntasks_running--;
