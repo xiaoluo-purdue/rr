@@ -1483,6 +1483,7 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
     int raw_status = 0;
     wait_ret = waitpid(tid, &raw_status, WNOHANG | __WALL);
     #if XDEBUG_WAIT
+    // The wait time caused by the above waitpid is very small
     waitpid2_counter++;
     #endif
     ASSERT(this, 0 <= wait_ret)

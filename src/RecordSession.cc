@@ -2749,12 +2749,19 @@ RecordSession::RecordResult RecordSession::record_step() {
     debug_exec_state("EXEC_START", t);
 
     auto before_task_continue = chrono::steady_clock::now();
-    task_continue(step_state);
-    #if XDEBUG_RESUME
-    task_continue_counter++;
+    #if XDEBUG_LATENCY
+      if (stopped_after_wait) {
+        before_resume = chrono::steady_clock::now();
+        block_times.push_back(chrono::duration <double, milli> (before_resume - after_wait).count());
+        stopped_after_wait = false;
+      }
     #endif
-    auto after_task_continue = chrono::steady_clock::now();
+    #if XDEBUG_RESUME
+      task_continue_counter++;
+    #endif
+    task_continue(step_state);
     #if DEBUG_RECORD_STEP
+      auto after_task_continue = chrono::steady_clock::now();
       cout << "[record step] task continue: " << chrono::duration <double, milli> (after_task_continue - before_task_continue).count() << " ms" << endl;
     #endif
   }

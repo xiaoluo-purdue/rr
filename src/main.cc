@@ -32,6 +32,13 @@ std::chrono::time_point<std::chrono::steady_clock> start_new_compressed_writer;
 std::chrono::time_point<std::chrono::steady_clock> end_new_compressed_writer; 
 std::chrono::time_point<std::chrono::steady_clock> tracee_exit;
 std::chrono::time_point<std::chrono::steady_clock> RR_exit;
+std::chrono::time_point<std::chrono::steady_clock> after_wait;
+std::chrono::time_point<std::chrono::steady_clock> before_resume;
+std::chrono::time_point<std::chrono::steady_clock> before_record;
+
+
+std::vector<double> block_times;
+bool stopped_after_wait = false;
 
 #if XDEBUG_WAIT
 int wait1_counter = 0;
@@ -369,6 +376,15 @@ int main(int argc, char* argv[]) {
   #endif 
   #if XDEBUG_LATENCY
     RR_exit = chrono::steady_clock::now();
+
+    double total_blocking = 0;
+    for (auto time : block_times) {
+      total_blocking += time;
+    }
+
+    cout << "block count: " << block_times.size() << endl;
+    cout << "total blocking time: " << total_blocking << " ms" << endl;
+
     cout << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms" << endl;
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;

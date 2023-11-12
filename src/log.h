@@ -246,6 +246,13 @@ extern std::chrono::time_point<std::chrono::steady_clock> start_new_compressed_w
 extern std::chrono::time_point<std::chrono::steady_clock> end_new_compressed_writer; 
 extern std::chrono::time_point<std::chrono::steady_clock> tracee_exit;
 extern std::chrono::time_point<std::chrono::steady_clock> RR_exit;
+extern std::chrono::time_point<std::chrono::steady_clock> before_record;
+
+extern std::chrono::time_point<std::chrono::steady_clock> after_wait;
+extern std::chrono::time_point<std::chrono::steady_clock> before_resume;
+
+extern std::vector<double> block_times;
+extern bool stopped_after_wait;
 
 # if XDEBUG_WAIT
 extern int wait1_counter;
