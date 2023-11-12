@@ -719,8 +719,6 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
             // PTRACE_CONT might kick us out of the PTRACE_EVENT_EXIT before
             // we can process it.
             t->wait();
-            // TODO: delete
-            wait1_counter++;
             break;
           default:
             ASSERT(t, false) << "Seccomp result not handled";
@@ -922,6 +920,10 @@ void RecordSession::task_continue(const StepState& step_state) {
     }
   }
   t->resume_execution(resume, RESUME_NONBLOCKING, ticks_request);
+  #if XDEBUG_RESUME
+  resume3++;
+  #endif
+
   if (t->is_running()) {
     scheduler().started(t);
   }
@@ -2748,6 +2750,9 @@ RecordSession::RecordResult RecordSession::record_step() {
 
     auto before_task_continue = chrono::steady_clock::now();
     task_continue(step_state);
+    #if XDEBUG_RESUME
+    task_continue_counter++;
+    #endif
     auto after_task_continue = chrono::steady_clock::now();
     #if DEBUG_RECORD_STEP
       cout << "[record step] task continue: " << chrono::duration <double, milli> (after_task_continue - before_task_continue).count() << " ms" << endl;
@@ -2793,8 +2798,6 @@ void RecordSession::term_detached_tasks() {
     }
     int status;
     pid_t ret = ::waitpid(t->rec_tid, &status, WEXITED);
-    // TODO: delete
-    waitpid3_counter++;
     if (ret != t->rec_tid) {
       LOG(warn) << "Unexpected wait status " << WaitStatus(status) << " while waiting for detached child " << t->rec_tid;
     }

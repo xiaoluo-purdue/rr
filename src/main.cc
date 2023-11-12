@@ -33,23 +33,22 @@ std::chrono::time_point<std::chrono::steady_clock> end_new_compressed_writer;
 std::chrono::time_point<std::chrono::steady_clock> tracee_exit;
 std::chrono::time_point<std::chrono::steady_clock> RR_exit;
 
+#if XDEBUG_WAIT
 int wait1_counter = 0;
 int wait2_counter = 0;
 int wait3_counter = 0;
 int wait4_counter = 0;
-int wait5_counter = 0;
-int wait6_counter = 0;
-
 int waitpid1_counter = 0;
 int waitpid2_counter = 0;
-int waitpid3_counter = 0;
-int waitpid4_counter = 0;
-int waitpid5_counter = 0;
-int waitpid6_counter = 0;
-int waitpid7_counter = 0;
-int waitpid8_counter = 0;
-int waitpid9_counter = 0;
-int waitpid10_counter = 0;
+#endif
+#if XDEBUG_RESUME
+int task_continue_counter = 0;
+int resume1 = 0;
+int resume2 = 0;
+int resume3 = 0;
+int resume4 = 0;
+int resume5 = 0;
+#endif
 #endif
 
 std::chrono::time_point<std::chrono::steady_clock> start_rr;
@@ -371,26 +370,28 @@ int main(int argc, char* argv[]) {
   #if XDEBUG_LATENCY
     RR_exit = chrono::steady_clock::now();
     cout << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms" << endl;
-  
+  #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;
     cout << "\twait 1: " << wait1_counter << endl;
     cout << "\twait 2: " << wait2_counter << endl;
-    cout << "\twait 3: " << rr::wait3_counter << endl;
-    cout << "\twait 4: " << rr::wait4_counter << endl;
-    cout << "\twait 5: " << wait5_counter << endl;
-    cout << "\twait 6: " << wait6_counter << endl;
+    cout << "\twait 3: " << wait3_counter << endl;
+    cout << "\twait 4: " << wait4_counter << endl;
   
     cout << "waitpid() call times distribution:" << endl;
     cout << "\twaitpid 1: " << waitpid1_counter << endl;
     cout << "\twaitpid 2: " << waitpid2_counter << endl;
-    cout << "\twaitpid 3: " << waitpid3_counter << endl;
-    cout << "\twaitpid 4: " << waitpid4_counter << endl;
-    cout << "\twaitpid 5: " << waitpid5_counter << endl;
-    cout << "\twaitpid 6: " << waitpid6_counter << endl;
-    cout << "\twaitpid 7: " << waitpid7_counter << endl;
-    cout << "\twaitpid 8: " << waitpid8_counter << endl;
-    cout << "\twaitpid 9: " << waitpid9_counter << endl;
-    cout << "\twaitpid 10: " << waitpid10_counter << endl;
+  #endif
+
+  #if XDEBUG_RESUME
+    cout << "\ntask_continue: " << task_continue_counter << endl;
+    cout << "resume_execution() call times distribution: " << endl;
+    cout << "\tresume 1: " << resume1 << endl;
+    cout << "\tresume 2: " << resume2 << endl;
+    cout << "\tresume 3: " << resume3 << endl;
+    cout << "\tresume 4: " << resume4 << endl;
+    cout << "\tresume 5: " << resume5 << endl;
+  #endif
+
   #endif
 
   return res;

@@ -235,7 +235,9 @@ template <typename T> inline void* HEX(T v) {
 #define XDEBUG_RECORDLOOP 0
 #define XDEBUG_SCHEDULING 0
 
-#define XDEBUG_LATENCY 1
+#define XDEBUG_LATENCY  1
+#define XDEBUG_WAIT   1
+#define XDEBUG_RESUME 1
 
 #if XDEBUG_LATENCY
 extern std::chrono::time_point<std::chrono::steady_clock> RR_start;
@@ -245,24 +247,23 @@ extern std::chrono::time_point<std::chrono::steady_clock> end_new_compressed_wri
 extern std::chrono::time_point<std::chrono::steady_clock> tracee_exit;
 extern std::chrono::time_point<std::chrono::steady_clock> RR_exit;
 
+# if XDEBUG_WAIT
 extern int wait1_counter;
 extern int wait2_counter;
 extern int wait3_counter;
 extern int wait4_counter;
-extern int wait5_counter;
-extern int wait6_counter;
 
 extern int waitpid1_counter;
 extern int waitpid2_counter;
-extern int waitpid3_counter;
-extern int waitpid4_counter;
-extern int waitpid5_counter;
-extern int waitpid6_counter;
-extern int waitpid7_counter;
-extern int waitpid8_counter;
-extern int waitpid9_counter;
-extern int waitpid10_counter;
-
+#endif 
+#if XDEBUG_RESUME
+extern int task_continue_counter;
+extern int resume1;
+extern int resume2;
+extern int resume3;
+extern int resume4;
+extern int resume5;
+#endif
 #endif
 
 extern std::chrono::time_point<std::chrono::steady_clock> start_rr;

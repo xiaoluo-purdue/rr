@@ -354,6 +354,9 @@ long AutoRemoteSyscalls::syscall_base(int syscallno, Registers& callregs) {
   if (use_singlestep_path && !from_seccomp) {
     while (true) {
       t->resume_execution(RESUME_SINGLESTEP, RESUME_WAIT, RESUME_NO_TICKS);
+      #if XDEBUG_RESUME
+      resume1++;
+      #endif
       LOG(debug) << "Used singlestep path; status=" << t->status();
       // When a PTRACE_EVENT_EXIT is returned we don't update registers
       if (t->ip() != callregs.ip()) {
@@ -387,6 +390,10 @@ long AutoRemoteSyscalls::syscall_base(int syscallno, Registers& callregs) {
     // proceed to syscall exit
     if (!exited) {
       t->resume_execution(RESUME_SYSCALL, RESUME_WAIT, RESUME_NO_TICKS);
+      #if XDEBUG_RESUME
+      resume2++;
+      #endif
+
       LOG(debug) << "syscall exit status=" << t->status();
     }
   }

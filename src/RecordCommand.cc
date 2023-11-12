@@ -626,8 +626,6 @@ static void copy_preload_sources_to_trace(const string& trace_dir) {
   posix_spawn_file_actions_destroy(&actions);
   int status;
   waitpid(pid, &status, 0);
-  //TODO: delete
-  waitpid2_counter++;
   LOG(info) << "Got zip status " << WaitStatus(status);
 }
 
