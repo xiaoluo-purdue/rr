@@ -102,15 +102,6 @@ static bool parse_dump_arg(vector<string>& args, DumpFlags& flags) {
     default:
       DEBUG_ASSERT(0 && "Unknown option");
   }
-  #if XDEBUG_TRACE
-    cout << "DumpFlag:" << endl;
-    cout << "\tdump_syscallbuf: " << (flags.dump_syscallbuf ? "true" : "false") << endl;
-    cout << "\tdump_task_events: " << (flags.dump_task_events ? "true" : "false") << endl;
-    cout << "\tdump_recorded_data_metadata: " << (flags.dump_recorded_data_metadata ? "true" : "false") << endl;
-    cout << "\tdump_mmaps: " << (flags.dump_mmaps ? "true" : "false") << endl;
-    cout << "\traw_dump: " << (flags.raw_dump ? "true" : "false") << endl;
-    cout << "\tdump_statistics: " << (flags.dump_statistics ? "true" : "false") << endl;
-  #endif
   return true;
 }
 

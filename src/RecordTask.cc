@@ -9,8 +9,6 @@
 #include <sys/prctl.h>
 #include <sys/syscall.h>
 
-#include <chrono>
-
 #include "AutoRemoteSyscalls.h"
 #include "PreserveFileMonitor.h"
 #include "RecordSession.h"
@@ -1878,8 +1876,6 @@ void RecordTask::maybe_reset_syscallbuf() {
 void RecordTask::record_event(const Event& ev, FlushSyscallbuf flush,
                               AllowSyscallbufReset reset,
                               const Registers* registers) {
-  auto record_event_start = chrono::steady_clock::now();
-
   if (flush == FLUSH_SYSCALLBUF) {
     maybe_flush_syscallbuf();
   }
@@ -1962,9 +1958,6 @@ void RecordTask::record_event(const Event& ev, FlushSyscallbuf flush,
     // reach it, we're done.
     maybe_reset_syscallbuf();
   }
-
-  auto record_event_end = chrono::steady_clock::now();
-  record_event_times.push_back(chrono::duration <double, milli> (record_event_end - record_event_start).count());
 }
 
 bool RecordTask::is_fatal_signal(int sig,

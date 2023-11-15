@@ -14,6 +14,8 @@
 
 #include "Flags.h"
 #include "RecordSession.h"
+#include "RecordTask.h"
+#include "Task.h"
 #include "StringVectorToCharArray.h"
 #include "WaitStatus.h"
 #include "core.h"
@@ -652,8 +654,6 @@ static void* repeat_SIGTERM(__attribute__((unused)) void* p) {
 static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   LOG(info) << "Start recording...";
 
-  auto begin_record = chrono::steady_clock::now();
-
   auto session = RecordSession::create(
       args, flags.extra_env, flags.disable_cpuid_features,
       flags.use_syscall_buffer, flags.syscallbuf_desched_sig,
@@ -664,21 +664,11 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
 
   static_session = session.get();
 
-  auto after_session_get = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[record] create and get record session: " << chrono::duration <double, milli> (after_session_get - begin_record).count() << " ms" << endl;
-  #endif
-
   if (flags.print_trace_dir >= 0) {
     const string& dir = session->trace_writer().dir();
     write_all(flags.print_trace_dir, dir.c_str(), dir.size());
     write_all(flags.print_trace_dir, "\n", 1);
   }
-
-  auto after_print_trace_dir = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[record] print_trace_dir: " << chrono::duration <double, milli> (after_print_trace_dir - after_session_get).count() << " ms" << endl;
-  #endif
 
   if (flags.copy_preload_src) {
     const string& dir = session->trace_writer().dir();
@@ -686,28 +676,14 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
     save_rr_git_revision(dir);
   }
 
-  auto after_copy_preload_src = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[record] copy preload src: " << chrono::duration <double, milli> (after_copy_preload_src - after_print_trace_dir).count() << " ms" << endl;
-  #endif
   // Install signal handlers after creating the session, to ensure they're not
   // inherited by the tracee.
   install_signal_handlers();
 
-  auto after_install_signal_handlers = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[record] install signal handlers: " << chrono::duration <double, milli> (after_install_signal_handlers - after_copy_preload_src).count() << " ms" << endl;
-  #endif
-
-  setupenv_end = chrono::steady_clock::now();
-  #if XDEBUG_WORKFLOW
-    cout << "[workflow] set up env: " << chrono::duration <double, milli> (setupenv_end - setupenv_start).count() << " ms" << endl;
-  #endif
   RecordSession::RecordResult step_result;
   bool did_forward_SIGTERM = false;
   bool did_term_detached_tasks = false;
   pthread_t term_repeater_thread;
-  int step_count = 0;
   int check_termination_count = 0;
 
   double initial_exec_time = 0;
@@ -715,33 +691,26 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   double make_latest_trace_time = 0;
   double check_termination_time = 0;
 
-  #if XDEBUG_WORKFLOW
-    cout << "from begin execve to begin record: " << chrono::duration <double, milli> (setupenv_end - start_execve).count() << " ms" << endl;
+  #if XDEBUG_LATENCY
+    before_record = chrono::steady_clock::now();
+    cout << "RR start - before record step: " << chrono::duration <double, milli> (before_record - RR_start).count() << " ms" << endl;
   #endif
+
   do {
-    step_count++;
-    auto record_loop_begin = chrono::steady_clock::now();
-    
+    #if XDEBUG_LATENCY
+    step_counter++;
+    auto start_step = chrono::steady_clock::now();
+    #endif
     bool done_initial_exec = session->done_initial_exec();
-    
-    auto after_initial_exec = chrono::steady_clock::now();
-    initial_exec_time += chrono::duration <double, milli> (after_initial_exec - record_loop_begin).count();
     
     step_result = session->record_step();
     
-    auto after_record_step = chrono::steady_clock::now();
-    record_step_time += chrono::duration <double, milli> (after_record_step - after_initial_exec).count();
-
     // Only create latest-trace symlink if --output-trace-dir is not being used
     if (!done_initial_exec && session->done_initial_exec() && flags.output_trace_dir.empty()) {
       session->trace_writer().make_latest_trace();
     }
 
-    auto after_latest_trace = chrono::steady_clock::now();
-    make_latest_trace_time += chrono::duration <double, milli> (after_latest_trace - after_record_step).count();
-
     if (term_requested) {
-      auto begin_term = chrono::steady_clock::now();
       if (monotonic_now_sec() - term_requested > TRACEE_SIGTERM_RESPONSE_MAX_TIME) {
         /* time ran out for the tracee to respond to SIGTERM; kill everything */
         session->terminate_tracees();
@@ -758,35 +727,27 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
         did_term_detached_tasks = true;
       }
       check_termination_count++;
-      auto end_term = chrono::steady_clock::now();
-      check_termination_time += chrono::duration <double, milli> (end_term - begin_term).count();
     }
+    #if XDEBUG_LATENCY
+    auto end_step = chrono::steady_clock::now();
+    if (no_execve) {
+      no_execve_record_step_times.push_back(chrono::duration <double, milli> (end_step - start_step).count());
+    }
+    #endif
   } while (step_result.status == RecordSession::STEP_CONTINUE);
 
-  #if XDEBUG_WORKFLOW
-    end_execve = chrono::steady_clock::now();
-    cout << "[tracee execution time] " << chrono::duration <double, milli> (end_execve - start_execve).count() << " ms" << endl;
-
-    auto after_record_loop = chrono::steady_clock::now();
-    cout << "[workflow] get record result: " << chrono::duration <double, milli> (after_record_loop - after_install_signal_handlers).count() << " ms" << endl;
-    cout << "Execute " << step_count << " steps to get the record result" << endl;
+  #if XDEBUG_LATENCY
+    auto before_close_trace_writer = chrono::steady_clock::now();
   #endif
 
-  #if XDEBUG_RECORDLOOP
-    // cout << "Execute " << step_count << " steps to get the record result" << endl;
-    cout << "[record loop] initial exec: " << initial_exec_time / step_count << " ms" << endl;
-    cout << "[record loop] record step: " << record_step_time / step_count << " ms" << endl;
-    cout << "[record loop] create latest-trace symlink: " << make_latest_trace_time / step_count << " ms" << endl;
-    cout << "[record loop] check termination: " << check_termination_time / check_termination_count << " ms" << endl;
-    cout << "[record loop] check termination count: " << check_termination_count << endl;
-  #endif
   session->close_trace_writer(TraceWriter::CLOSE_OK);
-  static_session = nullptr;
 
-  #if XDEBUG
+  #if XDEBUG_LATENCY
     auto after_close_trace_writer = chrono::steady_clock::now();
-    cout << "[record] close trace writer: " << chrono::duration <double, milli> (after_close_trace_writer - after_record_loop).count() << " ms" << endl;
+    cout << "close trace writer: " << chrono::duration <double, milli> (after_close_trace_writer - before_close_trace_writer).count() << " ms" << endl;
   #endif
+
+  static_session = nullptr;
 
   switch (step_result.status) {
     case RecordSession::STEP_CONTINUE:
@@ -859,25 +820,14 @@ static void reset_uid_sudo() {
 }
 
 int RecordCommand::run(vector<string>& args) {
-  auto record_run_start = chrono::steady_clock::now();
-
   RecordFlags flags;
   while (parse_record_arg(args, flags)) {
   }
-
-  auto parse_record_arg = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "parse_record_arg: " << chrono::duration <double, milli> (parse_record_arg - record_run_start).count() << " ms" << endl;
-  #endif
 
   LOG(debug) << "use_file_cloning: " << (flags.use_file_cloning ? "true" : "false");
   LOG(debug) << "use_read_cloning: " << (flags.use_read_cloning ? "true" : "false");
 
   if (running_under_rr()) {
-    #if XDEBUG
-      cout << "running under rr" << endl;
-    #endif
-
     switch (flags.nested) {
       case NESTED_IGNORE:
         exec_child(args);
@@ -909,10 +859,6 @@ int RecordCommand::run(vector<string>& args) {
     }
   }
 
-  auto after_check_running_under_rr = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "check_running_under_rr: " << chrono::duration <double, milli> (after_check_running_under_rr - parse_record_arg).count() << " ms" << endl;
-  #endif
   if (!verify_not_option(args) || args.size() == 0) {
     print_help(stderr);
     return 1;
@@ -920,10 +866,6 @@ int RecordCommand::run(vector<string>& args) {
 
   assert_prerequisites(flags.use_syscall_buffer);
 
-  auto assert_prereq = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "assert_prerequisites: " << chrono::duration <double, milli> (assert_prereq - after_check_running_under_rr).count() << " ms" << endl;
-  #endif
   if (flags.setuid_sudo) {
     if (geteuid() != 0 || getenv("SUDO_UID") == NULL) {
       fprintf(stderr, "rr: --setuid-sudo option may only be used under sudo.\n"
@@ -938,103 +880,22 @@ int RecordCommand::run(vector<string>& args) {
   if (flags.chaos) {
     // Add up to one page worth of random padding to the environment to induce
     // a variety of possible stack pointer offsets
-    auto begin_chaos = chrono::steady_clock::now();
     vector<char> chars;
     chars.resize(random() % page_size());
     memset(chars.data(), '0', chars.size());
     chars.push_back(0);
     string padding = string("RR_CHAOS_PADDING=") + chars.data();
     flags.extra_env.push_back(padding);
-    auto end_chaos = chrono::steady_clock::now();
-    #if XDEBUG
-      cout << "chaos: " << chrono::duration <double, milli> (end_chaos - begin_chaos).count() << " ms" << endl;
-    #endif
   }
-  auto before_record = chrono::steady_clock::now();
-
   WaitStatus status = record(args, flags);
 
-  auto after_record = chrono::steady_clock::now();
-
-
-  #if XDEBUG_WORKFLOW
-    double total_sched_time = 0;
-    for (double time : scheduling_time) {
-      total_sched_time += time;
-    }
-
-    double total_waiting = 0;
-    for (auto wait_time : waiting_times) {
-      total_waiting += wait_time;
-    }
-    cout << "[workflow] scheduling count: " << scheduling_time.size() << endl;
-    cout << "[workflow] total scheduling time (include waiting): " << total_sched_time << " ms" << endl;
-    cout << "[workflow] avg scheduling time (including waiting): " << total_sched_time / scheduling_time.size() << " ms" << endl;
-
-    cout << "[workflow] total waiting time: " << total_waiting << " ms" << endl;
-    cout << "[workflow] avg waiting time: " << total_waiting / waiting_times.size() << " ms" << endl;
-
-
-    double total_record_event_time = 0;
-    for(auto t : record_event_times) {
-      total_record_event_time += t;
-    }
-
-    double total_write_frame_time = 0;
-    for(auto t: write_frame_times) {
-      total_write_frame_time += t;
-    }
-
-    double total_write_raw_data_time = 0;
-    for(auto t : write_raw_data_times) {
-      total_write_raw_data_time += t;
-    }
-
-    double total_write_task_event_time = 0;
-    for(auto t : write_task_event_times) {
-      total_write_task_event_time += t;
-    }
-
-    cout << "[workflow] total write frame time: " << total_write_frame_time << " ms" << endl;
-    cout << "[workflow] write frame count: " << write_frame_times.size() << endl;
-    cout << "[workflow] avg write frame time: " << total_write_frame_time / write_frame_times.size() << " ms" << endl;
-  
-    cout << "[workflow] total write raw data time: " << total_write_raw_data_time << " ms" << endl;
-    cout << "[workflow] write raw data count: " << write_raw_data_times.size() << endl;
-    cout << "[workflow] avg write raw data time: " << total_write_raw_data_time / write_raw_data_times.size() << " ms" << endl;
-
-    cout << "[workflow] total write task event time: " << total_write_task_event_time << " ms" << endl;
-    cout << "[workflow] write task event count: " << write_task_event_times.size() << endl;
-    cout << "[workflow] avg write task event time: " << total_write_task_event_time / write_task_event_times.size() << " ms" << endl;
-
-
-    #if XDEBUG_PATCHING
-    assert(patching_names.size() == patching_times.size());
-    cout << "patching time: " << endl;
-    #endif
-    double total_patching_time = 0;
-    for (int i = 0; i < patching_times.size(); i++) {
-      double time = patching_times[i];
-      total_patching_time += time;
-      
-      #if XDEBUG_PATCHING
-      string syscall = patching_names[i];
-      cout << "\t" << syscall << ": " << time << " ms" << endl;
-      #endif
-    }
-
-    cout << "[workflow] patching count: " << patching_times.size() << endl;
-    cout << "[workflow] total patching time: " << total_patching_time << " ms" << endl;
-    cout << "[workflow] avg patching time: " << total_patching_time / patching_times.size() << " ms" << endl;
+  #if XDEBUG_LATENCY
+    RR_after_record = chrono::steady_clock::now();
+    cout << "tracee exit - RR after record: " << chrono::duration <double, milli> (RR_after_record - tracee_exit).count() << " ms" << endl;
   #endif
-
   // Everything should have been cleaned up by now.
   check_for_leaks();
 
-  #if XDEBUG_WORKFLOW
-    auto after_check_for_leaks = chrono::steady_clock::now();
-    cout << "[workflow] check for leaks and exit: " << chrono::duration <double, milli> (after_check_for_leaks - after_record).count() << " ms" << endl;
-  #endif
   switch (status.type()) {
     case WaitStatus::EXIT:
       return status.exit_code();

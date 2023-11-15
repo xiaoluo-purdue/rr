@@ -1419,14 +1419,21 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
   // During record, the process could have died, but otherwise, we control
   // process lifecycles and this should never fail.
   ASSERT(this, session().is_recording() || setup_succeeded);
-
   if (setup_succeeded) {
     if (tick_period != RESUME_NO_TICKS) {
       if (tick_period == RESUME_UNLIMITED_TICKS) {
         hpc.reset(0);
       } else {
         ASSERT(this, tick_period >= 0 && tick_period <= MAX_TICKS_REQUEST);
+        #if XDEBUG_LATENCY
+        auto begin_reset = chrono::steady_clock::now();
+        #endif
         hpc.reset(max<Ticks>(1, tick_period));
+        #if XDEBUG_LATENCY
+        auto end_reset = chrono::steady_clock::now();
+        if (step_counter == 1)
+          cout << "reset hpc(max(1, tick_period)): " << chrono::duration <double, milli> (end_reset - begin_reset).count() << " ms" << endl;
+        #endif
       }
       activate_preload_thread_locals();
     }
@@ -3477,8 +3484,6 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
                              const std::vector<std::string>& argv,
                              const std::vector<std::string>& envp,
                              pid_t rec_tid) {
-  createattach_start = chrono::steady_clock::now();
-
   DEBUG_ASSERT(session.tasks().size() == 0);
 
   int sockets[2];
@@ -3521,9 +3526,6 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
     // fork() can fail with EAGAIN due to temporary load issues. In such
     // cases, retry the fork().
   } while (0 > tid && errno == EAGAIN);
-  #if XDEBUG_WORKFLOW
-    start_execve = chrono::steady_clock::now();
-  #endif
   if (0 == tid) {
     run_initial_child(session, error_fd, *sock_fd_receiver_out, fd_number, exe_path.c_str(),
                       argv_array.get(), envp_array.get(), prog);
@@ -3560,11 +3562,6 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
     FATAL() << "PTRACE_SEIZE failed for tid " << tid << hint;
   }
 
-  #if XDEBUG_WORKFLOW
-    createattach_end = chrono::steady_clock::now();
-    cout << "[workflow] create and attach process: " << chrono::duration <double, milli> (createattach_end - createattach_start).count() << " ms" << endl;
-  #endif
-
   Task* t = session.new_task(tid, rec_tid, session.next_task_serial(),
                              NativeArch::arch());
   auto tg = session.create_initial_tg(t);
@@ -3582,7 +3579,6 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
   sa.sa_flags = 0; // No SA_RESTART, so waitpid() will be interrupted
   sigaction(SIGALRM, &sa, nullptr);
 
-  rr::stopall_start = chrono::steady_clock::now();
   t->wait();
   #if XDEBUG_WAIT
     wait4_counter++;
@@ -3603,11 +3599,6 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
             << "\nChild's message: "
             << session.read_spawned_task_error();
   }
-
-  rr::stopall_end = chrono::steady_clock::now();
-  #if XDEBUG_WORKFLOW
-    cout << "[workflow] stop all threads: " << chrono::duration <double, milli> (stopall_end - stopall_start).count() << " ms" << endl;
-  #endif
 
   t->clear_wait_status();
   t->open_mem_fd();

@@ -400,8 +400,6 @@ static const size_t reasonable_frame_message_words = 64;
 void TraceWriter::write_frame(RecordTask* t, const Event& ev,
                               const Registers* registers,
                               const ExtraRegisters* extra_registers) {
-  auto write_frame_start = chrono::steady_clock::now();
-
   // Use an on-stack first segment that should be adequate for most cases. A
   // simple syscall event takes 320 bytes currently. The default Capnproto
   // implementation does a calloc(8192) for the first segment.
@@ -534,9 +532,6 @@ void TraceWriter::write_frame(RecordTask* t, const Event& ev,
   }
 
   tick_time();
-
-  auto write_frame_end = chrono::steady_clock::now();
-  write_frame_times.push_back(chrono::duration <double, milli> (write_frame_end - write_frame_start).count());
 }
 
 TraceFrame TraceReader::read_frame() {
@@ -727,7 +722,6 @@ TraceFrame TraceReader::read_frame() {
 }
 
 void TraceWriter::write_task_event(const TraceTaskEvent& event) {
-  auto write_task_event_start = chrono::steady_clock::now();
   MallocMessageBuilder task_msg;
   trace::TaskEvent::Builder task = task_msg.initRoot<trace::TaskEvent>();
   task.setFrameTime(global_time);
@@ -772,8 +766,6 @@ void TraceWriter::write_task_event(const TraceTaskEvent& event) {
   } catch (...) {
     FATAL() << "Unable to write tasks";
   }
-  auto write_task_event_end = chrono::steady_clock::now();
-  write_task_event_times.push_back(chrono::duration <double, milli> (write_task_event_end - write_task_event_start).count());
 }
 
 TraceTaskEvent TraceReader::read_task_event(FrameTime* time) {
@@ -1227,11 +1219,8 @@ void TraceWriter::write_raw_header(pid_t rec_tid, size_t total_len,
 }
 
 void TraceWriter::write_raw_data(const void* d, size_t len) {
-  auto write_raw_data_start = chrono::steady_clock::now();
   auto& data = writer(RAW_DATA);
   data.write(d, len);
-  auto write_raw_data_end = chrono::steady_clock::now();
-  write_raw_data_times.push_back(chrono::duration <double, milli> (write_raw_data_end - write_raw_data_start).count());
 }
 
 TraceReader::RawData TraceReader::read_raw_data() {
@@ -1239,13 +1228,6 @@ TraceReader::RawData TraceReader::read_raw_data() {
   if (!read_raw_data_for_frame(d)) {
     FATAL() << "Expected raw data, found none";
   }
-  #if XDEBUG_TRACE
-    cout << "[TraceReader::read_raw_data] RawData d = ";
-    for (int i = 0; i < d.data.size(); i++) {
-      cout << d.data[i];
-    }
-    cout << endl;
-  #endif
   return d;
 }
 
@@ -1368,8 +1350,6 @@ TraceWriter::TraceWriter(const std::string& file_name,
       xsave_fip_fdp_quirk_(false),
       fdp_exception_only_quirk_(false),
       clear_fip_fdp_(false) {
-  auto begin_tracewriter = chrono::steady_clock::now();
-
   this->ticks_semantics_ = ticks_semantics_;
 
   #if XDEBUG_LATENCY
@@ -1384,29 +1364,17 @@ TraceWriter::TraceWriter(const std::string& file_name,
     cout << "create compressed writer: " << chrono::duration <double, milli> (end_new_compressed_writer - start_new_compressed_writer).count() << " ms" << endl;
   #endif
 
-  auto after_create_writer = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[TraceWriter] create Compressed Writer: " << chrono::duration <double, milli> (after_create_writer - begin_tracewriter).count() << " ms" << endl;
-  #endif
   string ver_path = incomplete_version_path();
   LOG(debug) << "ver_path: " << ver_path;
   version_fd = ScopedFd(ver_path.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0600);
   if (!version_fd.is_open()) {
     FATAL() << "Unable to create " << ver_path;
   }
-  auto after_create_tracefile = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[TraceWriter] create trace file: " << chrono::duration <double, milli> (after_create_tracefile - after_create_writer).count() << " ms" << endl;
-  #endif
   // Take an exclusive lock and hold it until we rename the file at
   // the end of recording and then close our file descriptor.
   if (flock(version_fd, LOCK_EX | LOCK_NB) != 0) {
     FATAL() << "Unable to lock " << ver_path;
   }
-  auto after_lock_tracefile = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[TraceWriter] lock trace file: " << chrono::duration <double, milli> (after_lock_tracefile - after_create_tracefile).count() << " ms" << endl;
-  #endif
   static const char buf[] = STR(TRACE_VERSION) "\n";
   size_t buf_len = sizeof(buf) - 1;
   if (write(version_fd, buf, buf_len) != (ssize_t)buf_len) {
@@ -1430,19 +1398,10 @@ TraceWriter::TraceWriter(const std::string& file_name,
   }
   unlink(version_clone_path.c_str());
 
-  auto after_test_data_cloning = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[TraceWriter] test if data cloning is supported: " << chrono::duration <double, milli> (after_test_data_cloning - after_lock_tracefile).count() << " ms" << endl; 
-  #endif
   if (!probably_not_interactive(STDOUT_FILENO)) {
     printf("rr: Saving execution to trace directory `%s'.\n",
            trace_dir.c_str());
   }
-
-  auto end_tracewriter = chrono::steady_clock::now();
-  #if XDEBUG
-  cout << "[TraceWriter] new TraceWriter body: " << chrono::duration <double, milli> (end_tracewriter - begin_tracewriter).count() << " ms" << endl;
-  #endif
 }
 
 void TraceWriter::setup_cpuid_records(bool has_cpuid_faulting,

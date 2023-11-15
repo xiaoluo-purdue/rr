@@ -1097,10 +1097,6 @@ bool Monkeypatcher::try_patch_syscall_x86ish(RecordTask* t, bool entering_syscal
     LOG(debug) << "Patching syscall at " << ip << " syscall "
                << syscall_name(syscallno, t->arch()) << " tid " << t->tid;
 
-    #if XDEBUG_PATCHING
-    patching_names.push_back(syscall_name(syscallno, t->arch()));
-    #endif
-
     success = patch_syscall_with_hook(*this, t, *hook_ptr, instruction_length, 0);
     if (!success && entering_syscall) {
       // Need to reenter the syscall to undo exit_syscall_and_prepare_restart
@@ -1181,8 +1177,6 @@ bool Monkeypatcher::try_patch_syscall_aarch64(RecordTask* t, bool entering_sysca
 }
 
 bool Monkeypatcher::try_patch_syscall(RecordTask* t, bool entering_syscall) {
-  patching_start = chrono::steady_clock::now();
-
   LOG(debug) << "try_patch_syscall() was called";
   LOG(debug) << "syscall_hooks.size(): " << syscall_hooks.size();
   if (syscall_hooks.empty()) {
@@ -1250,8 +1244,6 @@ bool Monkeypatcher::try_patch_syscall(RecordTask* t, bool entering_syscall) {
   else {
     res = try_patch_syscall_x86ish(t, entering_syscall, arch);
   }
-  patching_end = chrono::steady_clock::now();
-  patching_times.push_back(chrono::duration <double, milli> (patching_end - patching_start).count());
   return res;
 }
 

@@ -226,9 +226,6 @@ template <typename T> inline void* HEX(T v) {
       static_cast<typename std::make_unsigned<T>::type>(v));
 }
 
-#define XDEBUG 0
-#define DEBUG_RECORD_STEP 0
-#define XDEBUG_TRACE 0
 #define XDEBUG_CLONING 0
 #define XDEBUG_WORKFLOW 0
 #define XDEBUG_PATCHING 0
@@ -236,8 +233,8 @@ template <typename T> inline void* HEX(T v) {
 #define XDEBUG_SCHEDULING 0
 
 #define XDEBUG_LATENCY  1
-#define XDEBUG_WAIT   1
-#define XDEBUG_RESUME 1
+#define XDEBUG_WAIT   0
+#define XDEBUG_RESUME 0
 
 #if XDEBUG_LATENCY
 extern std::chrono::time_point<std::chrono::steady_clock> RR_start;
@@ -247,12 +244,21 @@ extern std::chrono::time_point<std::chrono::steady_clock> end_new_compressed_wri
 extern std::chrono::time_point<std::chrono::steady_clock> tracee_exit;
 extern std::chrono::time_point<std::chrono::steady_clock> RR_exit;
 extern std::chrono::time_point<std::chrono::steady_clock> before_record;
+extern std::chrono::time_point<std::chrono::steady_clock> RR_after_record;
 
 extern std::chrono::time_point<std::chrono::steady_clock> after_wait;
 extern std::chrono::time_point<std::chrono::steady_clock> before_resume;
 
 extern std::vector<double> block_times;
 extern bool stopped_after_wait;
+
+extern bool after_tracee_exit;
+
+extern int step_counter;
+extern bool no_execve;
+extern std::vector<double> no_execve_wait_times;
+extern std::vector<double> no_execve_blocking_times;
+extern std::vector<double> no_execve_record_step_times;
 
 # if XDEBUG_WAIT
 extern int wait1_counter;
@@ -272,39 +278,6 @@ extern int resume4;
 extern int resume5;
 #endif
 #endif
-
-extern std::chrono::time_point<std::chrono::steady_clock> start_rr;
-extern std::chrono::time_point<std::chrono::steady_clock> end_rr;
-
-extern std::chrono::time_point<std::chrono::steady_clock> setupenv_start;
-extern std::chrono::time_point<std::chrono::steady_clock> setupenv_end;
-extern std::chrono::time_point<std::chrono::steady_clock> createattach_start;
-extern std::chrono::time_point<std::chrono::steady_clock> createattach_end;
-extern std::chrono::time_point<std::chrono::steady_clock> stopall_start;
-extern std::chrono::time_point<std::chrono::steady_clock> stopall_end;
-extern std::chrono::time_point<std::chrono::steady_clock> scheduling_start;
-extern std::chrono::time_point<std::chrono::steady_clock> scheduling_end;
-extern std::chrono::time_point<std::chrono::steady_clock> patching_start;
-extern std::chrono::time_point<std::chrono::steady_clock> patching_end;
-extern std::chrono::time_point<std::chrono::steady_clock> preload_start;
-extern std::chrono::time_point<std::chrono::steady_clock> preload_end;
-
-extern std::chrono::time_point<std::chrono::steady_clock> start_execve;
-extern std::chrono::time_point<std::chrono::steady_clock> end_execve;
-
-extern std::vector<double> scheduling_time;
-extern std::vector<double> patching_times;
-// extern std::vector<double> unswitchable_waits;
-// extern std::vector<double> switchable_waits;
-extern std::vector<double> waiting_times;
-extern std::vector<double> record_event_times;
-extern std::vector<double> write_frame_times;
-extern std::vector<double> write_raw_data_times;
-extern std::vector<double> write_task_event_times;
-#if XDEBUG_PATCHING
-extern std::vector<std::string> patching_names;
-#endif
-
 } // namespace rr
 
 #endif // RR_LOG_H

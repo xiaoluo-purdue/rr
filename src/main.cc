@@ -35,7 +35,15 @@ std::chrono::time_point<std::chrono::steady_clock> RR_exit;
 std::chrono::time_point<std::chrono::steady_clock> after_wait;
 std::chrono::time_point<std::chrono::steady_clock> before_resume;
 std::chrono::time_point<std::chrono::steady_clock> before_record;
+std::chrono::time_point<std::chrono::steady_clock> RR_after_record;
 
+bool after_tracee_exit = false;
+
+bool no_execve = true;
+std::vector<double> no_execve_wait_times;
+std::vector<double> no_execve_blocking_times;
+std::vector<double> no_execve_record_step_times;
+int step_counter = 0;
 
 std::vector<double> block_times;
 bool stopped_after_wait = false;
@@ -56,36 +64,6 @@ int resume3 = 0;
 int resume4 = 0;
 int resume5 = 0;
 #endif
-#endif
-
-std::chrono::time_point<std::chrono::steady_clock> start_rr;
-std::chrono::time_point<std::chrono::steady_clock> end_rr;
-
-std::chrono::time_point<std::chrono::steady_clock> setupenv_start;
-std::chrono::time_point<std::chrono::steady_clock> setupenv_end;
-std::chrono::time_point<std::chrono::steady_clock> createattach_start;
-std::chrono::time_point<std::chrono::steady_clock> createattach_end;
-std::chrono::time_point<std::chrono::steady_clock> stopall_start;
-std::chrono::time_point<std::chrono::steady_clock> stopall_end;
-std::chrono::time_point<std::chrono::steady_clock> scheduling_start;
-std::chrono::time_point<std::chrono::steady_clock> scheduling_end;
-std::chrono::time_point<std::chrono::steady_clock> patching_start;
-std::chrono::time_point<std::chrono::steady_clock> patching_end;
-std::chrono::time_point<std::chrono::steady_clock> preload_start;
-std::chrono::time_point<std::chrono::steady_clock> preload_end;
-
-std::chrono::time_point<std::chrono::steady_clock> start_execve;
-std::chrono::time_point<std::chrono::steady_clock> end_execve;
-
-vector<double> scheduling_time;
-vector<double> patching_times;
-vector<double> waiting_times;
-vector<double> record_event_times;
-vector<double> write_frame_times;
-vector<double> write_raw_data_times;
-vector<double> write_task_event_times;
-#if XDEBUG_PATCHING
-vector<string> patching_names;
 #endif
 
 // Show version and quit.
@@ -301,24 +279,11 @@ int main(int argc, char* argv[]) {
   #if XDEBUG_LATENCY
     RR_start = chrono::steady_clock::now();
   #endif
-  #if XDEBUG_WORKFLOW
-    start_rr = chrono::steady_clock::now();
-  #endif
-  setupenv_start = chrono::steady_clock::now();
-  auto main_start = chrono::steady_clock::now();
   rr::saved_argv0_ = argv[0];
   rr::saved_argv0_space_ = argv[argc - 1] + strlen(argv[argc - 1]) + 1 - rr::saved_argv0_;
 
   init_random();
-  auto after_init_rand = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[main] init_random: " << chrono::duration <double, milli> (after_init_rand - main_start).count() << " ms" << endl;
-  #endif
   raise_resource_limits();
-  auto after_raise_resource_limits = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[main] raise_resource_limits: " << chrono::duration <double, milli> (after_raise_resource_limits - after_init_rand).count() << " ms" << endl;
-  #endif
   vector<string> args;
   for (int i = 1; i < argc; ++i) {
     args.push_back(argv[i]);
@@ -326,10 +291,6 @@ int main(int argc, char* argv[]) {
 
   while (parse_global_option(args)) {
   }
-  auto after_parse_global_option = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[main] parse_global_option: " << chrono::duration <double, milli> (after_parse_global_option - after_raise_resource_limits).count() << " ms" << endl;
-  #endif
 
   if (show_version) {
     print_version(stdout);
@@ -351,29 +312,14 @@ int main(int argc, char* argv[]) {
     if (!Command::verify_not_option(args)) {
       print_usage(stderr);
     }
-    auto before_get_cmd = chrono::steady_clock::now();
     if (is_directory(args[0].c_str())) {
       command = ReplayCommand::get();
     } else {
       command = RecordCommand::get();
     }
-    auto after_get_cmd = chrono::steady_clock::now();
-    #if XDEBUG
-      cout << "[main] get record cmd: " << chrono::duration <double, milli> (after_get_cmd - before_get_cmd).count() << " ms" << endl;
-    #endif
   }
-  auto before_cmd_run = chrono::steady_clock::now();
   int res = command->run(args);
-  auto after_cmd_run = chrono::steady_clock::now();
-  #if XDEBUG
-    cout << "[main] record_cmd::run: " << chrono::duration <double, milli> (after_cmd_run - before_cmd_run).count() << " ms" << endl;
-  #endif
 
-  #if XDEBUG_WORKFLOW
-  end_rr = chrono::steady_clock::now();
-  cout << "rr total time: " << chrono::duration <double, milli> (end_rr - start_rr).count() << " ms" << endl;
-  cout << "from end execve to end rr: " << chrono::duration <double, milli> (end_rr - end_execve).count() << " ms" << endl;
-  #endif 
   #if XDEBUG_LATENCY
     RR_exit = chrono::steady_clock::now();
 
@@ -384,8 +330,11 @@ int main(int argc, char* argv[]) {
 
     cout << "block count: " << block_times.size() << endl;
     cout << "total blocking time: " << total_blocking << " ms" << endl;
+    cout << "avg blocking time: " << total_blocking / block_times.size() << " ms" << endl;
 
+    cout << "RR after record - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_after_record).count() << " ms" << endl;
     cout << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms" << endl;
+    cout << "RR start - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_start).count() << " ms" << endl;
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;
     cout << "\twait 1: " << wait1_counter << endl;

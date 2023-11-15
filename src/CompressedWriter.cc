@@ -12,8 +12,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <chrono>
-
 #include "core.h"
 #include "util.h"
 
@@ -38,36 +36,15 @@ CompressedWriter::CompressedWriter(const string& filename, size_t block_size,
   LOG(debug) << "num_threads: " << num_threads;
   LOG(debug) << "block_size: " << block_size;
 
-  auto start_new = chrono::steady_clock::now();
-
   this->block_size = block_size;
   threads.resize(num_threads);
-
-  auto after_thread_resize = chrono::steady_clock::now();
-  LOG(debug) << "threads resize: " << chrono::duration <double, milli> (after_thread_resize - start_new).count() << " ms";
-
   thread_pos.resize(num_threads);
-
-  auto after_thread_pos_resize = chrono::steady_clock::now();
-  LOG(debug) << "thread_pos resize: " << chrono::duration <double, milli> (after_thread_pos_resize - after_thread_pos_resize).count() << " ms";
-
-  LOG(debug) << "buffer before resizing:\tsize = " << buffer.size() << "\tcapacity = " << buffer.capacity();
   buffer.resize(block_size * (num_threads + 2));
-
-  auto after_resize = chrono::steady_clock::now();
-  LOG(debug) << "buffer after resizing:\tsize = " << buffer.size() << "\tcapacity = " << buffer.capacity();
-  LOG(debug) << "buffer resize: " << chrono::duration <double, milli> (after_resize - start_new).count() << " ms";
 
   pthread_mutex_init(&mutex, nullptr);
 
-  auto after_mutex_init = chrono::steady_clock::now();
-  LOG(debug) << "mutex init: " << chrono::duration <double, milli> (after_mutex_init - after_resize).count() << " ms";
-
   pthread_cond_init(&cond, nullptr);
 
-  auto after_pthread_cond_init = chrono::steady_clock::now();
-  LOG(debug) << "cond init: " << chrono::duration <double, milli> (after_pthread_cond_init - after_mutex_init).count() << " ms";
-  LOG(debug) << "mutex & cond init: " << chrono::duration <double, milli> (after_pthread_cond_init - after_resize).count() << " ms";
   for (uint32_t i = 0; i < num_threads; ++i) {
     thread_pos[i] = UINT64_MAX;
   }
@@ -84,9 +61,6 @@ CompressedWriter::CompressedWriter(const string& filename, size_t block_size,
     error = true;
     return;
   }
-
-  auto before_mutex_lock = chrono::steady_clock::now();
-  LOG(debug) << "init local vars: " << chrono::duration <double, milli> (before_mutex_lock - after_pthread_cond_init).count() << " ms";
 
   // Hold the lock so threads don't inspect the 'threads' array
   // until we've finished initializing it.
@@ -110,9 +84,6 @@ CompressedWriter::CompressedWriter(const string& filename, size_t block_size,
     pthread_setname_np(threads[i], thread_name.substr(0, 15).c_str());
   }
   pthread_mutex_unlock(&mutex);
-
-  auto after_mutex_unlock = chrono::steady_clock::now();
-  LOG(debug) << "lock mutex and create pthreads: " << chrono::duration <double, milli> (after_mutex_unlock - before_mutex_lock).count() << " ms";
 }
 
 CompressedWriter::~CompressedWriter() {
