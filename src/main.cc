@@ -11,6 +11,7 @@
 #include <chrono>
 
 #include <sstream>
+#include <unordered_map>
 
 #include "Command.h"
 #include "Flags.h"
@@ -24,6 +25,7 @@ using namespace std;
 
 namespace rr {
 
+int step_counter = 0;
 #if XDEBUG_LATENCY
 // Used in calc latency added by RR record
 std::chrono::time_point<std::chrono::steady_clock> RR_start;
@@ -43,7 +45,6 @@ bool no_execve = true;
 std::vector<double> no_execve_wait_times;
 std::vector<double> no_execve_blocking_times;
 std::vector<double> no_execve_record_step_times;
-int step_counter = 0;
 
 std::vector<double> block_times;
 bool stopped_after_wait = false;
@@ -64,6 +65,23 @@ int resume3 = 0;
 int resume4 = 0;
 int resume5 = 0;
 #endif
+#endif
+
+#if XDEBUG_PATCHING
+std::vector<string> patching_names;
+
+std::unordered_map<intptr_t, std::vector<double>> before_patching;
+std::unordered_map<intptr_t, std::vector<double>> after_patching;
+
+std::chrono::time_point<std::chrono::steady_clock> start_syscall;
+std::chrono::time_point<std::chrono::steady_clock> end_syscall;
+
+std::chrono::time_point<std::chrono::steady_clock> after_patch_start_syscall;
+std::chrono::time_point<std::chrono::steady_clock> after_patch_end_syscall;
+
+int start_syscallno = -1;
+
+bool exiting_syscall = false;
 #endif
 
 // Show version and quit.
@@ -322,7 +340,7 @@ int main(int argc, char* argv[]) {
 
   #if XDEBUG_LATENCY
     RR_exit = chrono::steady_clock::now();
-
+    #if LATENCY_OUTPUT
     double total_blocking = 0;
     for (auto time : block_times) {
       total_blocking += time;
@@ -335,6 +353,7 @@ int main(int argc, char* argv[]) {
     cout << "RR after record - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_after_record).count() << " ms" << endl;
     cout << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms" << endl;
     cout << "RR start - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_start).count() << " ms" << endl;
+    #endif
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;
     cout << "\twait 1: " << wait1_counter << endl;
@@ -356,6 +375,52 @@ int main(int argc, char* argv[]) {
     cout << "\tresume 4: " << resume4 << endl;
     cout << "\tresume 5: " << resume5 << endl;
   #endif
+  #endif
+
+
+  #if XDEBUG_PATCHING
+  #if PATCHING_OUTPUT
+  cout << "before patching: " << endl;
+  for(const auto& pair : before_patching) {
+    int syscallno = pair.first;
+    cout << syscall_name(syscallno, SupportedArch::x86_64) << " (" << syscallno << "): ";
+    for (double duration : pair.second) {
+      cout << duration << ", ";
+    }
+    cout << endl;
+  }
+
+  cout << "\nafter patching: " << endl;
+  for(const auto& pair : after_patching) {
+    int syscallno = pair.first;
+    cout << syscall_name(syscallno, SupportedArch::x86_64) << " (" << syscallno << "): ";
+    for (double duration : pair.second) {
+      cout << duration << ", ";
+    }
+    cout << endl;
+  }
+  #endif
+  cout << "patching optimization: " << endl;
+  for (const auto& pair : after_patching) {
+    int syscallno = pair.first;
+    if (before_patching.find(syscallno) != before_patching.end() &&
+        pair.second.size()) {
+      double before_sum = 0;
+      for (const double duration : before_patching[syscallno]) {
+        before_sum += duration;
+      }
+      double before_avg = before_sum / before_patching[syscallno].size();
+
+      double after_sum = 0;
+      for(const double duration : pair.second) {
+        after_sum += duration;
+      }
+      double after_avg = after_sum / pair.second.size();
+
+      cout << syscall_name(syscallno, SupportedArch::x86_64) << " (" << syscallno << "): before: "
+        << before_avg << "\tafter: " << after_avg << "(" << (after_avg / before_avg) * 100 << "% of before)" << endl;
+    }
+  }
 
   #endif
 

@@ -1431,8 +1431,10 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
         hpc.reset(max<Ticks>(1, tick_period));
         #if XDEBUG_LATENCY
         auto end_reset = chrono::steady_clock::now();
+        #if LATENCY_OUTPUT
         if (step_counter == 1)
           cout << "reset hpc(max(1, tick_period)): " << chrono::duration <double, milli> (end_reset - begin_reset).count() << " ms" << endl;
+        #endif
         #endif
       }
       activate_preload_thread_locals();

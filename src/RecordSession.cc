@@ -471,6 +471,7 @@ void RecordSession::handle_seccomp_traced_syscall(RecordTask* t,
       // we need to handle that now.
       SupportedArch syscall_arch = t->detect_syscall_arch();
       t->canonicalize_regs(syscall_arch);
+      // process_syscall_entry() all goes from here
       if (!process_syscall_entry(t, step_state, result, syscall_arch)) {
         step_state->continue_type = RecordSession::DONT_CONTINUE;
         return;
@@ -787,7 +788,9 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
         if (t->ev().Syscall().is_exec()) {
           no_execve = false;
           tracee_execve = chrono::steady_clock::now();
+          #if LATENCY_OUTPUT
           cout << "RR start - resume at tracee execve exit: " << chrono::duration <double, milli> (tracee_execve - RR_start).count() << " ms" << endl;
+          #endif
         }
       #endif
 
@@ -920,6 +923,26 @@ void RecordSession::task_continue(const StepState& step_state) {
       }
     }
   }
+
+  #if XDEBUG_PATCHING
+  intptr_t syscallno = t->regs().original_syscallno();
+  if (exiting_syscall && syscallno >= 0) {
+    exiting_syscall = false;
+    if (start_syscallno == syscallno) {
+      end_syscall = chrono::steady_clock::now();
+      #if PATCHING_OUTPUT
+      cout << step_counter << ": end syscall " << syscallno << "(tick count " << t->tick_count() << ")" << endl;
+      #endif
+      double syscall_duration = chrono::duration <double, milli> (end_syscall - start_syscall).count();
+      auto it = after_patching.find(syscallno);
+      if (it == after_patching.end()) {
+        // syscall hasn't been patched yet
+        before_patching[syscallno].push_back(syscall_duration);
+      }
+    }
+  }
+  #endif
+
   t->resume_execution(resume, RESUME_NONBLOCKING, ticks_request);
   #if XDEBUG_RESUME
   resume3++;
@@ -1155,6 +1178,18 @@ void RecordSession::syscall_state_changed(RecordTask* t,
       return;
 
     case ENTERING_SYSCALL: {
+      // TODO: delete
+      // TODO: determine a syscall here, define as the start point; 
+      #if XDEBUG_PATCHING
+      intptr_t syscallno = t->regs().original_syscallno();
+      if (syscallno >= 0) {
+        start_syscall = after_wait;
+        start_syscallno = syscallno;
+        #if PATCHING_OUTPUT
+        cout << step_counter << ": start syscall " << syscallno << "(tick count " << t->tick_count() << ")" << endl;
+        #endif
+      }
+      #endif
       debug_exec_state("EXEC_SYSCALL_ENTRY", t);
       ASSERT(t, !t->emulated_stop_pending);
 
@@ -1221,6 +1256,22 @@ void RecordSession::syscall_state_changed(RecordTask* t,
       debug_exec_state("EXEC_SYSCALL_DONE", t);
 
       DEBUG_ASSERT(t->stop_sig() == 0);
+
+      #if XDEBUG_PATCHING
+      intptr_t my_syscallno = t->regs().original_syscallno();
+      if ( my_syscallno >= 0) {
+        exiting_syscall = true;
+        if (my_syscallno == start_syscallno && after_patching.find(my_syscallno) != after_patching.end()) {
+          // This is the exit for traced syscall (tracee recorded syscall)
+          after_patch_end_syscall = chrono::steady_clock::now();
+          double duration = chrono::duration <double, milli> (after_patch_end_syscall - after_patch_start_syscall).count();
+          after_patching[my_syscallno].push_back(duration);
+          #if PATCHING_OUTPUT
+          cout << step_counter << ": after patched syscall " << t->ev().Syscall().number << " exiting" << endl;
+          #endif
+        }
+      }
+      #endif
 
       SupportedArch syscall_arch = t->ev().Syscall().arch();
       int syscallno = t->ev().Syscall().number;
@@ -1340,6 +1391,7 @@ void RecordSession::syscall_state_changed(RecordTask* t,
           if (t->retry_syscall_patching) {
             LOG(debug) << "Retrying deferred syscall patching";
             if (t->vm()->monkeypatcher().try_patch_syscall(t, false)) {
+              cout << "1 patch" << endl;
               // Syscall was patched. Emit event and continue execution.
               auto ev = Event::patch_syscall();
               ev.PatchSyscall().patch_after_syscall = true;
@@ -1924,7 +1976,6 @@ static bool is_ptrace_any_sysemu(SupportedArch arch, int command)
 bool RecordSession::process_syscall_entry(RecordTask* t, StepState* step_state,
                                           RecordResult* step_result,
                                           SupportedArch syscall_arch) {
-  LOG(debug) << "process_syscall_entry() was called";
   if (const RecordTask::StashedSignal* sig = t->stashed_sig_not_synthetic_SIGCHLD()) {
     // The only four cases where we allow a stashed signal to be pending on
     // syscall entry are:
@@ -1966,6 +2017,13 @@ bool RecordSession::process_syscall_entry(RecordTask* t, StepState* step_state,
 
     // Don't ever patch a sigreturn syscall. These can't go through the syscallbuf.
     if (!is_sigreturn(t->regs().original_syscallno(), t->arch())) {
+      #if XDEBUG_PATCHING
+      if (t->is_in_traced_syscall()) {
+        after_patch_start_syscall = chrono::steady_clock::now();
+        start_syscallno = t->regs().original_syscallno();
+      }
+      #endif
+      // every patching goes from here
       if (t->vm()->monkeypatcher().try_patch_syscall(t)) {
         // Syscall was patched. Emit event and continue execution.
         LOG(debug) << "syscall has been patched";
@@ -2548,7 +2606,9 @@ RecordSession::RecordResult RecordSession::record_step() {
     last_task_switchable = ALLOW_SWITCH;
     #if XDEBUG_LATENCY
       tracee_exit = chrono::steady_clock::now();
+      #if LATENCY_OUTPUT
       cout << "tracee execve - tracee exit: " << chrono::duration <double, milli> (tracee_exit - tracee_execve).count() << " ms" << endl;
+      #endif
       after_tracee_exit = true;
     #endif
     return result;

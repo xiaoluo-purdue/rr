@@ -872,24 +872,15 @@ bool TraceWriter::try_clone_file(RecordTask* t,
     return false;
   }
 
-  LOG(debug) << "dest path: " << dest_path;
   int ret = ioctl(dest, BTRFS_IOC_CLONE, src.get());
   LOG(debug) << "ioctl(dest, BTRFS_IOC_CLONE, src) = " << ret;
   if (ret < 0) {
-    #if XDEBUG_CLONING
-    cout << "try file cloning failed!" << endl;
-    #endif
-    LOG(debug) << "try file cloning falied!";
     LOG(debug) << "errno: " << errno;
     LOG(debug) << "error reason: " << strerror(errno);
     // maybe not on the same filesystem, or filesystem doesn't support clone?
     unlink(dest_path.c_str());
     return false;
   }
-  #if XDEBUG_CLONING
-  cout << "try file cloning success!";
-  #endif
-  LOG(debug) << "try file cloning success!";
   *new_name = path;
   return true;
 }
@@ -1361,7 +1352,9 @@ TraceWriter::TraceWriter(const std::string& file_name,
   }
   #if XDEBUG_LATENCY
     end_new_compressed_writer = chrono::steady_clock::now();
+    #if LATENCY_OUTPUT
     cout << "create compressed writer: " << chrono::duration <double, milli> (end_new_compressed_writer - start_new_compressed_writer).count() << " ms" << endl;
+    #endif
   #endif
 
   string ver_path = incomplete_version_path();

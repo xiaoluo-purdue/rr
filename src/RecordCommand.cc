@@ -693,12 +693,14 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
 
   #if XDEBUG_LATENCY
     before_record = chrono::steady_clock::now();
+    #if LATENCY_OUTPUT
     cout << "RR start - before record step: " << chrono::duration <double, milli> (before_record - RR_start).count() << " ms" << endl;
+    #endif
   #endif
 
   do {
-    #if XDEBUG_LATENCY
     step_counter++;
+    #if XDEBUG_LATENCY
     auto start_step = chrono::steady_clock::now();
     #endif
     bool done_initial_exec = session->done_initial_exec();
@@ -744,7 +746,9 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
 
   #if XDEBUG_LATENCY
     auto after_close_trace_writer = chrono::steady_clock::now();
+    #if LATENCY_OUTPUT
     cout << "close trace writer: " << chrono::duration <double, milli> (after_close_trace_writer - before_close_trace_writer).count() << " ms" << endl;
+    #endif
   #endif
 
   static_session = nullptr;
@@ -891,7 +895,9 @@ int RecordCommand::run(vector<string>& args) {
 
   #if XDEBUG_LATENCY
     RR_after_record = chrono::steady_clock::now();
+    #if LATENCY_OUTPUT
     cout << "tracee exit - RR after record: " << chrono::duration <double, milli> (RR_after_record - tracee_exit).count() << " ms" << endl;
+    #endif
   #endif
   // Everything should have been cleaned up by now.
   check_for_leaks();

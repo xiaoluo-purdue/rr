@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <vector>
 #include <chrono>
+#include <unordered_map>
 
 /**
  * Print siginfo on ostream.
@@ -226,15 +227,15 @@ template <typename T> inline void* HEX(T v) {
       static_cast<typename std::make_unsigned<T>::type>(v));
 }
 
-#define XDEBUG_CLONING 0
-#define XDEBUG_WORKFLOW 0
 #define XDEBUG_PATCHING 0
-#define XDEBUG_RECORDLOOP 0
-#define XDEBUG_SCHEDULING 0
+#define PATCHING_OUTPUT 0
 
 #define XDEBUG_LATENCY  1
+#define LATENCY_OUTPUT 1
 #define XDEBUG_WAIT   0
 #define XDEBUG_RESUME 0
+
+extern int step_counter;
 
 #if XDEBUG_LATENCY
 extern std::chrono::time_point<std::chrono::steady_clock> RR_start;
@@ -254,7 +255,6 @@ extern bool stopped_after_wait;
 
 extern bool after_tracee_exit;
 
-extern int step_counter;
 extern bool no_execve;
 extern std::vector<double> no_execve_wait_times;
 extern std::vector<double> no_execve_blocking_times;
@@ -278,6 +278,24 @@ extern int resume4;
 extern int resume5;
 #endif
 #endif
+
+#if XDEBUG_PATCHING
+extern std::vector<std::string> patching_names;
+
+extern std::unordered_map<intptr_t, std::vector<double>> before_patching;
+extern std::unordered_map<intptr_t, std::vector<double>> after_patching;
+
+extern std::chrono::time_point<std::chrono::steady_clock> start_syscall;
+extern std::chrono::time_point<std::chrono::steady_clock> end_syscall;
+
+extern std::chrono::time_point<std::chrono::steady_clock> after_patch_start_syscall;
+extern std::chrono::time_point<std::chrono::steady_clock> after_patch_end_syscall;
+
+extern int start_syscallno;
+
+extern bool exiting_syscall;
+#endif
+
 } // namespace rr
 
 #endif // RR_LOG_H
