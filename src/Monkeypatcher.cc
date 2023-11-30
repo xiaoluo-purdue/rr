@@ -1115,15 +1115,10 @@ bool Monkeypatcher::try_patch_syscall_x86ish(RecordTask* t, bool entering_syscal
 
     #if XDEBUG_PATCHING
     patching_names.push_back(syscall_name(syscallno, t->arch()));
-    #if PATCHING_OUTPUT
+    #if PATCHING_DEBUG
     cout << "patched syscall name: " << syscall_name(syscallno, t->arch())
         << " (" << syscallno << ")" << endl;
     #endif
-    assert(after_patching.find(syscallno) == after_patching.end());
-    after_patching[syscallno] = std::vector<double>({});
-    if (after_patching.find(syscallno) == after_patching.end()) {
-      cout << "(" << step_counter << ") ERROR: entry with key " << syscallno << " does not exist" << endl;
-    }
     #endif
 
   return true;

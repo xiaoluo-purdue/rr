@@ -575,7 +575,11 @@ untraced_replay_assist_syscall_base(int syscallno, long a0, long a1, long a2,
 #define replay_only_syscall0(no) replay_only_syscall1(no, 0)
 
 static int privileged_untraced_close(int fd) {
+  #if MEASURE_SYSCALL_EXETIME
+  // TODO: cannot comment the following line out because it will cause assertion failed:
+  //        -> Assertion `false' failed to hold. Can't defer deterministic or internal signal {signo:SIGSEGV,errno:SUCCESS,code:SEGV_MAPERR,addr:0x67ffff90}
   printf("privileged_untraced_close()\n");
+  #endif
   return privileged_unrecorded_syscall1(SYS_close, fd);
 }
 
@@ -1608,7 +1612,7 @@ static long privileged_sys_generic_nonblocking_fd(const struct syscall_info* cal
 }
 
 static long sys_clock_gettime(struct syscall_info* call) {
-  // TODO: delete this
+  // TODO: cannot use clock_gettime here because it would cause dead loop
   // printf("sys_clock_gettime()\n");
 
   const int syscallno = SYS_clock_gettime;
@@ -1797,11 +1801,11 @@ static long sys_fcntl64(struct syscall_info* call)
 static long sys_fcntl(struct syscall_info* call)
 #endif
 {
-  // TODO: delete this
-  // printf("sys_fcntl()\n");
   int res;
+  #if MEASURE_SYSCALL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
+  #endif
   switch (call->args[1]) {
     case F_SETFL:
       if (call->args[2] == O_DIRECT) {
@@ -1851,8 +1855,10 @@ static long sys_fcntl(struct syscall_info* call)
     default:
       res = traced_raw_syscall(call);
   }
+  #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   printf("sys_fcntl() took %lf ms\n", ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0);
+  #endif
   return res;
 }
 
@@ -1954,10 +1960,10 @@ static long sys_futex(struct syscall_info* call) {
     return traced_raw_syscall(call);
   }
 
-  // TODO: delete this
-  // printf("sys_futex()\n");
+  #if MEASURE_SYSCALL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
+  #endif
   int op = call->args[1];
   int flags = 0;
   switch (FUTEX_CMD_MASK & op) {
@@ -2029,16 +2035,18 @@ static long sys_futex(struct syscall_info* call) {
     copy_futex_int(saved_uaddr2, uaddr2);
   }
   long res = commit_raw_syscall(syscallno, ptr, ret);
+  #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   printf("sys_futex() took %lf ms\n", ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0);
+  #endif
   return res;
 }
 
 static long sys_getrandom(struct syscall_info* call) {
-  // TODO: delete this
-  // printf("sys_getrandom()\n");
+  #if MEASURE_SYSCALL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
+  #endif
   void* buf = (void*)call->args[0];
   size_t buf_len = (size_t)call->args[1];
   unsigned int flags = (unsigned int)call->args[2];
@@ -2061,16 +2069,18 @@ static long sys_getrandom(struct syscall_info* call) {
   ret = untraced_syscall3(call->no, buf2, buf_len, flags);
   ptr = copy_output_buffer(ret, ptr, buf, buf2);
   long res = commit_raw_syscall(call->no, ptr, ret);
+  #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   printf("sys_getrandom() took %lf ms\n", ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0);
+  #endif
   return res;
 }
 
 static long sys_generic_getdents(struct syscall_info* call) {
-  // TODO: delete this
-  // printf("sys_generic_getdents()\n");
+  #if MEASURE_SYSCALL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
+  #endif
   int fd = (int)call->args[0];
   void* buf = (void*)call->args[1];
   unsigned int count = (unsigned int)call->args[2];
@@ -2090,8 +2100,10 @@ static long sys_generic_getdents(struct syscall_info* call) {
   ret = untraced_syscall3(call->no, fd, buf2, count);
   ptr = copy_output_buffer(ret, ptr, buf, buf2);
   long res = commit_raw_syscall(call->no, ptr, ret);
+  #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   printf("sys_generic_getdents() took %lf ms\n", ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0);
+  #endif
   return res;
 }
 
@@ -2315,10 +2327,10 @@ static long sys_madvise(struct syscall_info* call) {
 }
 
 static long sys_mprotect(struct syscall_info* call) {
-  // // TODO: delete this
-  // printf("sys_mprotect()\n");
+  #if MEASURE_SYSCALL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
+  #endif
   const int syscallno = SYS_mprotect;
   void* addr = (void*)call->args[0];
   size_t length = call->args[1];
@@ -2353,8 +2365,10 @@ static long sys_mprotect(struct syscall_info* call) {
   buffer_hdr()->mprotect_record_count_completed++;
 
   long res = commit_raw_syscall(syscallno, ptr, ret);
+  #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   printf("sys_mprotect() took %lf ms\n", ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0);
+  #endif
   return res;
 }
 
@@ -2467,10 +2481,10 @@ static long sys_openat(struct syscall_info* call) {
     return traced_raw_syscall(call);
   }
 
-  // TODO: delete this
-  // printf("sys_openat()\n");
+  #if MEASURE_SYSCALL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
+  #endif
 
   const int syscallno = SYS_openat;
   int dirfd = call->args[0];
@@ -2495,8 +2509,10 @@ static long sys_openat(struct syscall_info* call) {
   struct check_open_state state = capture_check_open_state();
   ret = commit_raw_syscall(syscallno, ptr, ret);
   int res = check_file_open_ok(call, ret, state);
+  #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   printf("sys_openat() took %lf ms\n", ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0);
+  #endif
   return res;
 }
 
@@ -2701,10 +2717,10 @@ static long sys_epoll_wait(struct syscall_info* call) {
 #define CLONE_SIZE_THRESHOLD 0x10000
 
 static long sys_read(struct syscall_info* call) {
-  // TODO: delete this
-  // printf("sys_read\n");
+  #if MEASURE_SYSCALL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
+  #endif
   if (force_traced_syscall_for_chaos_mode()) {
     /* Reading from a pipe could unblock a higher priority task */
     return traced_raw_syscall(call);
@@ -2820,8 +2836,10 @@ static long sys_read(struct syscall_info* call) {
   ret = untraced_syscall3(syscallno, fd, buf2, count);
   ptr = copy_output_buffer(ret, ptr, buf, buf2);
   long res = commit_raw_syscall(syscallno, ptr, ret);
+  #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   printf("sys_read() took %lf ms\n", ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0);
+  #endif
   return res;
 }
 
@@ -2860,11 +2878,10 @@ static long sys_pread64(struct syscall_info* call) {
 
 #if defined(SYS_readlink)
 static long sys_readlink(struct syscall_info* call) {
-  // TODO:delete this
-  // printf("sys_readlink()\n");
+  #if MEASURE_SYSCALL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
-
+  #endif
   const int syscallno = SYS_readlink;
   const char* path = (const char*)call->args[0];
   char* buf = (char*)call->args[1];
@@ -2887,17 +2904,19 @@ static long sys_readlink(struct syscall_info* call) {
   ret = untraced_syscall3(syscallno, path, buf2, bufsiz);
   ptr = copy_output_buffer(ret, ptr, buf, buf2);
   long res = commit_raw_syscall(syscallno, ptr, ret);
+  #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   printf("sys_readlink() took %lf ms\n", ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0);
+  #endif
   return res;
 }
 #endif
 
 static long sys_readlinkat(struct syscall_info* call, int privileged) {
-  // TODO: delete this
-  // printf("sys_readlinkat()\n");
+  #if MEASURE_SYSCALL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
+  #endif
   const int syscallno = SYS_readlinkat;
   int dirfd = call->args[0];
   const char* path = (const char*)call->args[1];
@@ -2928,7 +2947,10 @@ static long sys_readlinkat(struct syscall_info* call, int privileged) {
   }
   ptr = copy_output_buffer(ret, ptr, buf, buf2);
   long res = commit_raw_syscall(syscallno, ptr, ret);
+  #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
+  printf("sys_readlinkat() took %lf ms\n", ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0);
+  #endif
   return res;
 }
 
@@ -3454,8 +3476,10 @@ static long sys_xstat64(struct syscall_info* call) {
   /* Like open(), not arming the desched event because it's not
    * needed for correctness, and there are no data to suggest
    * whether it's a good idea perf-wise. */
+  #if MEASURE_SYSCALL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);  
+  #endif
   void* ptr = prep_syscall();
   stat64_t* buf2 = NULL;
   long ret;
@@ -3471,9 +3495,10 @@ static long sys_xstat64(struct syscall_info* call) {
     local_memcpy(buf, buf2, sizeof(*buf));
   }
   long res = commit_raw_syscall(syscallno, ptr, ret);
+  #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
-  // TODO
-  printf("sys_xstat64() took %lf ns\n", ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0);
+  printf("sys_xstat64() took %lf ms\n", ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0);
+  #endif
   return res;
 }
 

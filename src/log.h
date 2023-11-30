@@ -228,10 +228,10 @@ template <typename T> inline void* HEX(T v) {
 }
 
 #define XDEBUG_PATCHING 0
-#define PATCHING_OUTPUT 0
+#define PATCHING_DEBUG 0
 
-#define XDEBUG_LATENCY  1
-#define LATENCY_OUTPUT 1
+#define XDEBUG_LATENCY  0
+#define LATENCY_OUTPUT 0
 #define XDEBUG_WAIT   0
 #define XDEBUG_RESUME 0
 
@@ -283,12 +283,10 @@ extern int resume5;
 extern std::vector<std::string> patching_names;
 
 extern std::unordered_map<intptr_t, std::vector<double>> before_patching;
-extern std::unordered_map<intptr_t, std::vector<double>> after_patching;
 
 extern std::chrono::time_point<std::chrono::steady_clock> start_syscall;
 extern std::chrono::time_point<std::chrono::steady_clock> end_syscall;
 
-extern std::chrono::time_point<std::chrono::steady_clock> after_patch_start_syscall;
 extern std::chrono::time_point<std::chrono::steady_clock> after_patch_end_syscall;
 
 extern int start_syscallno;

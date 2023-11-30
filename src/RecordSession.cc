@@ -930,15 +930,11 @@ void RecordSession::task_continue(const StepState& step_state) {
     exiting_syscall = false;
     if (start_syscallno == syscallno) {
       end_syscall = chrono::steady_clock::now();
-      #if PATCHING_OUTPUT
+      #if PATCHING_DEBUG
       cout << step_counter << ": end syscall " << syscallno << "(tick count " << t->tick_count() << ")" << endl;
       #endif
       double syscall_duration = chrono::duration <double, milli> (end_syscall - start_syscall).count();
-      auto it = after_patching.find(syscallno);
-      if (it == after_patching.end()) {
-        // syscall hasn't been patched yet
-        before_patching[syscallno].push_back(syscall_duration);
-      }
+      before_patching[syscallno].push_back(syscall_duration);
     }
   }
   #endif
@@ -1185,7 +1181,7 @@ void RecordSession::syscall_state_changed(RecordTask* t,
       if (syscallno >= 0) {
         start_syscall = after_wait;
         start_syscallno = syscallno;
-        #if PATCHING_OUTPUT
+        #if PATCHING_DEBUG
         cout << step_counter << ": start syscall " << syscallno << "(tick count " << t->tick_count() << ")" << endl;
         #endif
       }
@@ -1258,18 +1254,11 @@ void RecordSession::syscall_state_changed(RecordTask* t,
       DEBUG_ASSERT(t->stop_sig() == 0);
 
       #if XDEBUG_PATCHING
-      intptr_t my_syscallno = t->regs().original_syscallno();
-      if ( my_syscallno >= 0) {
+      if (t->regs().original_syscallno() >= 0) {
         exiting_syscall = true;
-        if (my_syscallno == start_syscallno && after_patching.find(my_syscallno) != after_patching.end()) {
-          // This is the exit for traced syscall (tracee recorded syscall)
-          after_patch_end_syscall = chrono::steady_clock::now();
-          double duration = chrono::duration <double, milli> (after_patch_end_syscall - after_patch_start_syscall).count();
-          after_patching[my_syscallno].push_back(duration);
-          #if PATCHING_OUTPUT
-          cout << step_counter << ": after patched syscall " << t->ev().Syscall().number << " exiting" << endl;
-          #endif
-        }
+        #if PATCHING_DEBUG
+        cout << step_counter << ": exiting syscall " << t->regs().original_syscallno() << "(tick count " << t->tick_count() << ")" << endl;
+        #endif
       }
       #endif
 
@@ -2019,7 +2008,6 @@ bool RecordSession::process_syscall_entry(RecordTask* t, StepState* step_state,
     if (!is_sigreturn(t->regs().original_syscallno(), t->arch())) {
       #if XDEBUG_PATCHING
       if (t->is_in_traced_syscall()) {
-        after_patch_start_syscall = chrono::steady_clock::now();
         start_syscallno = t->regs().original_syscallno();
       }
       #endif

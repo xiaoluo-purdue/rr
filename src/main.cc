@@ -21,6 +21,10 @@
 #include "log.h"
 #include "util.h"
 
+#if XDEBUG_PATCHING
+#include <algorithm>
+#endif
+
 using namespace std;
 
 namespace rr {
@@ -71,12 +75,10 @@ int resume5 = 0;
 std::vector<string> patching_names;
 
 std::unordered_map<intptr_t, std::vector<double>> before_patching;
-std::unordered_map<intptr_t, std::vector<double>> after_patching;
 
 std::chrono::time_point<std::chrono::steady_clock> start_syscall;
 std::chrono::time_point<std::chrono::steady_clock> end_syscall;
 
-std::chrono::time_point<std::chrono::steady_clock> after_patch_start_syscall;
 std::chrono::time_point<std::chrono::steady_clock> after_patch_end_syscall;
 
 int start_syscallno = -1;
@@ -379,49 +381,25 @@ int main(int argc, char* argv[]) {
 
 
   #if XDEBUG_PATCHING
-  #if PATCHING_OUTPUT
-  cout << "before patching: " << endl;
+  cout << "unpatched syscall: " << endl;
   for(const auto& pair : before_patching) {
     int syscallno = pair.first;
     cout << syscall_name(syscallno, SupportedArch::x86_64) << " (" << syscallno << "): ";
-    for (double duration : pair.second) {
-      cout << duration << ", ";
+    // for (double duration : pair.second) {
+    //   cout << duration << ", ";
+    // }
+    // cout << endl;
+    // find the median value in the vector
+    vector<double> durations = pair.second;
+    sort(durations.begin(), durations.end());
+    double median;
+    if (durations.size() % 2 == 0) {
+      median = (durations[durations.size() / 2 - 1] + durations[durations.size() / 2]) / 2;
+    } else {
+      median = durations[durations.size() / 2];
     }
-    cout << endl;
+    cout << median << " ms" << endl;
   }
-
-  cout << "\nafter patching: " << endl;
-  for(const auto& pair : after_patching) {
-    int syscallno = pair.first;
-    cout << syscall_name(syscallno, SupportedArch::x86_64) << " (" << syscallno << "): ";
-    for (double duration : pair.second) {
-      cout << duration << ", ";
-    }
-    cout << endl;
-  }
-  #endif
-  cout << "patching optimization: " << endl;
-  for (const auto& pair : after_patching) {
-    int syscallno = pair.first;
-    if (before_patching.find(syscallno) != before_patching.end() &&
-        pair.second.size()) {
-      double before_sum = 0;
-      for (const double duration : before_patching[syscallno]) {
-        before_sum += duration;
-      }
-      double before_avg = before_sum / before_patching[syscallno].size();
-
-      double after_sum = 0;
-      for(const double duration : pair.second) {
-        after_sum += duration;
-      }
-      double after_avg = after_sum / pair.second.size();
-
-      cout << syscall_name(syscallno, SupportedArch::x86_64) << " (" << syscallno << "): before: "
-        << before_avg << "\tafter: " << after_avg << "(" << (after_avg / before_avg) * 100 << "% of before)" << endl;
-    }
-  }
-
   #endif
 
   return res;
