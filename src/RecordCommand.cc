@@ -652,8 +652,6 @@ static void* repeat_SIGTERM(__attribute__((unused)) void* p) {
 }
 
 static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
-  LOG(info) << "Start recording...";
-
   auto session = RecordSession::create(
       args, flags.extra_env, flags.disable_cpuid_features,
       flags.use_syscall_buffer, flags.syscallbuf_desched_sig,
@@ -699,6 +697,7 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   #endif
 
   do {
+    
     step_counter++;
     #if XDEBUG_LATENCY
     auto start_step = chrono::steady_clock::now();

@@ -930,7 +930,7 @@ void RecordSession::task_continue(const StepState& step_state) {
     exiting_syscall = false;
     if (start_syscallno == syscallno) {
       end_syscall = chrono::steady_clock::now();
-      #if PATCHING_DEBUG
+      #if PATCHING_DEBUG_OUTPUT
       cout << step_counter << ": end syscall " << syscallno << "(tick count " << t->tick_count() << ")" << endl;
       #endif
       double syscall_duration = chrono::duration <double, milli> (end_syscall - start_syscall).count();
@@ -1181,7 +1181,7 @@ void RecordSession::syscall_state_changed(RecordTask* t,
       if (syscallno >= 0) {
         start_syscall = after_wait;
         start_syscallno = syscallno;
-        #if PATCHING_DEBUG
+        #if PATCHING_DEBUG_OUTPUT
         cout << step_counter << ": start syscall " << syscallno << "(tick count " << t->tick_count() << ")" << endl;
         #endif
       }
@@ -1256,7 +1256,7 @@ void RecordSession::syscall_state_changed(RecordTask* t,
       #if XDEBUG_PATCHING
       if (t->regs().original_syscallno() >= 0) {
         exiting_syscall = true;
-        #if PATCHING_DEBUG
+        #if PATCHING_DEBUG_OUTPUT
         cout << step_counter << ": exiting syscall " << t->regs().original_syscallno() << "(tick count " << t->tick_count() << ")" << endl;
         #endif
       }

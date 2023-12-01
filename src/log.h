@@ -228,7 +228,7 @@ template <typename T> inline void* HEX(T v) {
 }
 
 #define XDEBUG_PATCHING 0
-#define PATCHING_DEBUG 0
+#define PATCHING_DEBUG_OUTPUT 0
 
 #define XDEBUG_LATENCY  0
 #define LATENCY_OUTPUT 0
