@@ -697,13 +697,15 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   #endif
 
   do {
-    
     step_counter++;
     #if XDEBUG_LATENCY
     auto start_step = chrono::steady_clock::now();
     #endif
     bool done_initial_exec = session->done_initial_exec();
     
+    // TODO: delete this
+    cout << "trace dir: " << session->trace_writer().dir() << endl;
+
     step_result = session->record_step();
     
     // Only create latest-trace symlink if --output-trace-dir is not being used
