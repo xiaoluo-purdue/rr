@@ -794,6 +794,12 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
         }
       #endif
 
+      #if SERVERLESS_OUTPUT
+        if (t->ev().Syscall().is_exec()) {
+          cout << t->time_at_start_of_last_timeslice << ": execve()" << endl;
+        }
+      #endif
+
       break;
     }
 
@@ -1142,6 +1148,11 @@ static bool is_in_privileged_syscall(RecordTask* t) {
 void RecordSession::syscall_state_changed(RecordTask* t,
                                           StepState* step_state) {
   LOG(debug) << "syscall_state_changed() was called";
+  #if SERVERLESS_OUTPUT
+    if (is_exit_group_syscall(t->regs().original_syscallno(), t->arch())) {
+      cout << t->time_at_start_of_last_timeslice << ": exit_group()" << endl;
+    }
+  #endif  
   switch (t->ev().Syscall().state) {
     case ENTERING_SYSCALL_PTRACE:
       debug_exec_state("EXEC_SYSCALL_ENTRY_PTRACE", t);

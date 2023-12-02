@@ -235,6 +235,8 @@ template <typename T> inline void* HEX(T v) {
 #define XDEBUG_WAIT   0
 #define XDEBUG_RESUME 0
 
+#define SERVERLESS_OUTPUT 1
+
 extern int step_counter;
 
 #if XDEBUG_LATENCY
