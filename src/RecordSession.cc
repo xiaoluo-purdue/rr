@@ -9,6 +9,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <chrono>
+#if TEMP
+#include <cstdlib>
+#endif
 
 #include <algorithm>
 #include <sstream>
@@ -794,11 +797,11 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
         }
       #endif
 
-      #if SERVERLESS_OUTPUT
-        if (t->ev().Syscall().is_exec()) {
-          cout << t->time_at_start_of_last_timeslice << ": execve()" << endl;
-        }
-      #endif
+      // #if SERVERLESS_OUTPUT
+      //   if (t->ev().Syscall().is_exec()) {
+      //     cout << t->time_at_start_of_last_timeslice << ": execve()" << endl;
+      //   }
+      // #endif
 
       break;
     }
@@ -1148,11 +1151,34 @@ static bool is_in_privileged_syscall(RecordTask* t) {
 void RecordSession::syscall_state_changed(RecordTask* t,
                                           StepState* step_state) {
   LOG(debug) << "syscall_state_changed() was called";
-  #if SERVERLESS_OUTPUT
-    if (is_exit_group_syscall(t->regs().original_syscallno(), t->arch())) {
-      cout << t->time_at_start_of_last_timeslice << ": exit_group()" << endl;
-    }
-  #endif  
+  // #if SERVERLESS_OUTPUT
+  //   if (is_exit_group_syscall(t->regs().original_syscallno(), t->arch())) {
+  //     cout << t->time_at_start_of_last_timeslice << ": exit_group()" << endl;
+  //   }
+  // #endif  
+  // #if TEMP
+  //   if (is_set_robust_list_syscall(t->regs().original_syscallno(), t->arch()) && t->ev().Syscall().state == ENTERING_SYSCALL) {
+  //     cout << "set_robust_list" << endl;
+  //     // TODO: restore point
+  //   }
+
+  //   if (is_exit_group_syscall(t->regs().original_syscallno(), t->arch())) {
+  //     // TODO: check can we checkpoint here?
+  //     cout << "try checkpointing here..." << endl;
+  //     string dump_dir = "/home/rui/Documents/test/criu/images/rr_counter/dump.log";
+  //     string images_dir = "/home/rui/Documents/test/criu/images/rr_counter";
+  //     string command = "sudo criu dump -vvvv -o " 
+  //       + dump_dir + " -t " + std::to_string(tracee_pid) + " --images-dir " 
+  //       + images_dir + " && echo OK";
+  //     cout << "executing command: " << command << endl;
+  //     int status = system(command.c_str());
+  //     if (status == 0) {
+  //       std::cout << "Command executed successfully." << std::endl;
+  //     } else {
+  //         std::cerr << "Command execution failed." << std::endl;
+  //     }    
+  //   }
+  // #endif
   switch (t->ev().Syscall().state) {
     case ENTERING_SYSCALL_PTRACE:
       debug_exec_state("EXEC_SYSCALL_ENTRY_PTRACE", t);

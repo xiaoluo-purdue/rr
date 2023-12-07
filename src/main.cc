@@ -86,6 +86,10 @@ int start_syscallno = -1;
 bool exiting_syscall = false;
 #endif
 
+#if TEMP
+pid_t tracee_pid = -1;
+#endif
+
 // Show version and quit.
 static bool show_version = false;
 static bool show_cmd_list = false;
@@ -380,7 +384,7 @@ int main(int argc, char* argv[]) {
   #endif
 
 
-  #if XDEBUG_PATCHING
+  #if XDEBUG_PATCHING_OUTPUT
   cout << "unpatched syscall: " << endl;
   for(const auto& pair : before_patching) {
     int syscallno = pair.first;

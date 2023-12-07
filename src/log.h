@@ -227,15 +227,17 @@ template <typename T> inline void* HEX(T v) {
       static_cast<typename std::make_unsigned<T>::type>(v));
 }
 
-#define XDEBUG_PATCHING 0
+#define XDEBUG_PATCHING 1
 #define PATCHING_DEBUG_OUTPUT 0
 
-#define XDEBUG_LATENCY  0
+#define XDEBUG_LATENCY 1
 #define LATENCY_OUTPUT 0
 #define XDEBUG_WAIT   0
 #define XDEBUG_RESUME 0
 
 #define SERVERLESS_OUTPUT 1
+
+#define TEMP 0
 
 extern int step_counter;
 
@@ -294,6 +296,10 @@ extern std::chrono::time_point<std::chrono::steady_clock> after_patch_end_syscal
 extern int start_syscallno;
 
 extern bool exiting_syscall;
+#endif
+
+#if TEMP
+extern pid_t tracee_pid;
 #endif
 
 } // namespace rr
