@@ -237,7 +237,7 @@ template <typename T> inline void* HEX(T v) {
 
 #define SERVERLESS_OUTPUT 1
 
-#define CHECKPOINT 1
+#define CHECKPOINT 0
 
 extern int step_counter;
 
