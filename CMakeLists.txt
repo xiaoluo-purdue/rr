@@ -205,10 +205,17 @@ if(${CAPNP} STREQUAL "CAPNP-NOTFOUND")
   message(FATAL_ERROR "Can't find 'capnp' command; install Capnproto packages? https://github.com/rr-debugger/rr/wiki/Building-And-Installing#tldr")
 endif()
 
+find_program(CRIU criu)
+if(${CRIU} STREQUAL "CRIU-NOTFOUND")
+  message(FATAL_ERROR "Can't find 'criu' command; install CRIU packages?")
+endif()
+
 set(REQUIRED_LIBS
   capnp
 # zlib is required to handle ELF compression
   zlib
+# criu is required to handle checkpoint&restore
+  criu
 )
 
 foreach(required_lib ${REQUIRED_LIBS})
@@ -651,6 +658,7 @@ target_link_libraries(rr
   ${CMAKE_DL_LIBS}
   ${ZLIB_LDFLAGS}
   brotli
+  criu
 )
 
 if(staticlibs)

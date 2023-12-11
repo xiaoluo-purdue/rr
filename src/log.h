@@ -237,7 +237,7 @@ template <typename T> inline void* HEX(T v) {
 
 #define SERVERLESS_OUTPUT 1
 
-#define TEMP 0
+#define CHECKPOINT 1
 
 extern int step_counter;
 
@@ -298,7 +298,7 @@ extern int start_syscallno;
 extern bool exiting_syscall;
 #endif
 
-#if TEMP
+#if CHECKPOINT
 extern pid_t tracee_pid;
 #endif
 

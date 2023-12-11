@@ -3602,10 +3602,10 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
             << session.read_spawned_task_error();
   }
 
-  // #if TEMP
-  //   cout << "tracee pid: " << tid << endl;
-  //   tracee_pid = tid;
-  // #endif
+  #if CHECKPOINT
+    cout << "tracee pid: " << tid << endl;
+    tracee_pid = tid;
+  #endif
 
   t->clear_wait_status();
   t->open_mem_fd();

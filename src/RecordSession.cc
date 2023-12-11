@@ -9,8 +9,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <chrono>
-#if TEMP
+#if CHECKPOINT
 #include <cstdlib>
+#include <sstream>
+#include <fstream>
+#include <criu/criu.h>
 #endif
 
 #include <algorithm>
@@ -1151,12 +1154,38 @@ static bool is_in_privileged_syscall(RecordTask* t) {
 void RecordSession::syscall_state_changed(RecordTask* t,
                                           StepState* step_state) {
   LOG(debug) << "syscall_state_changed() was called";
+  #if CHECKPOINT
+    if (is_exit_group_syscall(t->regs().original_syscallno(), t->arch())  && t->ev().Syscall().state == ENTERING_SYSCALL) {
+      cout << "exit_group syscall" << endl;
+      // checkpoint here
+      // use criu to checkpoint the process with pid tracee_pid
+      string image_dir = "/home/rui/Documents/test/criu/images/rr_record";
+      int fd = open(image_dir.c_str(), O_DIRECTORY);
+
+      criu_init_opts();
+      criu_set_images_dir_fd(fd);
+      // double check here
+      criu_set_pid(tracee_pid);
+      criu_set_shell_job(true);
+      criu_set_log_level(4);
+      criu_set_log_file("checkpoint.log");
+      criu_set_leave_running(true);
+      int ret = criu_dump();
+
+      if (ret < 0) {
+        cout << "criu dump failed" << endl;
+      }
+      else {
+        cout << "criu dump succeeded" << endl;
+      }
+    }
+  #endif
   // #if SERVERLESS_OUTPUT
   //   if (is_exit_group_syscall(t->regs().original_syscallno(), t->arch())) {
   //     cout << t->time_at_start_of_last_timeslice << ": exit_group()" << endl;
   //   }
   // #endif  
-  // #if TEMP
+  // #if CHECKPOINT
   //   if (is_set_robust_list_syscall(t->regs().original_syscallno(), t->arch()) && t->ev().Syscall().state == ENTERING_SYSCALL) {
   //     cout << "set_robust_list" << endl;
   //     // TODO: restore point
@@ -1417,7 +1446,6 @@ void RecordSession::syscall_state_changed(RecordTask* t,
           if (t->retry_syscall_patching) {
             LOG(debug) << "Retrying deferred syscall patching";
             if (t->vm()->monkeypatcher().try_patch_syscall(t, false)) {
-              cout << "1 patch" << endl;
               // Syscall was patched. Emit event and continue execution.
               auto ev = Event::patch_syscall();
               ev.PatchSyscall().patch_after_syscall = true;

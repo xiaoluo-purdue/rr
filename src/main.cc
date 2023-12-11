@@ -86,7 +86,7 @@ int start_syscallno = -1;
 bool exiting_syscall = false;
 #endif
 
-#if TEMP
+#if CHECKPOINT
 pid_t tracee_pid = -1;
 #endif
 
