@@ -684,11 +684,6 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   pthread_t term_repeater_thread;
   int check_termination_count = 0;
 
-  double initial_exec_time = 0;
-  double record_step_time = 0;
-  double make_latest_trace_time = 0;
-  double check_termination_time = 0;
-
   #if XDEBUG_LATENCY
     before_record = chrono::steady_clock::now();
     #if LATENCY_OUTPUT
@@ -737,14 +732,16 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
   } while (step_result.status == RecordSession::STEP_CONTINUE);
 
   #if XDEBUG_LATENCY
+    #if LATENCY_OUTPUT
     auto before_close_trace_writer = chrono::steady_clock::now();
+    #endif
   #endif
 
   session->close_trace_writer(TraceWriter::CLOSE_OK);
 
   #if XDEBUG_LATENCY
-    auto after_close_trace_writer = chrono::steady_clock::now();
     #if LATENCY_OUTPUT
+    auto after_close_trace_writer = chrono::steady_clock::now();
     cout << "close trace writer: " << chrono::duration <double, milli> (after_close_trace_writer - before_close_trace_writer).count() << " ms" << endl;
     #endif
   #endif

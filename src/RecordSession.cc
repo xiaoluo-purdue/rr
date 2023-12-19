@@ -800,12 +800,6 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
         }
       #endif
 
-      // #if SERVERLESS_OUTPUT
-      //   if (t->ev().Syscall().is_exec()) {
-      //     cout << t->time_at_start_of_last_timeslice << ": execve()" << endl;
-      //   }
-      // #endif
-
       break;
     }
 
@@ -942,9 +936,6 @@ void RecordSession::task_continue(const StepState& step_state) {
     exiting_syscall = false;
     if (start_syscallno == syscallno) {
       end_syscall = chrono::steady_clock::now();
-      #if PATCHING_DEBUG_OUTPUT
-      cout << step_counter << ": end syscall " << syscallno << "(tick count " << t->tick_count() << ")" << endl;
-      #endif
       double syscall_duration = chrono::duration <double, milli> (end_syscall - start_syscall).count();
       before_patching[syscallno].push_back(syscall_duration);
     }
@@ -1180,34 +1171,6 @@ void RecordSession::syscall_state_changed(RecordTask* t,
       }
     }
   #endif
-  // #if SERVERLESS_OUTPUT
-  //   if (is_exit_group_syscall(t->regs().original_syscallno(), t->arch())) {
-  //     cout << t->time_at_start_of_last_timeslice << ": exit_group()" << endl;
-  //   }
-  // #endif  
-  // #if CHECKPOINT
-  //   if (is_set_robust_list_syscall(t->regs().original_syscallno(), t->arch()) && t->ev().Syscall().state == ENTERING_SYSCALL) {
-  //     cout << "set_robust_list" << endl;
-  //     // TODO: restore point
-  //   }
-
-  //   if (is_exit_group_syscall(t->regs().original_syscallno(), t->arch())) {
-  //     // TODO: check can we checkpoint here?
-  //     cout << "try checkpointing here..." << endl;
-  //     string dump_dir = "/home/rui/Documents/test/criu/images/rr_counter/dump.log";
-  //     string images_dir = "/home/rui/Documents/test/criu/images/rr_counter";
-  //     string command = "sudo criu dump -vvvv -o " 
-  //       + dump_dir + " -t " + std::to_string(tracee_pid) + " --images-dir " 
-  //       + images_dir + " && echo OK";
-  //     cout << "executing command: " << command << endl;
-  //     int status = system(command.c_str());
-  //     if (status == 0) {
-  //       std::cout << "Command executed successfully." << std::endl;
-  //     } else {
-  //         std::cerr << "Command execution failed." << std::endl;
-  //     }    
-  //   }
-  // #endif
   switch (t->ev().Syscall().state) {
     case ENTERING_SYSCALL_PTRACE:
       debug_exec_state("EXEC_SYSCALL_ENTRY_PTRACE", t);
@@ -1247,9 +1210,6 @@ void RecordSession::syscall_state_changed(RecordTask* t,
       if (syscallno >= 0) {
         start_syscall = after_wait;
         start_syscallno = syscallno;
-        #if PATCHING_DEBUG_OUTPUT
-        cout << step_counter << ": start syscall " << syscallno << "(tick count " << t->tick_count() << ")" << endl;
-        #endif
       }
       #endif
       debug_exec_state("EXEC_SYSCALL_ENTRY", t);
@@ -1322,9 +1282,6 @@ void RecordSession::syscall_state_changed(RecordTask* t,
       #if XDEBUG_PATCHING
       if (t->regs().original_syscallno() >= 0) {
         exiting_syscall = true;
-        #if PATCHING_DEBUG_OUTPUT
-        cout << step_counter << ": exiting syscall " << t->regs().original_syscallno() << "(tick count " << t->tick_count() << ")" << endl;
-        #endif
       }
       #endif
 

@@ -1115,7 +1115,7 @@ bool Monkeypatcher::try_patch_syscall_x86ish(RecordTask* t, bool entering_syscal
 
     #if XDEBUG_PATCHING
     patching_names.push_back(syscall_name(syscallno, t->arch()));
-    #if SERVERLESS_OUTPUT
+    #if PATCHED_SYSCALL_NAME
     cout << "patched syscall name: " << syscall_name(syscallno, t->arch())
         << " (" << syscallno << ")" << endl;
     #endif
