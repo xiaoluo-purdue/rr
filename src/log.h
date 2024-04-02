@@ -227,12 +227,12 @@ template <typename T> inline void* HEX(T v) {
       static_cast<typename std::make_unsigned<T>::type>(v));
 }
 
-#define XDEBUG_PATCHING 0
-#define XDEBUG_PATCHING_OUTPUT 0
-#define PATCHED_SYSCALL_NAME 0
+#define XDEBUG_PATCHING 1
+#define XDEBUG_PATCHING_OUTPUT 1
+#define PATCHED_SYSCALL_NAME 1
 
-#define XDEBUG_LATENCY 0
-#define LATENCY_OUTPUT 0
+#define XDEBUG_LATENCY 1
+#define LATENCY_OUTPUT 1
 #define XDEBUG_WAIT   0
 #define XDEBUG_RESUME 0
 
