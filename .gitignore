@@ -26,3 +26,4 @@ Testing/
 .idea/
 .*.swp
 build/
+cmake-build-debug-wsl/

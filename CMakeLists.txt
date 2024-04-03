@@ -602,7 +602,9 @@ if(PROC_SERVICE_H)
 endif()
 
 if (x86ish)
-  set(RR_SOURCES ${RR_SOURCES} src/test/x86/cpuid_loop.S)
+  set(RR_SOURCES ${RR_SOURCES} src/test/x86/cpuid_loop.S
+          src/CRIU.h
+          src/CRIU.cc)
 endif()
 
 set_source_files_properties(${RR_SOURCES}
