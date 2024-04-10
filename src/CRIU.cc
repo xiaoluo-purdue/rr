@@ -15,9 +15,10 @@ CRIU::CRIU() {}
 CRIU::~CRIU() {}
 
 void CRIU::check_point() {
+#if CHECKPOINT
   // checkpoint here
   // use criu to checkpoint the process with pid tracee_pid
-  string image_dir = "~/criu/images/rr_record";
+  string image_dir = "/home/xiao/criu/images/rr_record";
   int fd = open(image_dir.c_str(), O_DIRECTORY);
 
   criu_init_opts();
@@ -36,10 +37,13 @@ void CRIU::check_point() {
   else {
     cout << "criu dump succeeded" << endl;
   }
+#endif
 }
 
 void CRIU::restore_state() {
+#if CHECKPOINT
   criu_restore();
+#endif
 }
 
 } // namespace rr

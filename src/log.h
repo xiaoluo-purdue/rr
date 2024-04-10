@@ -236,7 +236,7 @@ template <typename T> inline void* HEX(T v) {
 #define XDEBUG_WAIT   0
 #define XDEBUG_RESUME 0
 
-#define CHECKPOINT 0
+#define CHECKPOINT 1
 
 extern int step_counter;
 
