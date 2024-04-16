@@ -263,6 +263,12 @@ extern std::vector<double> no_execve_wait_times;
 extern std::vector<double> no_execve_blocking_times;
 extern std::vector<double> no_execve_record_step_times;
 
+extern std::chrono::time_point<std::chrono::steady_clock> before_criu_checkpoint;
+extern std::chrono::time_point<std::chrono::steady_clock> after_criu_checkpoint;
+extern bool is_checkpointed;
+extern std::chrono::time_point<std::chrono::steady_clock> before_criu_restore;
+extern std::chrono::time_point<std::chrono::steady_clock> after_criu_restore;
+
 # if XDEBUG_WAIT
 extern int wait1_counter;
 extern int wait2_counter;

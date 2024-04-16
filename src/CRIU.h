@@ -30,8 +30,8 @@ public:
   CRIU();
   ~CRIU();
 
-  void check_point();
-  void restore_state();
+  static void check_point();
+  static void restore_state();
 };
 
 } // namespace rr

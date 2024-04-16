@@ -52,6 +52,7 @@ std::vector<double> no_execve_record_step_times;
 
 std::vector<double> block_times;
 bool stopped_after_wait = false;
+bool is_checkpointed = false;
 
 #if XDEBUG_WAIT
 int wait1_counter = 0;
