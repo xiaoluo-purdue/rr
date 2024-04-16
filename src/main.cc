@@ -52,7 +52,12 @@ std::vector<double> no_execve_record_step_times;
 
 std::vector<double> block_times;
 bool stopped_after_wait = false;
+
+std::chrono::time_point<std::chrono::steady_clock> before_criu_checkpoint;
+std::chrono::time_point<std::chrono::steady_clock> after_criu_checkpoint;
 bool is_checkpointed = false;
+std::chrono::time_point<std::chrono::steady_clock> before_criu_restore;
+std::chrono::time_point<std::chrono::steady_clock> after_criu_restore;
 
 #if XDEBUG_WAIT
 int wait1_counter = 0;
