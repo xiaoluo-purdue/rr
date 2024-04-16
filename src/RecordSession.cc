@@ -1147,11 +1147,20 @@ void RecordSession::syscall_state_changed(RecordTask* t,
   LOG(debug) << "syscall_state_changed() was called";
   #if CHECKPOINT
     if (is_exit_group_syscall(t->regs().original_syscallno(), t->arch())  && t->ev().Syscall().state == ENTERING_SYSCALL) {
-      cout << "exit_group syscall" << endl;
-      before_criu_checkpoint = chrono::steady_clock::now();
-      CRIU::check_point();
-      after_criu_checkpoint = chrono::steady_clock::now();
-      cout << "criu checkpoint time cost: " << chrono::duration <double, milli> (after_criu_checkpoint - before_criu_checkpoint).count() << " ms" << endl;
+      if (!is_checkpointed) {
+        cout << "exit_group syscall" << endl;
+        before_criu_checkpoint = chrono::steady_clock::now();
+        CRIU::check_point();
+        after_criu_checkpoint = chrono::steady_clock::now();
+        cout << "criu checkpoint time cost: " << chrono::duration <double, milli> (after_criu_checkpoint - before_criu_checkpoint).count() << " ms" << endl;
+        is_checkpointed = true;
+      } else {
+        cout << "criu restore" << endl;
+        before_criu_restore = chrono::steady_clock::now();
+        CRIU::restore_state();
+        after_criu_restore = chrono::steady_clock::now();
+        cout << "criu restore time cost: " << chrono::duration <double, milli> (after_criu_restore - before_criu_restore).count() << " ms" << endl;
+      }
     }
   #endif
   switch (t->ev().Syscall().state) {
@@ -1194,24 +1203,6 @@ void RecordSession::syscall_state_changed(RecordTask* t,
         start_syscall = after_wait;
         start_syscallno = syscallno;
       }
-        #if CHECKPOINT
-              if (is_exit_group_syscall(t->regs().original_syscallno(), t->arch())  && t->ev().Syscall().state == ENTERING_SYSCALL) {
-                if (!is_checkpointed) {
-                  cout << "exit_group syscall" << endl;
-                  before_criu_checkpoint = chrono::steady_clock::now();
-                  CRIU::check_point();
-                  after_criu_checkpoint = chrono::steady_clock::now();
-                  cout << "criu checkpoint time cost: " << chrono::duration <double, milli> (after_criu_checkpoint - before_criu_checkpoint).count() << " ms" << endl;
-                  is_checkpointed = true;
-                } else {
-                  cout << "criu restore" << endl;
-                  before_criu_restore = chrono::steady_clock::now();
-                  CRIU::restore_state();
-                  after_criu_restore = chrono::steady_clock::now();
-                  cout << "criu restore time cost: " << chrono::duration <double, milli> (after_criu_restore - before_criu_restore).count() << " ms" << endl;
-                }
-              }
-        #endif
       #endif
       debug_exec_state("EXEC_SYSCALL_ENTRY", t);
       ASSERT(t, !t->emulated_stop_pending);
