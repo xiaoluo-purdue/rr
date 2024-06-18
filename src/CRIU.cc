@@ -53,8 +53,10 @@ void CRIU::restore_state() {
   int fd = open(image_dir.c_str(), O_DIRECTORY);
   criu_set_images_dir_fd(fd);
 
+  criu_set_shell_job(true);
   criu_set_log_file("restore.log");
   criu_set_log_level(4);
+  criu_set_leave_running(true);
 
   criu_restore();
 #endif
