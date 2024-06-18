@@ -45,7 +45,17 @@ void CRIU::check_point() {
 }
 
 void CRIU::restore_state() {
-#if CHECKPOINT
+#if RESTORE
+  criu_init_opts();
+  criu_set_service_address("/home/criu_service.socket");
+
+  string image_dir = "/home";
+  int fd = open(image_dir.c_str(), O_DIRECTORY);
+  criu_set_images_dir_fd(fd);
+
+  criu_set_log_file("restore.log");
+  criu_set_log_level(4);
+
   criu_restore();
 #endif
 }

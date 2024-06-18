@@ -307,6 +307,13 @@ size_t saved_argv0_space() {
 using namespace rr;
 
 int main(int argc, char* argv[]) {
+  #if RESTORE
+    before_criu_restore = chrono::steady_clock::now();
+    CRIU::restore_state();
+    after_criu_restore = chrono::steady_clock::now();
+    cout << "criu restore time cost: " << chrono::duration <double, milli> (after_criu_restore - before_criu_restore).count() << " ms" << endl;
+  #endif
+
   #if XDEBUG_LATENCY
     RR_start = chrono::steady_clock::now();
   #endif
