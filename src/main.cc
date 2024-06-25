@@ -430,13 +430,13 @@ int main(int argc, char* argv[]) {
   #endif
 
   #if XDEBUG_LATENCY
-      RR_start = chrono::steady_clock::now();
       block_times.clear();
       no_execve_wait_times.clear();
       no_execve_blocking_times.clear();
       no_execve_record_step_times.clear();
       patching_names.clear();
       before_patching.clear();
+      RR_start = chrono::steady_clock::now();
   #endif
     rr::saved_argv0_ = argv[0];
     rr::saved_argv0_space_ = argv[argc - 1] + strlen(argv[argc - 1]) + 1 - rr::saved_argv0_;
