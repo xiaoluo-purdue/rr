@@ -53,9 +53,9 @@ void CRIU::restore_state() {
   int fd = open(image_dir.c_str(), O_DIRECTORY);
   criu_set_images_dir_fd(fd);
 
-  pid_t pid = getpid();
-  cout << "RR PID:" << pid << std::endl;
-  criu_set_pid(pid);
+//  pid_t pid = getpid();
+//  cout << "RR PID:" << pid << std::endl;
+//  criu_set_pid(pid);
   criu_set_shell_job(true);
   criu_set_log_file("restore.log");
   criu_set_log_level(4);
