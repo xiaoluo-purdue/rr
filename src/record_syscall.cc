@@ -1451,8 +1451,8 @@ template <typename Arch> void get_ethtool_gstrings_arch(RecordTask* t) {
 
   // Do a ETHTOOL_GSSET_INFO to get the number of strings
   struct SingleStringSet {
-    ethtool_sset_info et;
     uint32_t data;
+    ethtool_sset_info et;
   };
   SingleStringSet sss;
   sss.et.cmd = ETHTOOL_GSSET_INFO;
