@@ -422,12 +422,12 @@ int main(int argc, char* argv[]) {
     is_checkpointed = true;
   #endif
 
-  #if RESTORE
-    before_criu_restore = chrono::steady_clock::now();
-    CRIU::restore_state();
-    after_criu_restore = chrono::steady_clock::now();
-    cout << "criu restore time cost: " << chrono::duration <double, milli> (after_criu_restore - before_criu_restore).count() << " ms" << endl;
-  #endif
+//  #if RESTORE
+//    before_criu_restore = chrono::steady_clock::now();
+//    CRIU::restore_state();
+//    after_criu_restore = chrono::steady_clock::now();
+//    cout << "criu restore time cost: " << chrono::duration <double, milli> (after_criu_restore - before_criu_restore).count() << " ms" << endl;
+//  #endif
 
   #if XDEBUG_LATENCY
       block_times.clear();
