@@ -29,10 +29,10 @@ void CRIU::check_point() {
   pid_t pid = getpid();
   cout << "RR PID:" << pid << std::endl;
   criu_set_pid(pid);
-//  criu_set_shell_job(true);
+  criu_set_shell_job(true);
   criu_set_log_level(4);
   criu_set_log_file("checkpoint.log");
-//  criu_set_leave_running(true);
+  criu_set_leave_running(false);
   int ret = criu_dump();
 
   if (ret < 0) {
