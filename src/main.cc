@@ -308,8 +308,12 @@ using namespace rr;
 
 int main(int argc, char* argv[]) {
 
+  std::chrono::time_point<std::chrono::steady_clock> origin_time = chrono::steady_clock::now();
   #if XDEBUG_LATENCY
     RR_start = chrono::steady_clock::now();
+    cout << "RR_start: " << chrono::duration <double, milli> (RR_start - origin_time).count() << " ms" << endl;
+    pid_t pid = getpid();
+    cout << "RR PID:" << pid << std::endl;
   #endif
   rr::saved_argv0_ = argv[0];
   rr::saved_argv0_space_ = argv[argc - 1] + strlen(argv[argc - 1]) + 1 - rr::saved_argv0_;
