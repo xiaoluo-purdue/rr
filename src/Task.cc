@@ -3021,7 +3021,7 @@ ssize_t Task::write_bytes_helper_no_notifications(remote_ptr<void> addr, ssize_t
   if (uint8_t* local_addr = as->local_mapping(addr, buf_size)) {
     #if XDEBUG_PATCHING
       cout << "Patching syscall write_bytes_helper_no_notifications addr: " << addr << " local_addr: " << *local_addr
-          << "buf_size: " << buf_size << "buf: " << buf << endl;
+          << " buf_size: " << buf_size << " buf: " << *(static_cast<const uint8_t*>(buf)) << endl;
     #endif
     memcpy(local_addr, buf, buf_size);
     return buf_size;
