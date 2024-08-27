@@ -1096,6 +1096,10 @@ bool Monkeypatcher::try_patch_syscall_x86ish(RecordTask* t, bool entering_syscal
 
     LOG(debug) << "Patching syscall at " << ip << " syscall "
                << syscall_name(syscallno, t->arch()) << " tid " << t->tid;
+    #if XDEBUG_PATCHING
+    cout << "Patching syscall at " << ip << " syscall "
+         << syscall_name(syscallno, t->arch()) << " tid " << t->tid;
+    #endif
 
     success = patch_syscall_with_hook(*this, t, *hook_ptr, instruction_length, 0);
     if (!success && entering_syscall) {
