@@ -296,6 +296,13 @@ static bool handle_ptrace_exit_event(RecordTask* t) {
   record_exit_trace_event(t, exit_status);
   t->record_exit_event(
     (!t->already_reaped() && !may_wait_exit) ? RecordTask::WRITE_CHILD_TID : RecordTask::KERNEL_WRITES_CHILD_TID);
+  #if CHECKPOINT
+    before_criu_checkpoint = chrono::steady_clock::now();
+    CRIU::check_point();
+    after_criu_checkpoint = chrono::steady_clock::now();
+    cout << "criu checkpoint time cost: " << chrono::duration <double, milli> (after_criu_checkpoint - before_criu_checkpoint).count() << " ms" << endl;
+    is_checkpointed = true;
+  #endif
   if (!t->already_reaped()) {
     t->proceed_to_exit(may_wait_exit);
   }
@@ -2599,13 +2606,6 @@ RecordSession::RecordResult RecordSession::record_step() {
       cout << "tracee execve - tracee exit: " << chrono::duration <double, milli> (tracee_exit - tracee_execve).count() << " ms" << endl;
       #endif
       after_tracee_exit = true;
-    #endif
-    #if CHECKPOINT
-      before_criu_checkpoint = chrono::steady_clock::now();
-      CRIU::check_point();
-      after_criu_checkpoint = chrono::steady_clock::now();
-      cout << "criu checkpoint time cost: " << chrono::duration <double, milli> (after_criu_checkpoint - before_criu_checkpoint).count() << " ms" << endl;
-      is_checkpointed = true;
     #endif
     return result;
   }
