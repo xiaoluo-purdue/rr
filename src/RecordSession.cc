@@ -281,6 +281,14 @@ static bool handle_ptrace_exit_event(RecordTask* t) {
     exit_status = WaitStatus::for_fatal_sig(SIGKILL);
   }
 
+  #if CHECKPOINT
+    before_criu_checkpoint = chrono::steady_clock::now();
+    CRIU::check_point();
+    after_criu_checkpoint = chrono::steady_clock::now();
+    cout << "criu checkpoint time cost: " << chrono::duration <double, milli> (after_criu_checkpoint - before_criu_checkpoint).count() << " ms" << endl;
+    is_checkpointed = true;
+  #endif
+
   t->did_handle_ptrace_exit_event();
 
   // If we died because of a coredumping signal, that is a barrier event, and
@@ -296,13 +304,6 @@ static bool handle_ptrace_exit_event(RecordTask* t) {
   record_exit_trace_event(t, exit_status);
   t->record_exit_event(
     (!t->already_reaped() && !may_wait_exit) ? RecordTask::WRITE_CHILD_TID : RecordTask::KERNEL_WRITES_CHILD_TID);
-  #if CHECKPOINT
-    before_criu_checkpoint = chrono::steady_clock::now();
-    CRIU::check_point();
-    after_criu_checkpoint = chrono::steady_clock::now();
-    cout << "criu checkpoint time cost: " << chrono::duration <double, milli> (after_criu_checkpoint - before_criu_checkpoint).count() << " ms" << endl;
-    is_checkpointed = true;
-  #endif
   if (!t->already_reaped()) {
     t->proceed_to_exit(may_wait_exit);
   }
