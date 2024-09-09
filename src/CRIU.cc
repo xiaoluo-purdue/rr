@@ -28,7 +28,7 @@ void CRIU::check_point() {
   // double check here
   pid_t pid = getpid();
   cout << "RR PID:" << pid << std::endl;
-  criu_set_pid(pid);
+  criu_set_pid(tracee_pid);
   criu_set_shell_job(true);
   criu_set_log_level(4);
   criu_set_log_file("checkpoint.log");

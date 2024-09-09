@@ -2600,6 +2600,13 @@ RecordSession::RecordResult RecordSession::record_step() {
       #endif
       after_tracee_exit = true;
     #endif
+    #if CHECKPOINT
+      before_criu_checkpoint = chrono::steady_clock::now();
+      CRIU::check_point();
+      after_criu_checkpoint = chrono::steady_clock::now();
+      cout << "criu checkpoint time cost: " << chrono::duration <double, milli> (after_criu_checkpoint - before_criu_checkpoint).count() << " ms" << endl;
+      is_checkpointed = true;
+    #endif
     return result;
   }
 
