@@ -1083,6 +1083,10 @@ bool Monkeypatcher::try_patch_syscall_x86ish(RecordTask* t, bool entering_syscal
 
   ASSERT(t, is_x86ish(arch)) << "Unsupported architecture";
 
+  #if XDEBUG_PATCHING
+    std::chrono::time_point<std::chrono::steady_clock> patch_start = chrono::steady_clock::now();
+  #endif
+
   size_t instruction_length = rr::syscall_instruction_length(arch);
   const syscall_patch_hook* hook_ptr = find_syscall_hook(t, ip - instruction_length,
       true, entering_syscall, instruction_length);
@@ -1124,6 +1128,7 @@ bool Monkeypatcher::try_patch_syscall_x86ish(RecordTask* t, bool entering_syscal
         << " (" << syscallno << ")" << endl;
     std::chrono::time_point<std::chrono::steady_clock> patch_now = chrono::steady_clock::now();
     cout << "RR_start - patch_now: " << chrono::duration <double, milli> (patch_now - RR_start).count() << " ms" << endl;
+    cout << "patch_start - patch_now: " << chrono::duration <double, milli> (patch_now - patch_start).count() << " ms" << endl;
     #endif
     #endif
 
