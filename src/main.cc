@@ -371,6 +371,7 @@ int main(int argc, char* argv[]) {
     cout << "RR after record - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_after_record).count() << " ms" << endl;
     cout << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms" << endl;
     cout << "RR start - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_start).count() << " ms" << endl;
+    cout << "step_counter: " << step_counter << endl;
     #endif
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;
@@ -417,133 +418,6 @@ int main(int argc, char* argv[]) {
     cout << median << " ms" << endl;
   }
   #endif
-
-//  #if CHECKPOINT
-//    before_criu_checkpoint = chrono::steady_clock::now();
-//    CRIU::check_point();
-//    after_criu_checkpoint = chrono::steady_clock::now();
-//    cout << "criu checkpoint time cost: " << chrono::duration <double, milli> (after_criu_checkpoint - before_criu_checkpoint).count() << " ms" << endl;
-//    is_checkpointed = true;
-//  #endif
-//
-////  #if RESTORE
-////    before_criu_restore = chrono::steady_clock::now();
-////    CRIU::restore_state();
-////    after_criu_restore = chrono::steady_clock::now();
-////    cout << "criu restore time cost: " << chrono::duration <double, milli> (after_criu_restore - before_criu_restore).count() << " ms" << endl;
-////  #endif
-//
-//  #if XDEBUG_LATENCY
-//      block_times.clear();
-//      no_execve_wait_times.clear();
-//      no_execve_blocking_times.clear();
-//      no_execve_record_step_times.clear();
-//      patching_names.clear();
-//      before_patching.clear();
-//      RR_start = chrono::steady_clock::now();
-//  #endif
-//    rr::saved_argv0_ = argv[0];
-//    rr::saved_argv0_space_ = argv[argc - 1] + strlen(argv[argc - 1]) + 1 - rr::saved_argv0_;
-//
-//    init_random();
-//    raise_resource_limits();
-////    vector<string> args;
-////    for (int i = 1; i < argc; ++i) {
-////      args.push_back(argv[i]);
-////    }
-//
-//    while (parse_global_option(args)) {
-//    }
-//
-//    if (show_version) {
-//      print_version(stdout);
-//      return 0;
-//    }
-//    if (show_cmd_list) {
-//      list_commands(stdout);
-//      return 0;
-//    }
-//
-//    if (args.size() == 0) {
-//      print_usage(stderr);
-//    }
-//
-//    command = Command::command_for_name(args[0]);
-//    if (command) {
-//      args.erase(args.begin());
-//    } else {
-//      if (!Command::verify_not_option(args)) {
-//        print_usage(stderr);
-//      }
-//      if (is_directory(args[0].c_str())) {
-//        command = ReplayCommand::get();
-//      } else {
-//        command = RecordCommand::get();
-//      }
-//    }
-//    res = command->run(args);
-//
-//  #if XDEBUG_LATENCY
-//      RR_exit = chrono::steady_clock::now();
-//  #if LATENCY_OUTPUT
-//    total_blocking = 0;
-//    for (auto time : block_times) {
-//      total_blocking += time;
-//    }
-//
-//    cout << "block count: " << block_times.size() << endl;
-//    cout << "total blocking time: " << total_blocking << " ms" << endl;
-//    cout << "avg blocking time: " << total_blocking / block_times.size() << " ms" << endl;
-//
-//    cout << "RR after record - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_after_record).count() << " ms" << endl;
-//    cout << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms" << endl;
-//    cout << "RR start - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_start).count() << " ms" << endl;
-//#endif
-//#if XDEBUG_WAIT
-//    cout << "wait() call times distribution:" << endl;
-//    cout << "\twait 1: " << wait1_counter << endl;
-//    cout << "\twait 2: " << wait2_counter << endl;
-//    cout << "\twait 3: " << wait3_counter << endl;
-//    cout << "\twait 4: " << wait4_counter << endl;
-//
-//    cout << "waitpid() call times distribution:" << endl;
-//    cout << "\twaitpid 1: " << waitpid1_counter << endl;
-//    cout << "\twaitpid 2: " << waitpid2_counter << endl;
-//#endif
-//
-//#if XDEBUG_RESUME
-//    cout << "\ntask_continue: " << task_continue_counter << endl;
-//    cout << "resume_execution() call times distribution: " << endl;
-//    cout << "\tresume 1: " << resume1 << endl;
-//    cout << "\tresume 2: " << resume2 << endl;
-//    cout << "\tresume 3: " << resume3 << endl;
-//    cout << "\tresume 4: " << resume4 << endl;
-//    cout << "\tresume 5: " << resume5 << endl;
-//#endif
-//#endif
-//
-//
-//#if XDEBUG_PATCHING_OUTPUT
-//    cout << "unpatched syscall: " << endl;
-//    for(const auto& pair : before_patching) {
-//      int syscallno = pair.first;
-//      cout << syscall_name(syscallno, SupportedArch::x86_64) << " (" << syscallno << "): ";
-//      // for (double duration : pair.second) {
-//      //   cout << duration << ", ";
-//      // }
-//      // cout << endl;
-//      // find the median value in the vector
-//      vector<double> durations = pair.second;
-//      sort(durations.begin(), durations.end());
-//      double median;
-//      if (durations.size() % 2 == 0) {
-//        median = (durations[durations.size() / 2 - 1] + durations[durations.size() / 2]) / 2;
-//      } else {
-//        median = durations[durations.size() / 2];
-//      }
-//      cout << median << " ms" << endl;
-//    }
-//#endif
 
   return res;
 }
