@@ -2684,6 +2684,11 @@ RecordSession::RecordResult RecordSession::record_step() {
   }
 
   LOG(debug) << "record_step() was exited";
+#if PATCHED_SYSCALL_NAME
+  step_end = chrono::steady_clock::now();
+  cout << "record step time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (step_end - step_start).count() << " ms" << endl;
+  total_step_counter_time += chrono::duration <double, milli> (step_end - step_start).count();
+#endif
   return result;
 }
 

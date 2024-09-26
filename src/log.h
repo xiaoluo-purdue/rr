@@ -270,6 +270,10 @@ extern bool is_checkpointed;
 extern std::chrono::time_point<std::chrono::steady_clock> before_criu_restore;
 extern std::chrono::time_point<std::chrono::steady_clock> after_criu_restore;
 
+extern std::chrono::time_point<std::chrono::steady_clock> step_start;
+extern std::chrono::time_point<std::chrono::steady_clock> step_end;
+extern double total_step_counter_time;
+
 # if XDEBUG_WAIT
 extern int wait1_counter;
 extern int wait2_counter;

@@ -602,6 +602,9 @@ Scheduler::Rescheduled Scheduler::reschedule(Switchable switchable) {
   result.by_waitpid = false;
   result.started_new_timeslice = false;
 
+#if PATCHED_SYSCALL_NAME
+  step_start = chrono::steady_clock::now();
+#endif
   LOG(debug) << "Scheduling next task (" <<
     ((switchable == PREVENT_SWITCH) ? "PREVENT_SWITCH)" : "ALLOW_SWITCH)");
 

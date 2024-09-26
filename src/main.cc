@@ -60,6 +60,10 @@ bool is_checkpointed = false;
 std::chrono::time_point<std::chrono::steady_clock> before_criu_restore;
 std::chrono::time_point<std::chrono::steady_clock> after_criu_restore;
 
+std::chrono::time_point<std::chrono::steady_clock> step_start;
+std::chrono::time_point<std::chrono::steady_clock> step_end;
+double total_step_counter_time = 0.0;
+
 #if XDEBUG_WAIT
 int wait1_counter = 0;
 int wait2_counter = 0;
@@ -372,6 +376,7 @@ int main(int argc, char* argv[]) {
     cout << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms" << endl;
     cout << "RR start - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_start).count() << " ms" << endl;
     cout << "step_counter: " << step_counter << endl;
+    cout << "total_step_counter_time: " << total_step_counter_time << endl;
     #endif
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;
