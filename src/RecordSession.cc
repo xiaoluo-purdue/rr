@@ -1849,6 +1849,9 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
   if (!sig) {
     return false;
   }
+#if XDEBUG_LATENCY
+  LOG(debug) << "We get a signal!";
+#endif
   if (!done_initial_exec()) {
     // If the initial tracee isn't prepared to handle
     // signals yet, then us ignoring the ptrace
