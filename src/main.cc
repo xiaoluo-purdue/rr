@@ -315,8 +315,10 @@ int main(int argc, char* argv[]) {
   std::chrono::time_point<std::chrono::steady_clock> origin_time = chrono::steady_clock::now();
   #if XDEBUG_LATENCY
     RR_start = chrono::steady_clock::now();
+    LOG(debug) << "RR_start: " << chrono::duration <double, milli> (RR_start - origin_time).count() << " ms";
     cout << "RR_start: " << chrono::duration <double, milli> (RR_start - origin_time).count() << " ms" << endl;
     pid_t pid = getpid();
+    LOG(debug) << "RR PID:" << pid;
     cout << "RR PID:" << pid << std::endl;
   #endif
   rr::saved_argv0_ = argv[0];
@@ -377,6 +379,16 @@ int main(int argc, char* argv[]) {
     cout << "RR start - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_start).count() << " ms" << endl;
     cout << "step_counter: " << step_counter << endl;
     cout << "total_step_counter_time: " << total_step_counter_time << endl;
+
+    LOG(debug) << "block count: " << block_times.size();
+    LOG(debug) << "total blocking time: " << total_blocking << " ms";
+    LOG(debug) << "avg blocking time: " << total_blocking / block_times.size() << " ms";
+
+    LOG(debug) << "RR after record - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_after_record).count() << " ms";
+    LOG(debug) << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms";
+    LOG(debug) << "RR start - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_start).count() << " ms";
+    LOG(debug) << "step_counter: " << step_counter;
+    LOG(debug) << "total_step_counter_time: " << total_step_counter_time;
     #endif
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;
@@ -388,6 +400,16 @@ int main(int argc, char* argv[]) {
     cout << "waitpid() call times distribution:" << endl;
     cout << "\twaitpid 1: " << waitpid1_counter << endl;
     cout << "\twaitpid 2: " << waitpid2_counter << endl;
+
+    LOG(debug) << "wait() call times distribution:";
+    LOG(debug) << "\twait 1: " << wait1_counter;
+    LOG(debug) << "\twait 2: " << wait2_counter;
+    LOG(debug) << "\twait 3: " << wait3_counter;
+    LOG(debug) << "\twait 4: " << wait4_counter;
+
+    LOG(debug) << "waitpid() call times distribution:";
+    LOG(debug) << "\twaitpid 1: " << waitpid1_counter;
+    LOG(debug) << "\twaitpid 2: " << waitpid2_counter;
   #endif
 
   #if XDEBUG_RESUME
@@ -398,6 +420,14 @@ int main(int argc, char* argv[]) {
     cout << "\tresume 3: " << resume3 << endl;
     cout << "\tresume 4: " << resume4 << endl;
     cout << "\tresume 5: " << resume5 << endl;
+
+    LOG(debug) << "\ntask_continue: " << task_continue_counter;
+    LOG(debug) << "resume_execution() call times distribution: ";
+    LOG(debug) << "\tresume 1: " << resume1;
+    LOG(debug) << "\tresume 2: " << resume2;
+    LOG(debug) << "\tresume 3: " << resume3;
+    LOG(debug) << "\tresume 4: " << resume4;
+    LOG(debug) << "\tresume 5: " << resume5;
   #endif
   #endif
 
