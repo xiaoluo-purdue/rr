@@ -1124,9 +1124,13 @@ bool Monkeypatcher::try_patch_syscall_x86ish(RecordTask* t, bool entering_syscal
     #if XDEBUG_PATCHING
     patching_names.push_back(syscall_name(syscallno, t->arch()));
     #if PATCHED_SYSCALL_NAME
+    LOG(debug) << "patched syscall name: " << syscall_name(syscallno, t->arch())
+         << " (" << syscallno << ")";
     cout << "patched syscall name: " << syscall_name(syscallno, t->arch())
         << " (" << syscallno << ")" << endl;
     std::chrono::time_point<std::chrono::steady_clock> patch_now = chrono::steady_clock::now();
+    LOG(debug) << "RR_start - patch_now: " << chrono::duration <double, milli> (patch_now - RR_start).count() << " ms";
+    LOG(debug) << "patch_start - patch_now: " << chrono::duration <double, milli> (patch_now - patch_start).count() << " ms";
     cout << "RR_start - patch_now: " << chrono::duration <double, milli> (patch_now - RR_start).count() << " ms" << endl;
     cout << "patch_start - patch_now: " << chrono::duration <double, milli> (patch_now - patch_start).count() << " ms" << endl;
     #endif

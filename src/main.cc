@@ -403,9 +403,11 @@ int main(int argc, char* argv[]) {
 
 
   #if XDEBUG_PATCHING_OUTPUT
+  LOG(debug) << "unpatched syscall: ";
   cout << "unpatched syscall: " << endl;
   for(const auto& pair : before_patching) {
     int syscallno = pair.first;
+    LOG(debug) << syscall_name(syscallno, SupportedArch::x86_64) << " (" << syscallno << "): ";
     cout << syscall_name(syscallno, SupportedArch::x86_64) << " (" << syscallno << "): ";
     // for (double duration : pair.second) {
     //   cout << duration << ", ";
@@ -420,6 +422,7 @@ int main(int argc, char* argv[]) {
     } else {
       median = durations[durations.size() / 2];
     }
+    LOG(debug) << median << " ms";
     cout << median << " ms" << endl;
   }
   #endif

@@ -1432,8 +1432,10 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
         #if XDEBUG_LATENCY
         auto end_reset = chrono::steady_clock::now();
         #if LATENCY_OUTPUT
-        if (step_counter == 1)
+        if (step_counter == 1) {
+          LOG(debug) << "reset hpc(max(1, tick_period)): " << chrono::duration <double, milli> (end_reset - begin_reset).count() << " ms";
           cout << "reset hpc(max(1, tick_period)): " << chrono::duration <double, milli> (end_reset - begin_reset).count() << " ms" << endl;
+        }
         #endif
         #endif
       }
@@ -3607,6 +3609,7 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
   }
 
   #if CHECKPOINT
+    LOG(debug) << "tracee pid: " << tid;
     cout << "tracee pid: " << tid << endl;
     tracee_pid = tid;
   #endif

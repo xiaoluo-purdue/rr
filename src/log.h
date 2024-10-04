@@ -233,8 +233,8 @@ template <typename T> inline void* HEX(T v) {
 
 #define XDEBUG_LATENCY 1
 #define LATENCY_OUTPUT 1
-#define XDEBUG_WAIT   0
-#define XDEBUG_RESUME 0
+#define XDEBUG_WAIT   1
+#define XDEBUG_RESUME 1
 
 #define CHECKPOINT 1
 #define RESTORE 1

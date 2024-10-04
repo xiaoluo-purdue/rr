@@ -1353,6 +1353,7 @@ TraceWriter::TraceWriter(const std::string& file_name,
   #if XDEBUG_LATENCY
     end_new_compressed_writer = chrono::steady_clock::now();
     #if LATENCY_OUTPUT
+    LOG(debug) << "create compressed writer: " << chrono::duration <double, milli> (end_new_compressed_writer - start_new_compressed_writer).count() << " ms";
     cout << "create compressed writer: " << chrono::duration <double, milli> (end_new_compressed_writer - start_new_compressed_writer).count() << " ms" << endl;
     #endif
   #endif

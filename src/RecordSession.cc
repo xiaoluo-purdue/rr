@@ -795,6 +795,7 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
           no_execve = false;
           tracee_execve = chrono::steady_clock::now();
           #if LATENCY_OUTPUT
+          LOG(debug) << "RR start - resume at tracee execve exit: " << chrono::duration <double, milli> (tracee_execve - RR_start).count() << " ms";
           cout << "RR start - resume at tracee execve exit: " << chrono::duration <double, milli> (tracee_execve - RR_start).count() << " ms" << endl;
           #endif
         }
@@ -2599,6 +2600,7 @@ RecordSession::RecordResult RecordSession::record_step() {
     #if XDEBUG_LATENCY
       tracee_exit = chrono::steady_clock::now();
       #if LATENCY_OUTPUT
+      LOG(debug) << "tracee execve - tracee exit: " << chrono::duration <double, milli> (tracee_exit - tracee_execve).count() << " ms";
       cout << "tracee execve - tracee exit: " << chrono::duration <double, milli> (tracee_exit - tracee_execve).count() << " ms" << endl;
       #endif
       after_tracee_exit = true;
@@ -2689,6 +2691,7 @@ RecordSession::RecordResult RecordSession::record_step() {
   LOG(debug) << "record_step() was exited";
 #if PATCHED_SYSCALL_NAME
   step_end = chrono::steady_clock::now();
+  LOG(debug) << "record step time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (step_end - step_start).count() << " ms";
   cout << "record step time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (step_end - step_start).count() << " ms" << endl;
   total_step_counter_time += chrono::duration <double, milli> (step_end - step_start).count();
 #endif
