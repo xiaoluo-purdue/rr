@@ -1335,7 +1335,13 @@ void RecordSession::syscall_state_changed(RecordTask* t,
          * restarted this will be done in the exit from the
          * restart_syscall */
         if (!may_restart) {
+#if XDEBUG_LATENCY
+          rec_process_syscall_start = chrono::steady_clock::now();
+#endif
           rec_process_syscall(t);
+#if XDEBUG_LATENCY
+          rec_process_syscall_end = chrono::steady_clock::now();
+#endif
           if (t->session().done_initial_exec() &&
               Flags::get().check_cached_mmaps) {
             t->vm()->verify(t);
@@ -2553,7 +2559,13 @@ RecordSession::RecordResult RecordSession::record_step() {
   if (scheduler().current()) {
     prev_task_tuid = scheduler().current()->tuid();
   }
+#if XDEBUG_LATENCY
+  schedule_start = chrono::steady_clock::now();
+#endif
   auto rescheduled = scheduler().reschedule(last_task_switchable);
+#if XDEBUG_LATENCY
+  schedule_end = chrono::steady_clock::now();
+#endif
   // LOG(debug) << "[workflow] scheduling: " << curr_sched_time << " ms";
   if (rescheduled.interrupted_by_signal) {
     // The scheduler was waiting for some task to become active, but was
@@ -2692,8 +2704,17 @@ RecordSession::RecordResult RecordSession::record_step() {
 #if PATCHED_SYSCALL_NAME
   step_end = chrono::steady_clock::now();
   LOG(debug) << "record step time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (step_end - step_start).count() << " ms";
-  cout << "record step time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (step_end - step_start).count() << " ms" << endl;
+//  cout << "record step time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (step_end - step_start).count() << " ms" << endl;
   total_step_counter_time += chrono::duration <double, milli> (step_end - step_start).count();
+
+  LOG(debug) << "schedule time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (schedule_end - schedule_start).count() << " ms";
+  total_schedule_time += chrono::duration <double, milli> (schedule_end - schedule_start).count();
+
+  LOG(debug) << "rec_process_syscall time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (rec_process_syscall_end - rec_process_syscall_start).count() << " ms";
+  total_rec_process_syscall_time += chrono::duration <double, milli> (rec_process_syscall_end - rec_process_syscall_start).count();
+
+  LOG(debug) << "record_event time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (record_event_end - record_event_start).count() << " ms";
+  total_record_event_time += chrono::duration <double, milli> (record_event_end - record_event_start).count();
 #endif
   return result;
 }

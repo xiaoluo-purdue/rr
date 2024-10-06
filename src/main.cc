@@ -64,6 +64,20 @@ std::chrono::time_point<std::chrono::steady_clock> step_start;
 std::chrono::time_point<std::chrono::steady_clock> step_end;
 double total_step_counter_time = 0.0;
 
+std::chrono::time_point<std::chrono::steady_clock> schedule_start;
+std::chrono::time_point<std::chrono::steady_clock> schedule_end;
+double total_schedule_time = 0.0;
+
+std::chrono::time_point<std::chrono::steady_clock> rec_process_syscall_start;
+std::chrono::time_point<std::chrono::steady_clock> rec_process_syscall_end;
+double total_rec_process_syscall_time = 0.0;
+
+std::chrono::time_point<std::chrono::steady_clock> record_event_start;
+std::chrono::time_point<std::chrono::steady_clock> record_event_end;
+double total_record_event_time = 0.0;
+
+double total_patching_time = 0.0;
+
 #if XDEBUG_WAIT
 int wait1_counter = 0;
 int wait2_counter = 0;
@@ -379,6 +393,10 @@ int main(int argc, char* argv[]) {
     cout << "RR start - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_start).count() << " ms" << endl;
     cout << "step_counter: " << step_counter << endl;
     cout << "total_step_counter_time: " << total_step_counter_time << endl;
+    cout << "total_schedule_time: " << total_schedule_time << endl;
+    cout << "total_rec_process_syscall_time: " << total_rec_process_syscall_time << endl;
+    cout << "total_record_event_time: " << total_record_event_time << endl;
+    cout << "total_patching_time: " << total_patching_time << endl;
 
     LOG(debug) << "block count: " << block_times.size();
     LOG(debug) << "total blocking time: " << total_blocking << " ms";
@@ -389,6 +407,10 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "RR start - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_start).count() << " ms";
     LOG(debug) << "step_counter: " << step_counter;
     LOG(debug) << "total_step_counter_time: " << total_step_counter_time;
+    LOG(debug) << "total_schedule_time: " << total_schedule_time;
+    LOG(debug) << "total_rec_process_syscall_time: " << total_rec_process_syscall_time;
+    LOG(debug) << "total_record_event_time: " << total_record_event_time;
+    LOG(debug) << "total_patching_time: " << total_patching_time;
     #endif
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;

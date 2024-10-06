@@ -1871,6 +1871,9 @@ void RecordTask::maybe_reset_syscallbuf() {
 void RecordTask::record_event(const Event& ev, FlushSyscallbuf flush,
                               AllowSyscallbufReset reset,
                               const Registers* registers) {
+#if XDEBUG_LATENCY
+  record_event_start = chrono::steady_clock::now();
+#endif
   if (flush == FLUSH_SYSCALLBUF) {
     maybe_flush_syscallbuf();
   }
@@ -1953,6 +1956,9 @@ void RecordTask::record_event(const Event& ev, FlushSyscallbuf flush,
     // reach it, we're done.
     maybe_reset_syscallbuf();
   }
+#if XDEBUG_LATENCY
+  record_event_end = chrono::steady_clock::now();
+#endif
 }
 
 bool RecordTask::is_fatal_signal(int sig,

@@ -1133,6 +1133,7 @@ bool Monkeypatcher::try_patch_syscall_x86ish(RecordTask* t, bool entering_syscal
     LOG(debug) << "patch_start - patch_now: " << chrono::duration <double, milli> (patch_now - patch_start).count() << " ms";
     cout << "RR_start - patch_now: " << chrono::duration <double, milli> (patch_now - RR_start).count() << " ms" << endl;
     cout << "patch_start - patch_now: " << chrono::duration <double, milli> (patch_now - patch_start).count() << " ms" << endl;
+    total_patching_time += chrono::duration <double, milli> (patch_now - patch_start).count();
     #endif
     #endif
 
