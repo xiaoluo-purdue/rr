@@ -1898,19 +1898,25 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
     // invalidate_sigmask() must not be called before we reach handle_signal!
     siginfo_t siginfo = t->get_siginfo();
     switch (handle_signal(t, &siginfo, deterministic, signal_was_blocked)) {
-#if XDEBUG_LATENCY
-      handle_signal_end = chrono::steady_clock::now();
-#endif
       case SIGNAL_PTRACE_STOP:
         // Emulated ptrace-stop. Don't run the task again yet.
         last_task_switchable = ALLOW_SWITCH;
         step_state->continue_type = DONT_CONTINUE;
+#if XDEBUG_LATENCY
+        handle_signal_end = chrono::steady_clock::now();
+#endif
         return true;
       case DEFER_SIGNAL:
         ASSERT(t, false) << "Can't defer deterministic or internal signal "
                          << siginfo << " at ip " << t->ip();
+#if XDEBUG_LATENCY
+        handle_signal_end = chrono::steady_clock::now();
+#endif
         break;
       case SIGNAL_HANDLED:
+#if XDEBUG_LATENCY
+        handle_signal_end = chrono::steady_clock::now();
+#endif
         if (t->ptrace_event() == PTRACE_EVENT_SECCOMP) {
           // `handle_desched_event` detected a spurious desched followed
           // by a SECCOMP event, which it left pending. Handle that SECCOMP
