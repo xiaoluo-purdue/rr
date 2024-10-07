@@ -290,6 +290,10 @@ extern std::chrono::time_point<std::chrono::steady_clock> ptrace_event_seccomp_s
 extern std::chrono::time_point<std::chrono::steady_clock> ptrace_event_seccomp_end;
 extern double total_ptrace_event_seccomp_time;
 
+extern std::chrono::time_point<std::chrono::steady_clock> handle_signal_start;
+extern std::chrono::time_point<std::chrono::steady_clock> handle_signal_end;
+extern double total_handle_signal_time;
+
 extern double total_patching_time;
 
 # if XDEBUG_WAIT

@@ -80,6 +80,10 @@ std::chrono::time_point<std::chrono::steady_clock> ptrace_event_seccomp_start;
 std::chrono::time_point<std::chrono::steady_clock> ptrace_event_seccomp_end;
 double total_ptrace_event_seccomp_time = 0.0;
 
+std::chrono::time_point<std::chrono::steady_clock> handle_signal_start;
+std::chrono::time_point<std::chrono::steady_clock> handle_signal_end;
+double total_handle_signal_time = 0.0;
+
 double total_patching_time = 0.0;
 
 #if XDEBUG_WAIT
@@ -402,6 +406,7 @@ int main(int argc, char* argv[]) {
     cout << "total_record_event_time: " << total_record_event_time << endl;
     cout << "total_patching_time: " << total_patching_time << endl;
     cout << "total_ptrace_event_seccomp_time: " << total_ptrace_event_seccomp_time << endl;
+    cout << "total_handle_signal_time: " << total_handle_signal_time << endl;
 
     LOG(debug) << "block count: " << block_times.size();
     LOG(debug) << "total blocking time: " << total_blocking << " ms";
@@ -417,6 +422,7 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "total_record_event_time: " << total_record_event_time;
     LOG(debug) << "total_patching_time: " << total_patching_time;
     LOG(debug) << "total_ptrace_event_seccomp_time: " << total_ptrace_event_seccomp_time;
+    LOG(debug) << "total_handle_signal_time: " << total_handle_signal_time;
     #endif
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;

@@ -1864,6 +1864,7 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
   }
 #if XDEBUG_LATENCY
   LOG(debug) << "We get a signal!";
+  handle_signal_start = chrono::steady_clock::now();
 #endif
   if (!done_initial_exec()) {
     // If the initial tracee isn't prepared to handle
@@ -1897,6 +1898,9 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
     // invalidate_sigmask() must not be called before we reach handle_signal!
     siginfo_t siginfo = t->get_siginfo();
     switch (handle_signal(t, &siginfo, deterministic, signal_was_blocked)) {
+#if XDEBUG_LATENCY
+      handle_signal_end = chrono::steady_clock::now();
+#endif
       case SIGNAL_PTRACE_STOP:
         // Emulated ptrace-stop. Don't run the task again yet.
         last_task_switchable = ALLOW_SWITCH;
@@ -2724,6 +2728,9 @@ RecordSession::RecordResult RecordSession::record_step() {
 
   LOG(debug) << "ptrace_event_seccomp time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (ptrace_event_seccomp_end - ptrace_event_seccomp_start).count() << " ms";
   total_ptrace_event_seccomp_time += chrono::duration <double, milli> (ptrace_event_seccomp_end - ptrace_event_seccomp_start).count();
+
+  LOG(debug) << "handle_signal time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (handle_signal_end - handle_signal_start).count() << " ms";
+  total_handle_signal_time += chrono::duration <double, milli> (handle_signal_end - handle_signal_start).count();
 #endif
   return result;
 }
