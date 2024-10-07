@@ -1100,10 +1100,6 @@ bool Monkeypatcher::try_patch_syscall_x86ish(RecordTask* t, bool entering_syscal
 
     LOG(debug) << "Patching syscall at " << ip << " syscall "
                << syscall_name(syscallno, t->arch()) << " tid " << t->tid;
-    #if XDEBUG_PATCHING
-    cout << "Patching syscall at " << ip << " syscall "
-         << syscall_name(syscallno, t->arch()) << " tid " << t->tid << endl;
-    #endif
 
     success = patch_syscall_with_hook(*this, t, *hook_ptr, instruction_length, 0);
     if (!success && entering_syscall) {
@@ -1126,13 +1122,9 @@ bool Monkeypatcher::try_patch_syscall_x86ish(RecordTask* t, bool entering_syscal
     #if PATCHED_SYSCALL_NAME
     LOG(debug) << "patched syscall name: " << syscall_name(syscallno, t->arch())
          << " (" << syscallno << ")";
-    cout << "patched syscall name: " << syscall_name(syscallno, t->arch())
-        << " (" << syscallno << ")" << endl;
     std::chrono::time_point<std::chrono::steady_clock> patch_now = chrono::steady_clock::now();
     LOG(debug) << "RR_start - patch_now: " << chrono::duration <double, milli> (patch_now - RR_start).count() << " ms";
     LOG(debug) << "patch_start - patch_now: " << chrono::duration <double, milli> (patch_now - patch_start).count() << " ms";
-    cout << "RR_start - patch_now: " << chrono::duration <double, milli> (patch_now - RR_start).count() << " ms" << endl;
-    cout << "patch_start - patch_now: " << chrono::duration <double, milli> (patch_now - patch_start).count() << " ms" << endl;
     total_patching_time += chrono::duration <double, milli> (patch_now - patch_start).count();
     #endif
     #endif
