@@ -670,6 +670,9 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
   switch (event) {
     case PTRACE_EVENT_SECCOMP_OBSOLETE:
     case PTRACE_EVENT_SECCOMP: {
+#if XDEBUG_LATENCY
+      ptrace_event_seccomp_start = chrono::steady_clock::now();
+#endif
       if (syscall_seccomp_ordering_ == PTRACE_SYSCALL_BEFORE_SECCOMP_UNKNOWN) {
         syscall_seccomp_ordering_ = SECCOMP_BEFORE_PTRACE_SYSCALL;
       }
@@ -690,6 +693,9 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
         LOG(debug) << "  traced syscall entered: "
                    << syscall_name(syscallno, t->arch());
         handle_seccomp_traced_syscall(t, step_state, result, did_enter_syscall);
+#if XDEBUG_LATENCY
+        ptrace_event_seccomp_end = chrono::steady_clock::now();
+#endif
       } else {
         // Note that we make no attempt to patch the syscall site when the
         // user handle does not return ALLOW. Apart from the ERRNO case,
@@ -2715,6 +2721,9 @@ RecordSession::RecordResult RecordSession::record_step() {
 
   LOG(debug) << "record_event time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (record_event_end - record_event_start).count() << " ms";
   total_record_event_time += chrono::duration <double, milli> (record_event_end - record_event_start).count();
+
+  LOG(debug) << "ptrace_event_seccomp time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (ptrace_event_seccomp_end - ptrace_event_seccomp_start).count() << " ms";
+  total_ptrace_event_seccomp_time += chrono::duration <double, milli> (ptrace_event_seccomp_end - ptrace_event_seccomp_start).count();
 #endif
   return result;
 }

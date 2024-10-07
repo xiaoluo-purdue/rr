@@ -286,6 +286,10 @@ extern std::chrono::time_point<std::chrono::steady_clock> record_event_start;
 extern std::chrono::time_point<std::chrono::steady_clock> record_event_end;
 extern double total_record_event_time;
 
+extern std::chrono::time_point<std::chrono::steady_clock> ptrace_event_seccomp_start;
+extern std::chrono::time_point<std::chrono::steady_clock> ptrace_event_seccomp_end;
+extern double total_ptrace_event_seccomp_time;
+
 extern double total_patching_time;
 
 # if XDEBUG_WAIT
