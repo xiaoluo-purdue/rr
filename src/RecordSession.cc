@@ -1932,6 +1932,9 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
         }
         break;
     }
+#if XDEBUG_LATENCY
+    handle_signal_end = chrono::steady_clock::now();
+#endif
     return false;
   }
   // Conservatively invalidate the sigmask in case just accepting a signal has
@@ -1947,6 +1950,9 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
       vpmc->synthesize_signal(t);
 
       t->next_pmc_interrupt_is_for_user = false;
+#if XDEBUG_LATENCY
+      handle_signal_end = chrono::steady_clock::now();
+#endif
       return true;
     }
 
@@ -1974,6 +1980,9 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
         << ", fd=" << si.si_fd << ")";
   }
   t->stash_sig();
+#if XDEBUG_LATENCY
+  handle_signal_end = chrono::steady_clock::now();
+#endif
   return true;
 }
 
