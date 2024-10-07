@@ -68,6 +68,10 @@ std::chrono::time_point<std::chrono::steady_clock> schedule_start;
 std::chrono::time_point<std::chrono::steady_clock> schedule_end;
 double total_schedule_time = 0.0;
 
+std::chrono::time_point<std::chrono::steady_clock> rec_prepare_syscall_start;
+std::chrono::time_point<std::chrono::steady_clock> rec_prepare_syscall_end;
+double total_rec_prepare_syscall_time = 0.0;
+
 std::chrono::time_point<std::chrono::steady_clock> rec_process_syscall_start;
 std::chrono::time_point<std::chrono::steady_clock> rec_process_syscall_end;
 double total_rec_process_syscall_time = 0.0;
@@ -402,6 +406,7 @@ int main(int argc, char* argv[]) {
     cout << "step_counter: " << step_counter << endl;
     cout << "total_step_counter_time: " << total_step_counter_time << endl;
     cout << "total_schedule_time: " << total_schedule_time << endl;
+    cout << "total_rec_prepare_syscall_time: " << total_rec_prepare_syscall_time << endl;
     cout << "total_rec_process_syscall_time: " << total_rec_process_syscall_time << endl;
     cout << "total_record_event_time: " << total_record_event_time << endl;
     cout << "total_patching_time: " << total_patching_time << endl;
@@ -418,6 +423,7 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "step_counter: " << step_counter;
     LOG(debug) << "total_step_counter_time: " << total_step_counter_time;
     LOG(debug) << "total_schedule_time: " << total_schedule_time;
+    LOG(debug) << "total_rec_prepare_syscall_time: " << total_rec_prepare_syscall_time;
     LOG(debug) << "total_rec_process_syscall_time: " << total_rec_process_syscall_time;
     LOG(debug) << "total_record_event_time: " << total_record_event_time;
     LOG(debug) << "total_patching_time: " << total_patching_time;

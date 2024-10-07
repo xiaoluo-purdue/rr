@@ -278,6 +278,10 @@ extern std::chrono::time_point<std::chrono::steady_clock> schedule_start;
 extern std::chrono::time_point<std::chrono::steady_clock> schedule_end;
 extern double total_schedule_time;
 
+extern std::chrono::time_point<std::chrono::steady_clock> rec_prepare_syscall_start;
+extern std::chrono::time_point<std::chrono::steady_clock> rec_prepare_syscall_end;
+extern double total_rec_prepare_syscall_time;
+
 extern std::chrono::time_point<std::chrono::steady_clock> rec_process_syscall_start;
 extern std::chrono::time_point<std::chrono::steady_clock> rec_process_syscall_end;
 extern double total_rec_process_syscall_time;

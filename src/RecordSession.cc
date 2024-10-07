@@ -1205,8 +1205,14 @@ void RecordSession::syscall_state_changed(RecordTask* t,
       // rec_prepare_syscall is associated with the syscall event
       t->maybe_flush_syscallbuf();
 
+#if XDEBUG_LATENCY
+      rec_prepare_syscall_start = chrono::steady_clock::now();
+#endif
       last_task_switchable = t->ev().Syscall().switchable =
           rec_prepare_syscall(t);
+#if XDEBUG_LATENCY
+      rec_prepare_syscall_end = chrono::steady_clock::now();
+#endif
       t->record_event(t->ev(), RecordTask::DONT_FLUSH_SYSCALLBUF,
                       RecordTask::ALLOW_RESET_SYSCALLBUF,
                       &t->ev().Syscall().regs);
@@ -2734,6 +2740,9 @@ RecordSession::RecordResult RecordSession::record_step() {
 
   LOG(debug) << "schedule time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (schedule_end - schedule_start).count() << " ms";
   total_schedule_time += chrono::duration <double, milli> (schedule_end - schedule_start).count();
+
+  LOG(debug) << "rec_prepare_syscall time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (rec_prepare_syscall_end - rec_prepare_syscall_start).count() << " ms";
+  total_rec_prepare_syscall_time += chrono::duration <double, milli> (rec_prepare_syscall_end - rec_prepare_syscall_start).count();
 
   LOG(debug) << "rec_process_syscall time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (rec_process_syscall_end - rec_process_syscall_start).count() << " ms";
   total_rec_process_syscall_time += chrono::duration <double, milli> (rec_process_syscall_end - rec_process_syscall_start).count();
