@@ -65,4 +65,22 @@ void CRIU::restore_state() {
 #endif
 }
 
+int main(int argc, char *argv[]) {
+  if (argc != 2) {
+    fprintf(stderr, "Usage: %s <pid>\n", argv[0]);
+    return 1;
+  }
+
+  pid_t pid = atoi(argv[1]);
+
+  // Detach the process from ptrace
+  if (ptrace(PTRACE_DETACH, pid, NULL, NULL) == -1) {
+    perror("ptrace detach failed");
+    return 1;
+  }
+
+  printf("Successfully detached process %d\n", pid);
+  return 0;
+}
+
 } // namespace rr

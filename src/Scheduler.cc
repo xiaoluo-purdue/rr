@@ -695,6 +695,9 @@ Scheduler::Rescheduled Scheduler::reschedule(Switchable switchable) {
     return result;
   }
 
+#if XDEBUG_LATENCY
+  schedule_allow_switch_start = chrono::steady_clock::now();
+#endif
   unlimited_ticks_mode = false;
 
   RecordTask* next = nullptr;
@@ -730,6 +733,9 @@ Scheduler::Rescheduled Scheduler::reschedule(Switchable switchable) {
           is_task_runnable(current_, &result.by_waitpid)) {
         LOG(debug) << "  Carrying on with task " << current_->tid;
         validate_scheduled_task();
+#if XDEBUG_LATENCY
+        schedule_allow_switch_end = chrono::steady_clock::now();
+#endif
         return result;
       }
       // Having rejected current_, be prepared to run the next task in the
@@ -799,6 +805,9 @@ Scheduler::Rescheduled Scheduler::reschedule(Switchable switchable) {
       if (!wait_any(tid, status, timeout)) {
         ASSERT(current_, !must_run_task);
         result.interrupted_by_signal = true;
+#if XDEBUG_LATENCY
+        schedule_allow_switch_end = chrono::steady_clock::now();
+#endif
         return result;
       }
       LOG(debug) << "  " << tid << " changed status to " << status;
@@ -837,6 +846,9 @@ Scheduler::Rescheduled Scheduler::reschedule(Switchable switchable) {
   validate_scheduled_task();
   setup_new_timeslice();
   result.started_new_timeslice = true;
+#if XDEBUG_LATENCY
+  schedule_allow_switch_end = chrono::steady_clock::now();
+#endif
   return result;
 }
 

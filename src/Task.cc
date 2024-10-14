@@ -3547,6 +3547,11 @@ long Task::ptrace_seize(pid_t tid, Session& session) {
   // Make sure the child has the only reference to this side of the pipe.
   error_fd.close();
 
+#if XDEBUG_LATENCY
+  before_ptrace_seize = chrono::steady_clock::now();
+  LOG(debug) << "RR start - before ptrace seize: " << chrono::duration <double, milli> (before_ptrace_seize - RR_start).count() << " ms";
+#endif
+
   // Sync with the child process.
   // We minimize the code we run between fork()ing and PTRACE_SEIZE, because
   // any abnormal exit of the rr process will leave the child paused and

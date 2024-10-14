@@ -2741,6 +2741,9 @@ RecordSession::RecordResult RecordSession::record_step() {
   LOG(debug) << "schedule time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (schedule_end - schedule_start).count() << " ms";
   total_schedule_time += chrono::duration <double, milli> (schedule_end - schedule_start).count();
 
+  LOG(debug) << "allow switch schedule time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (schedule_allow_switch_end - schedule_allow_switch_start).count() << " ms";
+  total_schedule_allow_switch_time += chrono::duration <double, milli> (schedule_allow_switch_end - schedule_allow_switch_start).count();
+
   LOG(debug) << "rec_prepare_syscall time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (rec_prepare_syscall_end - rec_prepare_syscall_start).count() << " ms";
   total_rec_prepare_syscall_time += chrono::duration <double, milli> (rec_prepare_syscall_end - rec_prepare_syscall_start).count();
 

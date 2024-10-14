@@ -243,6 +243,7 @@ extern int step_counter;
 
 #if XDEBUG_LATENCY
 extern std::chrono::time_point<std::chrono::steady_clock> RR_start;
+extern std::chrono::time_point<std::chrono::steady_clock> before_ptrace_seize;
 extern std::chrono::time_point<std::chrono::steady_clock> tracee_execve;
 extern std::chrono::time_point<std::chrono::steady_clock> start_new_compressed_writer;
 extern std::chrono::time_point<std::chrono::steady_clock> end_new_compressed_writer; 
@@ -276,11 +277,10 @@ extern double total_step_counter_time;
 
 extern std::chrono::time_point<std::chrono::steady_clock> schedule_start;
 extern std::chrono::time_point<std::chrono::steady_clock> schedule_end;
+extern std::chrono::time_point<std::chrono::steady_clock> schedule_allow_switch_start;
+extern std::chrono::time_point<std::chrono::steady_clock> schedule_allow_switch_end;
 extern double total_schedule_time;
-
-extern std::chrono::time_point<std::chrono::steady_clock> rec_prepare_syscall_start;
-extern std::chrono::time_point<std::chrono::steady_clock> rec_prepare_syscall_end;
-extern double total_rec_prepare_syscall_time;
+extern double total_schedule_allow_switch_time;
 
 extern std::chrono::time_point<std::chrono::steady_clock> rec_process_syscall_start;
 extern std::chrono::time_point<std::chrono::steady_clock> rec_process_syscall_end;

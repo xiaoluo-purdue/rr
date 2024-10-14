@@ -34,6 +34,7 @@ int step_counter = 0;
 #if XDEBUG_LATENCY
 // Used in calc latency added by RR record
 std::chrono::time_point<std::chrono::steady_clock> RR_start;
+std::chrono::time_point<std::chrono::steady_clock> before_ptrace_seize;
 std::chrono::time_point<std::chrono::steady_clock> tracee_execve;
 std::chrono::time_point<std::chrono::steady_clock> start_new_compressed_writer;
 std::chrono::time_point<std::chrono::steady_clock> end_new_compressed_writer;
@@ -66,7 +67,10 @@ double total_step_counter_time = 0.0;
 
 std::chrono::time_point<std::chrono::steady_clock> schedule_start;
 std::chrono::time_point<std::chrono::steady_clock> schedule_end;
+std::chrono::time_point<std::chrono::steady_clock> schedule_allow_switch_start;
+std::chrono::time_point<std::chrono::steady_clock> schedule_allow_switch_end;
 double total_schedule_time = 0.0;
+extern double total_schedule_allow_switch_time;
 
 std::chrono::time_point<std::chrono::steady_clock> rec_prepare_syscall_start;
 std::chrono::time_point<std::chrono::steady_clock> rec_prepare_syscall_end;
@@ -396,9 +400,15 @@ int main(int argc, char* argv[]) {
       total_blocking += time;
     }
 
+    double total_no_execve_waiting = 0;
+    for (auto time : no_execve_wait_times) {
+      total_no_execve_waiting += time;
+    }
+
     cout << "block count: " << block_times.size() << endl;
     cout << "total blocking time: " << total_blocking << " ms" << endl;
     cout << "avg blocking time: " << total_blocking / block_times.size() << " ms" << endl;
+    cout << "total no execve waiting time: " << total_no_execve_waiting << " ms" << endl;
 
     cout << "RR after record - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_after_record).count() << " ms" << endl;
     cout << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms" << endl;
@@ -406,6 +416,7 @@ int main(int argc, char* argv[]) {
     cout << "step_counter: " << step_counter << endl;
     cout << "total_step_counter_time: " << total_step_counter_time << endl;
     cout << "total_schedule_time: " << total_schedule_time << endl;
+    cout << "total_schedule_allow_switch_time: " << total_schedule_allow_switch_time << endl;
     cout << "total_rec_prepare_syscall_time: " << total_rec_prepare_syscall_time << endl;
     cout << "total_rec_process_syscall_time: " << total_rec_process_syscall_time << endl;
     cout << "total_record_event_time: " << total_record_event_time << endl;
@@ -416,6 +427,7 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "block count: " << block_times.size();
     LOG(debug) << "total blocking time: " << total_blocking << " ms";
     LOG(debug) << "avg blocking time: " << total_blocking / block_times.size() << " ms";
+    LOG(debug) << "total no execve waiting time: " << total_no_execve_waiting << " ms";
 
     LOG(debug) << "RR after record - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_after_record).count() << " ms";
     LOG(debug) << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms";
