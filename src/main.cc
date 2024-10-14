@@ -70,7 +70,7 @@ std::chrono::time_point<std::chrono::steady_clock> schedule_end;
 std::chrono::time_point<std::chrono::steady_clock> schedule_allow_switch_start;
 std::chrono::time_point<std::chrono::steady_clock> schedule_allow_switch_end;
 double total_schedule_time = 0.0;
-extern double total_schedule_allow_switch_time;
+extern double total_schedule_allow_switch_time = 0.0;
 
 std::chrono::time_point<std::chrono::steady_clock> rec_prepare_syscall_start;
 std::chrono::time_point<std::chrono::steady_clock> rec_prepare_syscall_end;
