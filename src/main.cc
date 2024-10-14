@@ -48,6 +48,7 @@ std::chrono::time_point<std::chrono::steady_clock> RR_after_record;
 bool after_tracee_exit = false;
 
 bool no_execve = true;
+std::vector<double> schedule_wait_times;
 std::vector<double> no_execve_wait_times;
 std::vector<double> no_execve_blocking_times;
 std::vector<double> no_execve_record_step_times;
@@ -401,7 +402,7 @@ int main(int argc, char* argv[]) {
     }
 
     double total_no_execve_waiting = 0;
-    for (auto time : no_execve_wait_times) {
+    for (auto time : schedule_wait_times) {
       total_no_execve_waiting += time;
     }
 

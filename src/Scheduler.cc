@@ -676,6 +676,7 @@ Scheduler::Rescheduled Scheduler::reschedule(Switchable switchable) {
           if(no_execve) {
             no_execve_wait_times.push_back(chrono::duration <double, milli> (end_time - start_time).count());
           }
+          schedule_wait_times.push_back(chrono::duration <double, milli> (end_time - start_time).count());
           #endif
           ntasks_running--;
           break;
