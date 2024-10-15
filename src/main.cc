@@ -111,7 +111,6 @@ int wait4_counter = 0;
 int try_wait_counter = 0;
 int waitpid1_counter = 0;
 int waitpid2_counter = 0;
-
 int overall_wait_counter = 0;
 #endif
 #if XDEBUG_RESUME
@@ -121,7 +120,6 @@ int resume2 = 0;
 int resume3 = 0;
 int resume4 = 0;
 int resume5 = 0;
-
 int overall_resume_counter = 0;
 #endif
 #endif
