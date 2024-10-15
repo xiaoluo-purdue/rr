@@ -44,6 +44,10 @@ std::chrono::time_point<std::chrono::steady_clock> after_wait;
 std::chrono::time_point<std::chrono::steady_clock> before_resume;
 std::chrono::time_point<std::chrono::steady_clock> before_record;
 std::chrono::time_point<std::chrono::steady_clock> RR_after_record;
+std::chrono::time_point<std::chrono::steady_clock> overall_after_wait;
+std::chrono::time_point<std::chrono::steady_clock> overall_before_resume;
+std::vector<double> overall_block_times;
+bool overall_stopped_after_wait;
 
 bool after_tracee_exit = false;
 
@@ -93,6 +97,10 @@ std::chrono::time_point<std::chrono::steady_clock> handle_signal_start;
 std::chrono::time_point<std::chrono::steady_clock> handle_signal_end;
 double total_handle_signal_time = 0.0;
 
+std::chrono::time_point<std::chrono::steady_clock> did_waitpid_start;
+std::chrono::time_point<std::chrono::steady_clock> did_waitpid_end;
+double total_did_waitpid_time = 0.0;
+
 double total_patching_time = 0.0;
 
 #if XDEBUG_WAIT
@@ -100,8 +108,11 @@ int wait1_counter = 0;
 int wait2_counter = 0;
 int wait3_counter = 0;
 int wait4_counter = 0;
+int try_wait_counter = 0;
 int waitpid1_counter = 0;
 int waitpid2_counter = 0;
+
+int overall_wait_counter = 0;
 #endif
 #if XDEBUG_RESUME
 int task_continue_counter = 0;
@@ -110,6 +121,8 @@ int resume2 = 0;
 int resume3 = 0;
 int resume4 = 0;
 int resume5 = 0;
+
+int overall_resume_counter = 0;
 #endif
 #endif
 
@@ -406,10 +419,16 @@ int main(int argc, char* argv[]) {
       total_no_execve_waiting += time;
     }
 
+    double total_overall_blocking = 0;
+    for (auto time : overall_block_times) {
+      total_overall_blocking += time;
+    }
+
     cout << "block count: " << block_times.size() << endl;
     cout << "total blocking time: " << total_blocking << " ms" << endl;
     cout << "avg blocking time: " << total_blocking / block_times.size() << " ms" << endl;
     cout << "total no execve waiting time: " << total_no_execve_waiting << " ms" << endl;
+    cout << "total_overall_blocking time: " << total_overall_blocking << " ms" << endl;
 
     cout << "RR after record - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_after_record).count() << " ms" << endl;
     cout << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms" << endl;
@@ -424,11 +443,13 @@ int main(int argc, char* argv[]) {
     cout << "total_patching_time: " << total_patching_time << endl;
     cout << "total_ptrace_event_seccomp_time: " << total_ptrace_event_seccomp_time << endl;
     cout << "total_handle_signal_time: " << total_handle_signal_time << endl;
+    cout << "total_did_waitpid_time: " << total_did_waitpid_time << endl;
 
     LOG(debug) << "block count: " << block_times.size();
     LOG(debug) << "total blocking time: " << total_blocking << " ms";
     LOG(debug) << "avg blocking time: " << total_blocking / block_times.size() << " ms";
     LOG(debug) << "total no execve waiting time: " << total_no_execve_waiting << " ms";
+    LOG(debug) << "total_overall_blocking time: " << total_overall_blocking << " ms";
 
     LOG(debug) << "RR after record - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_after_record).count() << " ms";
     LOG(debug) << "tracee exit - RR exit: " << chrono::duration <double, milli> (RR_exit - tracee_exit).count() << " ms";
@@ -436,12 +457,14 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "step_counter: " << step_counter;
     LOG(debug) << "total_step_counter_time: " << total_step_counter_time;
     LOG(debug) << "total_schedule_time: " << total_schedule_time;
+    LOG(debug) << "total_schedule_allow_switch_time: " << total_schedule_allow_switch_time;
     LOG(debug) << "total_rec_prepare_syscall_time: " << total_rec_prepare_syscall_time;
     LOG(debug) << "total_rec_process_syscall_time: " << total_rec_process_syscall_time;
     LOG(debug) << "total_record_event_time: " << total_record_event_time;
     LOG(debug) << "total_patching_time: " << total_patching_time;
     LOG(debug) << "total_ptrace_event_seccomp_time: " << total_ptrace_event_seccomp_time;
     LOG(debug) << "total_handle_signal_time: " << total_handle_signal_time;
+    LOG(debug) << "total_did_waitpid_time: " << total_did_waitpid_time;
     #endif
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;
@@ -449,10 +472,13 @@ int main(int argc, char* argv[]) {
     cout << "\twait 2: " << wait2_counter << endl;
     cout << "\twait 3: " << wait3_counter << endl;
     cout << "\twait 4: " << wait4_counter << endl;
+    cout << "\ttry wait: " << try_wait_counter << endl;
 
     cout << "waitpid() call times distribution:" << endl;
     cout << "\twaitpid 1: " << waitpid1_counter << endl;
     cout << "\twaitpid 2: " << waitpid2_counter << endl;
+
+    cout << "\toverall_wait_counter: " << overall_wait_counter << endl;
 
     LOG(debug) << "wait() call times distribution:";
     LOG(debug) << "\twait 1: " << wait1_counter;
@@ -463,6 +489,8 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "waitpid() call times distribution:";
     LOG(debug) << "\twaitpid 1: " << waitpid1_counter;
     LOG(debug) << "\twaitpid 2: " << waitpid2_counter;
+
+    LOG(debug) << "\toverall_wait_counter: " << overall_wait_counter;
   #endif
 
   #if XDEBUG_RESUME
@@ -473,6 +501,7 @@ int main(int argc, char* argv[]) {
     cout << "\tresume 3: " << resume3 << endl;
     cout << "\tresume 4: " << resume4 << endl;
     cout << "\tresume 5: " << resume5 << endl;
+    cout << "\toverall_resume_counter: " << overall_resume_counter << endl;
 
     LOG(debug) << "\ntask_continue: " << task_continue_counter;
     LOG(debug) << "resume_execution() call times distribution: ";
@@ -481,6 +510,7 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "\tresume 3: " << resume3;
     LOG(debug) << "\tresume 4: " << resume4;
     LOG(debug) << "\tresume 5: " << resume5;
+    LOG(debug) << "\toverall_resume_counter: " << overall_resume_counter;
   #endif
   #endif
 

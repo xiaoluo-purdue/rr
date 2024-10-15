@@ -2118,6 +2118,13 @@ bool RecordTask::try_wait() {
   siginfo_t info;
   memset(&info, 0, sizeof(siginfo_t));
   int ret = waitid(P_PID, tid, &info, WSTOPPED | WNOHANG);
+  #if XDEBUG_LATENCY
+    overall_stopped_after_wait = true;
+    overall_after_wait = chrono::steady_clock::now();
+  #endif
+  #if XDEBUG_WAIT
+    overall_wait_counter++;
+  #endif
   ASSERT(this, 0 == ret || (-1 == ret && errno == ECHILD)) <<
     "waitid(" << tid << ", WSTOPPED | NOHANG) failed with "
                          << ret;

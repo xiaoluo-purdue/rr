@@ -1537,6 +1537,17 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
       #endif
     }
   }
+
+#if XDEBUG_LATENCY
+  if (overall_stopped_after_wait) {
+    overall_before_resume = chrono::steady_clock::now();
+    overall_block_times.push_back(chrono::duration <double, milli> (overall_before_resume - overall_after_wait).count());
+    overall_stopped_after_wait = false;
+  }
+#endif
+#if XDEBUG_RESUME
+  overall_resume_counter++;
+#endif
 }
 
 void Task::set_regs(const Registers& regs) {
@@ -1962,6 +1973,13 @@ void Task::wait(double interrupt_after_elapsed) {
     }
     siginfo_t info;
     ret = waitid(P_PID, tid, &info, WSTOPPED);
+    #if XDEBUG_LATENCY
+        overall_stopped_after_wait = true;
+        overall_after_wait = chrono::steady_clock::now();
+    #endif
+    #if XDEBUG_WAIT
+        overall_wait_counter++;
+    #endif
     DEBUG_ASSERT(ret == 0 || ret == -1);
     if (ret == -1) {
       ret = -errno;
@@ -2000,7 +2018,13 @@ void Task::wait(double interrupt_after_elapsed) {
       LOG(warn) << "  PTRACE_INTERRUPT raced with another event " << status;
     }
   }
+  #if XDEBUG_LATENCY
+    did_waitpid_start = chrono::steady_clock::now();
+  #endif
   did_waitpid(status);
+  #if XDEBUG_LATENCY
+    did_waitpid_end = chrono::steady_clock::now();
+  #endif
 }
 
 void Task::canonicalize_regs(SupportedArch syscall_arch) {

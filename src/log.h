@@ -255,8 +255,14 @@ extern std::chrono::time_point<std::chrono::steady_clock> RR_after_record;
 extern std::chrono::time_point<std::chrono::steady_clock> after_wait;
 extern std::chrono::time_point<std::chrono::steady_clock> before_resume;
 
+extern std::chrono::time_point<std::chrono::steady_clock> overall_after_wait;
+extern std::chrono::time_point<std::chrono::steady_clock> overall_before_resume;
+
 extern std::vector<double> block_times;
 extern bool stopped_after_wait;
+
+extern std::vector<double> overall_block_times;
+extern bool overall_stopped_after_wait;
 
 extern bool after_tracee_exit;
 
@@ -303,6 +309,10 @@ extern std::chrono::time_point<std::chrono::steady_clock> handle_signal_start;
 extern std::chrono::time_point<std::chrono::steady_clock> handle_signal_end;
 extern double total_handle_signal_time;
 
+extern std::chrono::time_point<std::chrono::steady_clock> did_waitpid_start;
+extern std::chrono::time_point<std::chrono::steady_clock> did_waitpid_end;
+extern double total_did_waitpid_time;
+
 extern double total_patching_time;
 
 # if XDEBUG_WAIT
@@ -310,9 +320,12 @@ extern int wait1_counter;
 extern int wait2_counter;
 extern int wait3_counter;
 extern int wait4_counter;
+extern int try_wait_counter;
 
 extern int waitpid1_counter;
 extern int waitpid2_counter;
+
+extern int overall_wait_counter;
 #endif 
 #if XDEBUG_RESUME
 extern int task_continue_counter;
@@ -321,6 +334,8 @@ extern int resume2;
 extern int resume3;
 extern int resume4;
 extern int resume5;
+
+extern int overall_resume_counter;
 #endif
 #endif
 

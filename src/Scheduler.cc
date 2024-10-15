@@ -310,6 +310,9 @@ bool Scheduler::is_task_runnable(RecordTask* t, bool* by_waitpid) {
 
   bool did_wait_for_t;
   did_wait_for_t = t->try_wait();
+  #if XDEBUG_WAIT
+    try_wait_counter++;
+  #endif
   #if XDEBUG_LATENCY
     stopped_after_wait = true;
     after_wait = chrono::steady_clock::now();

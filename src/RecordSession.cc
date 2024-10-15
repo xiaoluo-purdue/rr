@@ -2758,6 +2758,9 @@ RecordSession::RecordResult RecordSession::record_step() {
 
   LOG(debug) << "handle_signal time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (handle_signal_end - handle_signal_start).count() << " ms";
   total_handle_signal_time += chrono::duration <double, milli> (handle_signal_end - handle_signal_start).count();
+
+  LOG(debug) << "did_wait_pid time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (did_waitpid_end - did_waitpid_start).count() << " ms";
+  total_did_waitpid_time += chrono::duration <double, milli> (did_waitpid_end - did_waitpid_start).count();
 #endif
   return result;
 }
