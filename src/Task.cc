@@ -1531,6 +1531,10 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
       #if XDEBUG_WAIT
         wait3_counter++;
       #endif
+      #if XDEBUG_LATENCY
+        stopped_after_wait = true;
+        after_wait = chrono::steady_clock::now();
+      #endif
     }
   }
 }

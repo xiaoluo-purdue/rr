@@ -294,6 +294,10 @@ bool Scheduler::is_task_runnable(RecordTask* t, bool* by_waitpid) {
     #if XDEBUG_WAIT
       wait1_counter++;
     #endif
+    #if XDEBUG_LATENCY
+      stopped_after_wait = true;
+      after_wait = chrono::steady_clock::now();
+    #endif
     ntasks_running--;
     *by_waitpid = true;
     must_run_task = t;
@@ -306,6 +310,10 @@ bool Scheduler::is_task_runnable(RecordTask* t, bool* by_waitpid) {
 
   bool did_wait_for_t;
   did_wait_for_t = t->try_wait();
+  #if XDEBUG_LATENCY
+    stopped_after_wait = true;
+    after_wait = chrono::steady_clock::now();
+  #endif
   if (did_wait_for_t) {
     LOG(debug) << "  ready with status " << t->status();
     if (t->schedule_frozen && t->status().ptrace_event() != PTRACE_EVENT_SECCOMP) {
