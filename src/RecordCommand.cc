@@ -698,8 +698,16 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
     auto start_step = chrono::steady_clock::now();
     #endif
     bool done_initial_exec = session->done_initial_exec();
-    
+
+#if XDEBUG_LATENCY
+    step_start = chrono::steady_clock::now();
+#endif
     step_result = session->record_step();
+#if XDEBUG_LATENCY
+    step_end = chrono::steady_clock::now();
+    LOG(debug) << "record step time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (step_end - step_start).count() << " ms";
+    total_step_counter_time += chrono::duration <double, milli> (step_end - step_start).count();
+#endif
     
     // Only create latest-trace symlink if --output-trace-dir is not being used
     if (!done_initial_exec && session->done_initial_exec() && flags.output_trace_dir.empty()) {

@@ -2024,6 +2024,8 @@ void Task::wait(double interrupt_after_elapsed) {
   did_waitpid(status);
   #if XDEBUG_LATENCY
     did_waitpid_end = chrono::steady_clock::now();
+    LOG(debug) << "did_wait_pid time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (did_waitpid_end - did_waitpid_start).count() << " ms";
+    total_did_waitpid_time += chrono::duration <double, milli> (did_waitpid_end - did_waitpid_start).count();
   #endif
 }
 

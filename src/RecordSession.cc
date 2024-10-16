@@ -695,6 +695,8 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
         handle_seccomp_traced_syscall(t, step_state, result, did_enter_syscall);
 #if XDEBUG_LATENCY
         ptrace_event_seccomp_end = chrono::steady_clock::now();
+        LOG(debug) << "ptrace_event_seccomp time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (ptrace_event_seccomp_end - ptrace_event_seccomp_start).count() << " ms";
+        total_ptrace_event_seccomp_time += chrono::duration <double, milli> (ptrace_event_seccomp_end - ptrace_event_seccomp_start).count();
 #endif
       } else {
         // Note that we make no attempt to patch the syscall site when the
@@ -1212,6 +1214,8 @@ void RecordSession::syscall_state_changed(RecordTask* t,
           rec_prepare_syscall(t);
 #if XDEBUG_LATENCY
       rec_prepare_syscall_end = chrono::steady_clock::now();
+      LOG(debug) << "rec_prepare_syscall time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (rec_prepare_syscall_end - rec_prepare_syscall_start).count() << " ms";
+      total_rec_prepare_syscall_time += chrono::duration <double, milli> (rec_prepare_syscall_end - rec_prepare_syscall_start).count();
 #endif
       t->record_event(t->ev(), RecordTask::DONT_FLUSH_SYSCALLBUF,
                       RecordTask::ALLOW_RESET_SYSCALLBUF,
@@ -1353,6 +1357,8 @@ void RecordSession::syscall_state_changed(RecordTask* t,
           rec_process_syscall(t);
 #if XDEBUG_LATENCY
           rec_process_syscall_end = chrono::steady_clock::now();
+          LOG(debug) << "rec_process_syscall time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (rec_process_syscall_end - rec_process_syscall_start).count() << " ms";
+          total_rec_process_syscall_time += chrono::duration <double, milli> (rec_process_syscall_end - rec_process_syscall_start).count();
 #endif
           if (t->session().done_initial_exec() &&
               Flags::get().check_cached_mmaps) {
@@ -1870,7 +1876,6 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
   }
 #if XDEBUG_LATENCY
   LOG(debug) << "We get a signal!";
-  handle_signal_start = chrono::steady_clock::now();
 #endif
   if (!done_initial_exec()) {
     // If the initial tracee isn't prepared to handle
@@ -1908,21 +1913,12 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
         // Emulated ptrace-stop. Don't run the task again yet.
         last_task_switchable = ALLOW_SWITCH;
         step_state->continue_type = DONT_CONTINUE;
-#if XDEBUG_LATENCY
-        handle_signal_end = chrono::steady_clock::now();
-#endif
         return true;
       case DEFER_SIGNAL:
         ASSERT(t, false) << "Can't defer deterministic or internal signal "
                          << siginfo << " at ip " << t->ip();
-#if XDEBUG_LATENCY
-        handle_signal_end = chrono::steady_clock::now();
-#endif
         break;
       case SIGNAL_HANDLED:
-#if XDEBUG_LATENCY
-        handle_signal_end = chrono::steady_clock::now();
-#endif
         if (t->ptrace_event() == PTRACE_EVENT_SECCOMP) {
           // `handle_desched_event` detected a spurious desched followed
           // by a SECCOMP event, which it left pending. Handle that SECCOMP
@@ -1938,9 +1934,6 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
         }
         break;
     }
-#if XDEBUG_LATENCY
-    handle_signal_end = chrono::steady_clock::now();
-#endif
     return false;
   }
   // Conservatively invalidate the sigmask in case just accepting a signal has
@@ -1956,9 +1949,6 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
       vpmc->synthesize_signal(t);
 
       t->next_pmc_interrupt_is_for_user = false;
-#if XDEBUG_LATENCY
-      handle_signal_end = chrono::steady_clock::now();
-#endif
       return true;
     }
 
@@ -1986,9 +1976,6 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
         << ", fd=" << si.si_fd << ")";
   }
   t->stash_sig();
-#if XDEBUG_LATENCY
-  handle_signal_end = chrono::steady_clock::now();
-#endif
   return true;
 }
 
@@ -2596,6 +2583,12 @@ RecordSession::RecordResult RecordSession::record_step() {
   auto rescheduled = scheduler().reschedule(last_task_switchable);
 #if XDEBUG_LATENCY
   schedule_end = chrono::steady_clock::now();
+  LOG(debug) << "schedule time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (schedule_end - schedule_start).count() << " ms";
+  total_schedule_time += chrono::duration <double, milli> (schedule_end - schedule_start).count();
+
+  schedule_allow_switch_end = chrono::steady_clock::now();
+  LOG(debug) << "allow switch schedule time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (schedule_allow_switch_end - schedule_allow_switch_start).count() << " ms";
+  total_schedule_allow_switch_time += chrono::duration <double, milli> (schedule_allow_switch_end - schedule_allow_switch_start).count();
 #endif
   // LOG(debug) << "[workflow] scheduling: " << curr_sched_time << " ms";
   if (rescheduled.interrupted_by_signal) {
@@ -2732,36 +2725,6 @@ RecordSession::RecordResult RecordSession::record_step() {
   }
 
   LOG(debug) << "record_step() was exited";
-#if PATCHED_SYSCALL_NAME
-  step_end = chrono::steady_clock::now();
-  LOG(debug) << "record step time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (step_end - step_start).count() << " ms";
-//  cout << "record step time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (step_end - step_start).count() << " ms" << endl;
-  total_step_counter_time += chrono::duration <double, milli> (step_end - step_start).count();
-
-  LOG(debug) << "schedule time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (schedule_end - schedule_start).count() << " ms";
-  total_schedule_time += chrono::duration <double, milli> (schedule_end - schedule_start).count();
-
-  LOG(debug) << "allow switch schedule time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (schedule_allow_switch_end - schedule_allow_switch_start).count() << " ms";
-  total_schedule_allow_switch_time += chrono::duration <double, milli> (schedule_allow_switch_end - schedule_allow_switch_start).count();
-
-  LOG(debug) << "rec_prepare_syscall time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (rec_prepare_syscall_end - rec_prepare_syscall_start).count() << " ms";
-  total_rec_prepare_syscall_time += chrono::duration <double, milli> (rec_prepare_syscall_end - rec_prepare_syscall_start).count();
-
-  LOG(debug) << "rec_process_syscall time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (rec_process_syscall_end - rec_process_syscall_start).count() << " ms";
-  total_rec_process_syscall_time += chrono::duration <double, milli> (rec_process_syscall_end - rec_process_syscall_start).count();
-
-  LOG(debug) << "record_event time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (record_event_end - record_event_start).count() << " ms";
-  total_record_event_time += chrono::duration <double, milli> (record_event_end - record_event_start).count();
-
-  LOG(debug) << "ptrace_event_seccomp time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (ptrace_event_seccomp_end - ptrace_event_seccomp_start).count() << " ms";
-  total_ptrace_event_seccomp_time += chrono::duration <double, milli> (ptrace_event_seccomp_end - ptrace_event_seccomp_start).count();
-
-  LOG(debug) << "handle_signal time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (handle_signal_end - handle_signal_start).count() << " ms";
-  total_handle_signal_time += chrono::duration <double, milli> (handle_signal_end - handle_signal_start).count();
-
-  LOG(debug) << "did_wait_pid time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (did_waitpid_end - did_waitpid_start).count() << " ms";
-  total_did_waitpid_time += chrono::duration <double, milli> (did_waitpid_end - did_waitpid_start).count();
-#endif
   return result;
 }
 

@@ -1958,6 +1958,8 @@ void RecordTask::record_event(const Event& ev, FlushSyscallbuf flush,
   }
 #if XDEBUG_LATENCY
   record_event_end = chrono::steady_clock::now();
+  LOG(debug) << "record_event time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (record_event_end - record_event_start).count() << " ms";
+  total_record_event_time += chrono::duration <double, milli> (record_event_end - record_event_start).count();
 #endif
 }
 
