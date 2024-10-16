@@ -284,6 +284,7 @@ extern double total_step_counter_time;
 
 extern std::chrono::time_point<std::chrono::steady_clock> schedule_start;
 extern std::chrono::time_point<std::chrono::steady_clock> schedule_end;
+extern bool is_allow_switch;
 extern std::chrono::time_point<std::chrono::steady_clock> schedule_allow_switch_start;
 extern std::chrono::time_point<std::chrono::steady_clock> schedule_allow_switch_end;
 extern double total_schedule_time;

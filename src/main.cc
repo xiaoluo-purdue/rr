@@ -72,6 +72,7 @@ double total_step_counter_time = 0.0;
 
 std::chrono::time_point<std::chrono::steady_clock> schedule_start;
 std::chrono::time_point<std::chrono::steady_clock> schedule_end;
+bool is_allow_switch = false;
 std::chrono::time_point<std::chrono::steady_clock> schedule_allow_switch_start;
 std::chrono::time_point<std::chrono::steady_clock> schedule_allow_switch_end;
 double total_schedule_time = 0.0;

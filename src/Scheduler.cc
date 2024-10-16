@@ -706,6 +706,7 @@ Scheduler::Rescheduled Scheduler::reschedule(Switchable switchable) {
 
 #if XDEBUG_LATENCY
   schedule_allow_switch_start = chrono::steady_clock::now();
+  is_allow_switch = true;
 #endif
   unlimited_ticks_mode = false;
 

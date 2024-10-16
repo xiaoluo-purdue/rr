@@ -2586,9 +2586,12 @@ RecordSession::RecordResult RecordSession::record_step() {
   LOG(debug) << "schedule time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (schedule_end - schedule_start).count() << " ms";
   total_schedule_time += chrono::duration <double, milli> (schedule_end - schedule_start).count();
 
-  schedule_allow_switch_end = chrono::steady_clock::now();
-  LOG(debug) << "allow switch schedule time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (schedule_allow_switch_end - schedule_allow_switch_start).count() << " ms";
-  total_schedule_allow_switch_time += chrono::duration <double, milli> (schedule_allow_switch_end - schedule_allow_switch_start).count();
+  if (is_allow_switch) {
+    schedule_allow_switch_end = chrono::steady_clock::now();
+    LOG(debug) << "allow switch schedule time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (schedule_allow_switch_end - schedule_allow_switch_start).count() << " ms";
+    total_schedule_allow_switch_time += chrono::duration <double, milli> (schedule_allow_switch_end - schedule_allow_switch_start).count();
+    is_allow_switch = false;
+  }
 #endif
   // LOG(debug) << "[workflow] scheduling: " << curr_sched_time << " ms";
   if (rescheduled.interrupted_by_signal) {
