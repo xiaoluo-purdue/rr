@@ -2119,8 +2119,15 @@ bool RecordTask::try_wait() {
   WaitStatus status;
   siginfo_t info;
   memset(&info, 0, sizeof(siginfo_t));
+  #if XDEBUG_LATENCY
+    auto start_time = chrono::steady_clock::now();
+  #endif
   int ret = waitid(P_PID, tid, &info, WSTOPPED | WNOHANG);
   #if XDEBUG_LATENCY
+    auto end_time = chrono::steady_clock::now();
+    try_wait_times.push_back(chrono::duration <double, milli> (end_time - start_time).count());
+
+    LOG(debug) << "[try_wait] overall_stopped_after_wait";
     overall_stopped_after_wait = true;
     overall_after_wait = chrono::steady_clock::now();
   #endif

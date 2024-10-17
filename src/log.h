@@ -268,6 +268,9 @@ extern bool after_tracee_exit;
 
 extern bool no_execve;
 extern std::vector<double> schedule_wait_times;
+extern std::vector<double> try_wait_times;
+extern std::vector<double> wait_phase_1;
+extern std::vector<double> wait_phase_2;
 extern std::vector<double> no_execve_wait_times;
 extern std::vector<double> no_execve_blocking_times;
 extern std::vector<double> no_execve_record_step_times;

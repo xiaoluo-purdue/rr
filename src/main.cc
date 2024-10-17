@@ -53,6 +53,9 @@ bool after_tracee_exit = false;
 
 bool no_execve = true;
 std::vector<double> schedule_wait_times;
+std::vector<double> try_wait_times;
+std::vector<double> wait_phase_1;
+std::vector<double> wait_phase_2;
 std::vector<double> no_execve_wait_times;
 std::vector<double> no_execve_blocking_times;
 std::vector<double> no_execve_record_step_times;
@@ -413,9 +416,9 @@ int main(int argc, char* argv[]) {
       total_blocking += time;
     }
 
-    double total_no_execve_waiting = 0;
+    double total_schedule_waiting = 0;
     for (auto time : schedule_wait_times) {
-      total_no_execve_waiting += time;
+      total_schedule_waiting += time;
     }
 
     double total_overall_blocking = 0;
@@ -423,10 +426,28 @@ int main(int argc, char* argv[]) {
       total_overall_blocking += time;
     }
 
+    double total_try_wait = 0;
+    for (auto time : try_wait_times) {
+      total_try_wait += time;
+    }
+
+    double phase_1_wait = 0;
+    for (auto time : wait_phase_1) {
+      phase_1_wait += time;
+    }
+
+    double phase_2_wait = 0;
+    for (auto time : wait_phase_2) {
+      phase_2_wait += time;
+    }
+
     cout << "block count: " << block_times.size() << endl;
     cout << "total blocking time: " << total_blocking << " ms" << endl;
     cout << "avg blocking time: " << total_blocking / block_times.size() << " ms" << endl;
-    cout << "total no execve waiting time: " << total_no_execve_waiting << " ms" << endl;
+    cout << "total_schedule_waiting: " << total_schedule_waiting << " ms" << endl;
+    cout << "total_try_wait: " << total_try_wait << " ms" << endl;
+    cout << "phase_1_wait: " << phase_1_wait << " ms" << endl;
+    cout << "phase_2_wait: " << phase_2_wait << " ms" << endl;
     cout << "total_overall_blocking time: " << total_overall_blocking << " ms" << endl;
 
     cout << "RR after record - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_after_record).count() << " ms" << endl;
@@ -447,7 +468,10 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "block count: " << block_times.size();
     LOG(debug) << "total blocking time: " << total_blocking << " ms";
     LOG(debug) << "avg blocking time: " << total_blocking / block_times.size() << " ms";
-    LOG(debug) << "total no execve waiting time: " << total_no_execve_waiting << " ms";
+    LOG(debug) << "total_schedule_waiting: " << total_schedule_waiting << " ms";
+    LOG(debug) << "total_try_wait: " << total_try_wait << " ms";
+    LOG(debug) << "phase_1_wait: " << phase_1_wait << " ms";
+    LOG(debug) << "phase_2_wait: " << phase_2_wait << " ms";
     LOG(debug) << "total_overall_blocking time: " << total_overall_blocking << " ms";
 
     LOG(debug) << "RR after record - RR exit: " << chrono::duration <double, milli> (RR_exit - RR_after_record).count() << " ms";

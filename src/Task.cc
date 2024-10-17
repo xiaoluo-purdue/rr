@@ -1947,6 +1947,9 @@ bool Task::account_for_potential_ptrace_interrupt_stop(WaitStatus status) {
 
 void Task::wait(double interrupt_after_elapsed) {
   LOG(debug) << "going into blocking waitid(" << tid << ") ...";
+  #if XDEBUG_LATENCY
+    auto wait_t0 = chrono::steady_clock::now();
+  #endif
   ASSERT(this, session().is_recording() || interrupt_after_elapsed == -1);
 
   if (wait_unexpected_exit()) {
@@ -1974,11 +1977,8 @@ void Task::wait(double interrupt_after_elapsed) {
     siginfo_t info;
     ret = waitid(P_PID, tid, &info, WSTOPPED);
     #if XDEBUG_LATENCY
-        overall_stopped_after_wait = true;
-        overall_after_wait = chrono::steady_clock::now();
-    #endif
-    #if XDEBUG_WAIT
-        overall_wait_counter++;
+      auto wait_t1 = chrono::steady_clock::now();
+      wait_phase_1.push_back(chrono::duration <double, milli> (wait_t1 - wait_t0).count());
     #endif
     DEBUG_ASSERT(ret == 0 || ret == -1);
     if (ret == -1) {
@@ -1993,6 +1993,17 @@ void Task::wait(double interrupt_after_elapsed) {
     if (ret == 0) {
       status = WaitStatus(info);
       // waitpid was not interrupted by the alarm.
+    #if XDEBUG_LATENCY
+      LOG(debug) << "[wait] overall_stopped_after_wait";
+      overall_stopped_after_wait = true;
+      overall_after_wait = chrono::steady_clock::now();
+
+      auto wait_t2 = chrono::steady_clock::now();
+      wait_phase_2.push_back(chrono::duration <double, milli> (wait_t2 - wait_t1).count());
+    #endif
+    #if XDEBUG_WAIT
+      overall_wait_counter++;
+    #endif
       break;
     } else {
       if (ret == -ECHILD) {
