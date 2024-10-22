@@ -82,7 +82,10 @@
 #include <sys/prctl.h>
 #include <unistd.h>
 
+#ifndef _STRUCT_TIMEVAL
+#define _STRUCT_TIMEVAL
 #include <time.h>
+#endif
 
 #include "preload_interface.h"
 #include "rr/rr.h"
