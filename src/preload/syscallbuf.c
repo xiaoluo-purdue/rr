@@ -1313,8 +1313,10 @@ static void __attribute__((noinline)) do_breakpoint(size_t value)
  */
 static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
 
-  //struct timespec commit_raw_syscall_start, commit_raw_syscall_end;
-  //clock_gettime(CLOCK_MONOTONIC, &commit_raw_syscall_start);
+#if MEASURE_SYSCALL_EXETIME
+  struct timespec commit_raw_syscall_start, commit_raw_syscall_end;
+  clock_gettime(CLOCK_MONOTONIC, &commit_raw_syscall_start);
+#endif
 
   void* record_start = buffer_last();
   struct syscallbuf_record* rec = record_start;
@@ -1395,16 +1397,18 @@ static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
   }
 
 
-  //clock_gettime(CLOCK_MONOTONIC, &commit_raw_syscall_end);
+#if MEASURE_SYSCALL_EXETIME
+  clock_gettime(CLOCK_MONOTONIC, &commit_raw_syscall_end);
 
   // Calculate the time difference in nanoseconds
-  //double elapsed_time = (commit_raw_syscall_end.tv_sec - commit_raw_syscall_start.tv_sec) * 1e9 +
-  //                      (commit_raw_syscall_end.tv_nsec - commit_raw_syscall_start.tv_nsec);
+  double elapsed_time = (commit_raw_syscall_end.tv_sec - commit_raw_syscall_start.tv_sec) * 1e9 +
+                        (commit_raw_syscall_end.tv_nsec - commit_raw_syscall_start.tv_nsec);
 
   // Accumulate the total time spent in this function
-  //total_commit_raw_syscall_time += elapsed_time;
+  total_commit_raw_syscall_time += elapsed_time;
 
-  //printf("total_commit_raw_syscall_time %.2f microseconds\n", elapsed_time / 1e3);
+  printf("total_commit_raw_syscall_time %.2f microseconds\n", elapsed_time / 1e3);
+#endif
 
   return ret;
 }
