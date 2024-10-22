@@ -82,13 +82,12 @@
 #include <sys/prctl.h>
 #include <unistd.h>
 
-#include <chrono>
-#include <iostream>
+#include <time.h>
 
 #include "preload_interface.h"
 #include "rr/rr.h"
 
-double total_commit_raw_syscall_time = 0.0;
+static double total_commit_raw_syscall_time = 0.0;
 
 #ifndef SOL_NETLINK
 #define SOL_NETLINK 270
@@ -1316,7 +1315,8 @@ static void __attribute__((noinline)) do_breakpoint(size_t value)
  */
 static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
 
-  auto commit_raw_syscall_start = std::chrono::steady_clock::now();
+  struct timespec commit_raw_syscall_start, commit_raw_syscall_end;
+  clock_gettime(CLOCK_MONOTONIC, &commit_raw_syscall_start);
 
   void* record_start = buffer_last();
   struct syscallbuf_record* rec = record_start;
@@ -1397,9 +1397,16 @@ static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
   }
 
 
-    auto commit_raw_syscall_end = std::chrono::steady_clock::now();
-    total_commit_raw_syscall_time += std::chrono::duration <double, milli> (commit_raw_syscall_end - commit_raw_syscall_start).count();
-    cout << "total_commit_raw_syscall_time: " << duration.count() << " ms" << endl;
+  clock_gettime(CLOCK_MONOTONIC, &commit_raw_syscall_end);
+
+  // Calculate the time difference in nanoseconds
+  double elapsed_time = (commit_raw_syscall_end.tv_sec - commit_raw_syscall_start.tv_sec) * 1e9 +
+                        (commit_raw_syscall_end.tv_nsec - commit_raw_syscall_start.tv_nsec);
+
+  // Accumulate the total time spent in this function
+  total_commit_raw_syscall_time += elapsed_time;
+
+  printf("total_commit_raw_syscall_time %.2f microseconds\n", elapsed_time / 1e3);
 
   return ret;
 }
