@@ -82,8 +82,13 @@
 #include <sys/prctl.h>
 #include <unistd.h>
 
+#include <chrono>
+#include <iostream>
+
 #include "preload_interface.h"
 #include "rr/rr.h"
+
+double total_commit_raw_syscall_time = 0.0;
 
 #ifndef SOL_NETLINK
 #define SOL_NETLINK 270
@@ -1310,6 +1315,9 @@ static void __attribute__((noinline)) do_breakpoint(size_t value)
  * returned directly by the kernel syscall hook.
  */
 static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
+
+  auto commit_raw_syscall_start = std::chrono::steady_clock::now();
+
   void* record_start = buffer_last();
   struct syscallbuf_record* rec = record_start;
   struct syscallbuf_hdr* hdr = buffer_hdr();
@@ -1387,6 +1395,11 @@ static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
      */
     force_tick();
   }
+
+
+    auto commit_raw_syscall_end = std::chrono::steady_clock::now();
+    total_commit_raw_syscall_time += std::chrono::duration <double, milli> (commit_raw_syscall_end - commit_raw_syscall_start).count();
+    cout << "total_commit_raw_syscall_time: " << duration.count() << " ms" << endl;
 
   return ret;
 }
