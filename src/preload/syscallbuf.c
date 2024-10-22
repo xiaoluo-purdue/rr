@@ -70,7 +70,7 @@
 #include <linux/stat.h>
 #include <linux/socket.h>
 #include <linux/stat.h>
-//#include <linux/time.h>
+#include <linux/time.h>
 #include <linux/types.h>
 #include <linux/uio.h>
 #include <linux/un.h>
@@ -81,8 +81,6 @@
 #include <sys/mman.h>
 #include <sys/prctl.h>
 #include <unistd.h>
-
-#include <time.h>
 
 #include "preload_interface.h"
 #include "rr/rr.h"
