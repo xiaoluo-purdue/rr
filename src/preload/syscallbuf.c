@@ -434,10 +434,10 @@ static long untraced_syscall_full(int syscallno, long a0, long a1, long a2,
                                   long a3, long a4, long a5,
                                   void* syscall_instruction,
                                   long stack_param_1, long stack_param_2) {
-#if MEASURE_SYSCALL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
+//#if MEASURE_SYSCALL_EXETIME
+//  struct timespec start, end;
+//  clock_gettime(CLOCK_MONOTONIC, &start);
+  // #endif
   struct syscallbuf_record* rec = (struct syscallbuf_record*)buffer_last();
   /* Ensure tools analyzing the replay can find the pending syscall result */
   thread_locals->pending_untraced_syscall_result = &rec->ret;
@@ -477,11 +477,11 @@ static long untraced_syscall_full(int syscallno, long a0, long a1, long a2,
 #error Unknown architecture
 #endif
 
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("total kernel time %lf ms\n", total_kernel_time);
-#endif
+  //#if MEASURE_SYSCALL_EXETIME
+  // clock_gettime(CLOCK_MONOTONIC, &end);
+  //total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
+  // printf("total kernel time %lf ms\n", total_kernel_time);
+  //#endif
 
   return ret;
 }
