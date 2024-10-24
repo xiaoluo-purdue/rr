@@ -1415,9 +1415,16 @@ void TraceWriter::setup_cpuid_records(bool has_cpuid_faulting,
 }
 
 void TraceWriter::close(CloseStatus status, const TraceUuid* uuid) {
+#if XDEBUG_LATENCY
+  auto wclose_start = chrono::steady_clock::now();
+#endif
   for (auto& w : writers) {
     w->close();
   }
+#if XDEBUG_LATENCY
+  auto wclose_end = chrono::steady_clock::now();
+  LOG(debug) << "wclose time cost: " << chrono::duration <double, milli> (wclose_end - wclose_start).count() << " ms";
+#endif
 
   MallocMessageBuilder header_msg;
   trace::Header::Builder header = header_msg.initRoot<trace::Header>();
