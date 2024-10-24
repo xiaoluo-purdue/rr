@@ -225,16 +225,37 @@ void CompressedWriter::close(Sync sync) {
     return;
   }
 
+#if XDEBUG_LATENCY
+  auto update_reservation_start = chrono::steady_clock::now();
+#endif
   update_reservation(NOWAIT);
+#if XDEBUG_LATENCY
+  auto update_reservation_end = chrono::steady_clock::now();
+  LOG(debug) << "update_reservation time cost: " << chrono::duration <double, milli> (update_reservation_end - update_reservation_start).count() << " ms";
+#endif
 
   pthread_mutex_lock(&mutex);
   closing = true;
   pthread_cond_broadcast(&cond);
   pthread_mutex_unlock(&mutex);
 
+#if XDEBUG_LATENCY
+  auto pthread_join_start = chrono::steady_clock::now();
+#endif
   for (auto i = threads.begin(); i != threads.end(); ++i) {
+#if XDEBUG_LATENCY
+    auto pthread_join_internal_start = chrono::steady_clock::now();
+#endif
     pthread_join(*i, nullptr);
+#if XDEBUG_LATENCY
+    auto pthread_join_internal_end = chrono::steady_clock::now();
+    LOG(debug) << "pthread_join_internal time cost: " << chrono::duration <double, milli> (pthread_join_internal_end - pthread_join_internal_start).count() << " ms";
+#endif
   }
+#if XDEBUG_LATENCY
+  auto pthread_join_end = chrono::steady_clock::now();
+  LOG(debug) << "pthread_join time cost: " << chrono::duration <double, milli> (pthread_join_end - pthread_join_start).count() << " ms";
+#endif
 
   if (sync == SYNC) {
     if (fsync(fd) < 0) {

@@ -1419,7 +1419,14 @@ void TraceWriter::close(CloseStatus status, const TraceUuid* uuid) {
   auto wclose_start = chrono::steady_clock::now();
 #endif
   for (auto& w : writers) {
+#if XDEBUG_LATENCY
+    auto wclose_internal_start = chrono::steady_clock::now();
+#endif
     w->close();
+#if XDEBUG_LATENCY
+    auto wclose_internal_end = chrono::steady_clock::now();
+    LOG(debug) << "wclose internal time cost: " << chrono::duration <double, milli> (wclose_internal_end - wclose_internal_start).count() << " ms";
+#endif
   }
 #if XDEBUG_LATENCY
   auto wclose_end = chrono::steady_clock::now();
