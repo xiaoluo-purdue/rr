@@ -271,11 +271,19 @@ static int64_t read_counter(ScopedFd& fd) {
 static ScopedFd start_counter(pid_t tid, int group_fd,
                               struct perf_event_attr* attr,
                               bool* disabled_txcp = nullptr) {
+  LOG(debug) << "start_counter " << ticks_period;
   if (disabled_txcp) {
     *disabled_txcp = false;
   }
   attr->pinned = group_fd == -1;
+#if XDEBUG_LATENCY
+  auto start = chrono::steady_clock::now();
+#endif
   int fd = syscall(__NR_perf_event_open, attr, tid, -1, group_fd, PERF_FLAG_FD_CLOEXEC);
+#if XDEBUG_LATENCY
+  auto end = chrono::steady_clock::now();
+  LOG(debug) << "__NR_perf_event_open syscall time cost: " << chrono::duration <double, milli> (end - start).count() << " ms";
+#endif
   if (0 >= fd && errno == EINVAL && attr->type == PERF_TYPE_RAW &&
       (attr->config & IN_TXCP)) {
     // The kernel might not support IN_TXCP, so try again without it.
