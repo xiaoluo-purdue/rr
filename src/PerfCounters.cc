@@ -271,7 +271,7 @@ static int64_t read_counter(ScopedFd& fd) {
 static ScopedFd start_counter(pid_t tid, int group_fd,
                               struct perf_event_attr* attr,
                               bool* disabled_txcp = nullptr) {
-  LOG(debug) << "start_counter " << ticks_period;
+  LOG(debug) << "start_counter " << group_fd;
   if (disabled_txcp) {
     *disabled_txcp = false;
   }
