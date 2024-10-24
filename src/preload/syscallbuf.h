@@ -12,6 +12,8 @@ RR_HIDDEN extern struct preload_globals globals;
 RR_HIDDEN extern char impose_syscall_delay;
 RR_HIDDEN extern char impose_spurious_desched;
 
-#define MEASURE_SYSCALL_EXETIME 1
+#define MEASURE_SYSCALL_EXETIME 0
+
+#define MEASURE_KERNEL_EXETIME 1
 
 #endif /* RR_SYSCALLBUF_H_ */

@@ -1716,12 +1716,12 @@ static int sys_fcntl64_no_outparams(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, WONT_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
 #endif
   ret = untraced_syscall3(syscallno, fd, cmd, arg);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
   printf("sys_fcntl64_no_outparams() total kernel %lf ms\n", total_kernel_time);
@@ -1752,12 +1752,12 @@ static int sys_fcntl64_own_ex(struct syscall_info* call) {
   if (owner2) {
     memcpy_input_parameter(owner2, owner, sizeof(*owner2));
   }
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
 #endif
   ret = untraced_syscall3(syscallno, fd, cmd, owner2);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
   printf("sys_fcntl64_own_ex() total kernel %lf ms\n", total_kernel_time);
@@ -1795,12 +1795,12 @@ static int sys_fcntl64_setlk64(struct syscall_info* call) {
   if (lock2) {
     memcpy_input_parameter(lock2, lock, sizeof(*lock2));
   }
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
 #endif
   ret = untraced_syscall3(syscallno, fd, cmd, lock2);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
   printf("sys_fcntl64_setlk64() total kernel %lf ms\n", total_kernel_time);
@@ -1830,12 +1830,12 @@ static int sys_fcntl64_setlkw64(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, MAY_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
 #endif
   ret = untraced_syscall3(syscallno, fd, cmd, lock);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
   printf("sys_fcntl64_setlkw64() total kernel %lf ms\n", total_kernel_time);
@@ -1958,12 +1958,12 @@ static long sys_safe_nonblocking_ioctl(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, WONT_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
 #endif
   ret = untraced_syscall3(syscallno, fd, call->args[1], call->args[2]);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
   printf("sys_safe_nonblocking_ioctl() total kernel %lf ms\n", total_kernel_time);
@@ -1987,12 +1987,12 @@ static long sys_ioctl_fionread(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, WONT_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
 #endif
   ret = untraced_syscall3(syscallno, fd, FIONREAD, buf);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
   printf("sys_ioctl_fionread() total kernel %lf ms\n", total_kernel_time);
@@ -2106,12 +2106,12 @@ static long sys_futex(struct syscall_info* call) {
     return traced_raw_syscall(call);
   }
 
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec kernel_start, kernel_end;
   clock_gettime(CLOCK_MONOTONIC, &kernel_start);
 #endif
   ret = untraced_syscall6(syscallno, uaddr, op, val, timeout, uaddr2, val3);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &kernel_end);
   total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
   printf("sys_futex() total kernel %lf ms\n", total_kernel_time);
@@ -2159,12 +2159,12 @@ static long sys_getrandom(struct syscall_info* call) {
     return traced_raw_syscall(call);
   }
 
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec kernel_start, kernel_end;
   clock_gettime(CLOCK_MONOTONIC, &kernel_start);
 #endif
   ret = untraced_syscall3(call->no, buf2, buf_len, flags);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &kernel_end);
   total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
   printf("sys_getrandom() total kernel %lf ms\n", total_kernel_time);
@@ -2201,12 +2201,12 @@ static long sys_generic_getdents(struct syscall_info* call) {
     return traced_raw_syscall(call);
   }
 
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec kernel_start, kernel_end;
   clock_gettime(CLOCK_MONOTONIC, &kernel_start);
 #endif
   ret = untraced_syscall3(call->no, fd, buf2, count);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &kernel_end);
   total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
   printf("sys_generic_getdents() total kernel %lf ms\n", total_kernel_time);
@@ -2472,12 +2472,12 @@ static long sys_mprotect(struct syscall_info* call) {
   mrec->start = (uint64_t)(uintptr_t)addr;
   mrec->size = length;
   mrec->prot = prot;
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec kernel_start, kernel_end;
   clock_gettime(CLOCK_MONOTONIC, &kernel_start);
 #endif
   ret = untraced_replayed_syscall3(syscallno, addr, length, prot);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &kernel_end);
   total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
   printf("sys_mprotect() total kernel %lf ms\n", total_kernel_time);
@@ -2630,12 +2630,12 @@ static long sys_openat(struct syscall_info* call) {
     return traced_raw_syscall(call);
   }
 
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec kernel_start, kernel_end;
   clock_gettime(CLOCK_MONOTONIC, &kernel_start);
 #endif
   ret = untraced_syscall4(syscallno, dirfd, pathname, flags, mode);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &kernel_end);
   total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
   printf("sys_openat() total kernel %lf ms\n", total_kernel_time);
@@ -2969,12 +2969,12 @@ static long sys_read(struct syscall_info* call) {
     return traced_raw_syscall(call);
   }
 
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec kernel_start, kernel_end;
   clock_gettime(CLOCK_MONOTONIC, &kernel_start);
 #endif
   ret = untraced_syscall3(syscallno, fd, buf2, count);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &kernel_end);
   total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
   printf("sys_read() total kernel %lf ms\n", total_kernel_time);
@@ -3047,12 +3047,12 @@ static long sys_readlink(struct syscall_info* call) {
     return traced_raw_syscall(call);
   }
 
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec kernel_start, kernel_end;
   clock_gettime(CLOCK_MONOTONIC, &kernel_start);
 #endif
   ret = untraced_syscall3(syscallno, path, buf2, bufsiz);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &kernel_end);
   total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
   printf("sys_readlink() total kernel %lf ms\n", total_kernel_time);
@@ -3097,7 +3097,7 @@ static long sys_readlinkat(struct syscall_info* call, int privileged) {
     return traced_raw_syscall(call);
   }
 
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec kernel_start, kernel_end;
   clock_gettime(CLOCK_MONOTONIC, &kernel_start);
 #endif
@@ -3106,7 +3106,7 @@ static long sys_readlinkat(struct syscall_info* call, int privileged) {
   } else {
     ret = untraced_syscall4(syscallno, dirfd, path, buf2, bufsiz);
   }
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &kernel_end);
   total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
   printf("sys_readlinkat() total kernel %lf ms\n", total_kernel_time);
@@ -3626,12 +3626,12 @@ static long sys_time(struct syscall_info* call) {
     return traced_raw_syscall(call);
   }
 
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec kernel_start, kernel_end;
   clock_gettime(CLOCK_MONOTONIC, &kernel_start);
 #endif
   ret = untraced_syscall1(syscallno, NULL);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &kernel_end);
   total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
   printf("sys_time() total kernel %lf ms\n", total_kernel_time);
@@ -3682,12 +3682,12 @@ static long sys_xstat64(struct syscall_info* call) {
     return traced_raw_syscall(call);
   }
 
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec kernel_start, kernel_end;
   clock_gettime(CLOCK_MONOTONIC, &kernel_start);
 #endif
   ret = untraced_syscall2(syscallno, what, buf2);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &kernel_end);
   total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
   printf("sys_xstat64() total kernel %lf ms\n", total_kernel_time);
@@ -3813,12 +3813,12 @@ static long sys_write(struct syscall_info* call) {
     return traced_raw_syscall(call);
   }
 
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   struct timespec kernel_start, kernel_end;
   clock_gettime(CLOCK_MONOTONIC, &kernel_start);
 #endif
   ret = untraced_syscall3(syscallno, fd, buf, count);
-#if MEASURE_SYSCALL_EXETIME
+#if MEASURE_KERNEL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &kernel_end);
   total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
   printf("sys_write() total kernel %lf ms\n", total_kernel_time);
