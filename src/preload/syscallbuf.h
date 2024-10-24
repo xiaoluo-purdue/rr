@@ -14,6 +14,8 @@ RR_HIDDEN extern char impose_spurious_desched;
 
 #define MEASURE_SYSCALL_EXETIME 0
 
-#define MEASURE_KERNEL_EXETIME 1
+#define MEASURE_KERNEL_EXETIME 0
+
+#define MEASURE_KERNEL_UNI 1
 
 #endif /* RR_SYSCALLBUF_H_ */
