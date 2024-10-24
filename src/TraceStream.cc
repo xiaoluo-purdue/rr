@@ -1468,7 +1468,14 @@ void TraceWriter::close(CloseStatus status, const TraceUuid* uuid) {
   header.setPreloadLibraryPageSize(PRELOAD_LIBRARY_PAGE_SIZE);
 
   try {
+#if XDEBUG_LATENCY
+    auto start = chrono::steady_clock::now();
+#endif
     writePackedMessageToFd(version_fd, header_msg);
+#if XDEBUG_LATENCY
+    auto end = chrono::steady_clock::now();
+    LOG(debug) << "writePackedMessageToFd time cost: " << chrono::duration <double, milli> (end - start).count() << " ms";
+#endif
   } catch (...) {
     FATAL() << "Unable to write " << incomplete_version_path();
   }
