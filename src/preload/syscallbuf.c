@@ -85,8 +85,9 @@
 #include "preload_interface.h"
 #include "rr/rr.h"
 
+#if MEASURE_SYSCALL_EXETIME
 static double total_preload_library_time = 0.0;
-static double total_kernel_time = 0.0;
+#endif
 
 #ifndef SOL_NETLINK
 #define SOL_NETLINK 270
@@ -438,17 +439,8 @@ static long untraced_syscall_full(int syscallno, long a0, long a1, long a2,
   /* Ensure tools analyzing the replay can find the pending syscall result */
   thread_locals->pending_untraced_syscall_result = &rec->ret;
 
-  #if MEASURE_KERNEL_UNI
-    struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-  #endif
   long ret = _raw_syscall(syscallno, a0, a1, a2, a3, a4, a5,
                           syscall_instruction, stack_param_1, stack_param_2);
-  #if MEASURE_KERNEL_UNI
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-    printf("total kernel time %lf ms\n", total_kernel_time);
-  #endif
 
 /* During replay, return the result that's already in the buffer, instead
    of what our "syscall" returned. */
@@ -1702,10 +1694,6 @@ static long sys_creat(struct syscall_info* call) {
 #endif
 
 static int sys_fcntl64_no_outparams(struct syscall_info* call) {
-#if MEASURE_SYSCALL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
   const int syscallno = RR_FCNTL_SYSCALL;
   int fd = call->args[0];
   int cmd = call->args[1];
@@ -1718,32 +1706,15 @@ static int sys_fcntl64_no_outparams(struct syscall_info* call) {
 
   assert(syscallno == call->no);
 
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_fcntl64_no_outparams() takes %lf ms\n", total_preload_library_time);
-#endif
   if (!start_commit_buffered_syscall(syscallno, ptr, WONT_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_KERNEL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
   ret = untraced_syscall3(syscallno, fd, cmd, arg);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_fcntl64_no_outparams() total kernel %lf ms\n", total_kernel_time);
-#endif
+
   return commit_raw_syscall(syscallno, ptr, ret);
 }
 
 static int sys_fcntl64_own_ex(struct syscall_info* call) {
-#if MEASURE_SYSCALL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
   const int syscallno = RR_FCNTL_SYSCALL;
   int fd = call->args[0];
   int cmd = call->args[1];
@@ -1766,21 +1737,9 @@ static int sys_fcntl64_own_ex(struct syscall_info* call) {
   if (owner2) {
     memcpy_input_parameter(owner2, owner, sizeof(*owner2));
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_fcntl64_own_ex() takes %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
+
   ret = untraced_syscall3(syscallno, fd, cmd, owner2);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_fcntl64_own_ex() total kernel %lf ms\n", total_kernel_time);
-#endif
+
   if (owner2 && ret >= 0 && !buffer_hdr()->failed_during_preparation) {
     local_memcpy(owner, owner2, sizeof(*owner));
   }
@@ -1792,10 +1751,6 @@ static int sys_fcntl64_setlk64(struct syscall_info* call) {
     /* Releasing a lock could unblock a higher priority task */
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
   const int syscallno = RR_FCNTL_SYSCALL;
   int fd = call->args[0];
   int cmd = call->args[1];
@@ -1817,21 +1772,8 @@ static int sys_fcntl64_setlk64(struct syscall_info* call) {
   if (lock2) {
     memcpy_input_parameter(lock2, lock, sizeof(*lock2));
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_fcntl64_setlk64() takes %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
   ret = untraced_syscall3(syscallno, fd, cmd, lock2);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_fcntl64_setlk64() total kernel %lf ms\n", total_kernel_time);
-#endif
+
   if (lock2 && ret >= 0 && !buffer_hdr()->failed_during_preparation) {
     local_memcpy(lock, lock2, sizeof(*lock));
   }
@@ -1843,10 +1785,7 @@ static int sys_fcntl64_setlkw64(struct syscall_info* call) {
     /* Releasing a lock could unblock a higher priority task */
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
+
   const int syscallno = RR_FCNTL_SYSCALL;
   int fd = call->args[0];
   int cmd = call->args[1];
@@ -1860,21 +1799,9 @@ static int sys_fcntl64_setlkw64(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, MAY_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_fcntl64_setlkw64() takes %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
+
   ret = untraced_syscall3(syscallno, fd, cmd, lock);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_fcntl64_setlkw64() total kernel %lf ms\n", total_kernel_time);
-#endif
+
   return commit_raw_syscall(syscallno, ptr, ret);
 }
 
@@ -1887,10 +1814,10 @@ static long sys_fcntl(struct syscall_info* call)
 #endif
 {
   int res;
-//  #if MEASURE_SYSCALL_EXETIME
-//  struct timespec start, end;
-//  clock_gettime(CLOCK_MONOTONIC, &start);
-//  #endif
+  #if MEASURE_SYSCALL_EXETIME
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+  #endif
   switch (call->args[1]) {
     case F_SETFL:
       if (call->args[2] == O_DIRECT) {
@@ -1940,11 +1867,11 @@ static long sys_fcntl(struct syscall_info* call)
     default:
       res = traced_raw_syscall(call);
   }
-//  #if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_fcntl() took %lf ms\n", total_preload_library_time);
-//  #endif
+  #if MEASURE_SYSCALL_EXETIME
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
+    printf("sys_fcntl() took %lf ms\n", total_preload_library_time);
+  #endif
   return res;
 }
 
@@ -1984,10 +1911,6 @@ static long sys_flistxattr(struct syscall_info* call) {
 }
 
 static long sys_safe_nonblocking_ioctl(struct syscall_info* call) {
-#if MEASURE_SYSCALL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
   const int syscallno = SYS_ioctl;
   int fd = call->args[0];
 
@@ -1997,29 +1920,13 @@ static long sys_safe_nonblocking_ioctl(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, WONT_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_safe_nonblocking_ioctl() takes %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
+
   ret = untraced_syscall3(syscallno, fd, call->args[1], call->args[2]);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_safe_nonblocking_ioctl() total kernel %lf ms\n", total_kernel_time);
-#endif
+
   return commit_raw_syscall(syscallno, ptr, ret);
 }
 
 static long sys_ioctl_fionread(struct syscall_info* call) {
-#if MEASURE_SYSCALL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
   const int syscallno = SYS_ioctl;
   int fd = call->args[0];
   int* value = (int*)call->args[2];
@@ -2035,21 +1942,9 @@ static long sys_ioctl_fionread(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, WONT_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_ioctl_fionread() takes %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-#endif
+
   ret = untraced_syscall3(syscallno, fd, FIONREAD, buf);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_kernel_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_ioctl_fionread() total kernel %lf ms\n", total_kernel_time);
-#endif
+
   if (buf && ret >= 0 && !buffer_hdr()->failed_during_preparation) {
     local_memcpy(value, buf, sizeof(*value));
   }
@@ -2158,21 +2053,9 @@ static long sys_futex(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, WONT_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_futex() took %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec kernel_start, kernel_end;
-  clock_gettime(CLOCK_MONOTONIC, &kernel_start);
-#endif
+
   ret = untraced_syscall6(syscallno, uaddr, op, val, timeout, uaddr2, val3);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &kernel_end);
-  total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
-  printf("sys_futex() total kernel %lf ms\n", total_kernel_time);
-#endif
+
   /* During recording, save the real outparams to the buffer.
    * During replay, save the values from the buffer to the real outparams.
    *
@@ -2184,11 +2067,11 @@ static long sys_futex(struct syscall_info* call) {
     copy_futex_int(saved_uaddr2, uaddr2);
   }
   long res = commit_raw_syscall(syscallno, ptr, ret);
-//  #if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_futex() took %lf ms\n", total_preload_library_time);
-//  #endif
+  #if MEASURE_SYSCALL_EXETIME
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
+    printf("sys_futex() took %lf ms\n", total_preload_library_time);
+  #endif
   return res;
 }
 
@@ -2215,29 +2098,16 @@ static long sys_getrandom(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(call->no, ptr, (flags & GRND_NONBLOCK) ? WONT_BLOCK : MAY_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_getrandom() took %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec kernel_start, kernel_end;
-  clock_gettime(CLOCK_MONOTONIC, &kernel_start);
-#endif
+
   ret = untraced_syscall3(call->no, buf2, buf_len, flags);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &kernel_end);
-  total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
-  printf("sys_getrandom() total kernel %lf ms\n", total_kernel_time);
-#endif
 
   ptr = copy_output_buffer(ret, ptr, buf, buf2);
   long res = commit_raw_syscall(call->no, ptr, ret);
-//  #if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_getrandom() took %lf ms\n", total_preload_library_time);
-//  #endif
+  #if MEASURE_SYSCALL_EXETIME
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
+    printf("sys_getrandom() took %lf ms\n", total_preload_library_time);
+  #endif
   return res;
 }
 
@@ -2261,29 +2131,16 @@ static long sys_generic_getdents(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(call->no, ptr, WONT_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_generic_getdents() took %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec kernel_start, kernel_end;
-  clock_gettime(CLOCK_MONOTONIC, &kernel_start);
-#endif
+
   ret = untraced_syscall3(call->no, fd, buf2, count);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &kernel_end);
-  total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
-  printf("sys_generic_getdents() total kernel %lf ms\n", total_kernel_time);
-#endif
 
   ptr = copy_output_buffer(ret, ptr, buf, buf2);
   long res = commit_raw_syscall(call->no, ptr, ret);
-//  #if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_generic_getdents() took %lf ms\n", total_preload_library_time);
-//  #endif
+  #if MEASURE_SYSCALL_EXETIME
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
+    printf("sys_generic_getdents() took %lf ms\n", total_preload_library_time);
+  #endif
   return res;
 }
 
@@ -2537,21 +2394,9 @@ static long sys_mprotect(struct syscall_info* call) {
   mrec->start = (uint64_t)(uintptr_t)addr;
   mrec->size = length;
   mrec->prot = prot;
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_mprotect() took %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec kernel_start, kernel_end;
-  clock_gettime(CLOCK_MONOTONIC, &kernel_start);
-#endif
+
   ret = untraced_replayed_syscall3(syscallno, addr, length, prot);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &kernel_end);
-  total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
-  printf("sys_mprotect() total kernel %lf ms\n", total_kernel_time);
-#endif
+
   if (ret < 0 && ret != -ENOMEM) {
     /* indicate that nothing was mprotected */
     mrec->size = 0;
@@ -2559,11 +2404,11 @@ static long sys_mprotect(struct syscall_info* call) {
   buffer_hdr()->mprotect_record_count_completed++;
 
   long res = commit_raw_syscall(syscallno, ptr, ret);
-//  #if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_mprotect() took %lf ms\n", total_preload_library_time);
-//  #endif
+  #if MEASURE_SYSCALL_EXETIME
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
+  printf("sys_mprotect() took %lf ms\n", total_preload_library_time);
+  #endif
   return res;
 }
 
@@ -2699,30 +2544,17 @@ static long sys_openat(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, MAY_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_openat() took %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec kernel_start, kernel_end;
-  clock_gettime(CLOCK_MONOTONIC, &kernel_start);
-#endif
+
   ret = untraced_syscall4(syscallno, dirfd, pathname, flags, mode);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &kernel_end);
-  total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
-  printf("sys_openat() total kernel %lf ms\n", total_kernel_time);
-#endif
 
   struct check_open_state state = capture_check_open_state();
   ret = commit_raw_syscall(syscallno, ptr, ret);
   int res = check_file_open_ok(call, ret, state);
-//  #if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_openat() took %lf ms\n", total_preload_library_time);
-//  #endif
+  #if MEASURE_SYSCALL_EXETIME
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
+  printf("sys_openat() took %lf ms\n", total_preload_library_time);
+  #endif
   return res;
 }
 
@@ -3042,28 +2874,16 @@ static long sys_read(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, MAY_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
+
+  ret = untraced_syscall3(syscallno, fd, buf2, count);
+
+  ptr = copy_output_buffer(ret, ptr, buf, buf2);
+  long res = commit_raw_syscall(syscallno, ptr, ret);
+  #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
   printf("sys_read() took %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec kernel_start, kernel_end;
-  clock_gettime(CLOCK_MONOTONIC, &kernel_start);
-#endif
-  ret = untraced_syscall3(syscallno, fd, buf2, count);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &kernel_end);
-  total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
-  printf("sys_read() total kernel %lf ms\n", total_kernel_time);
-#endif
-  ptr = copy_output_buffer(ret, ptr, buf, buf2);
-  long res = commit_raw_syscall(syscallno, ptr, ret);
-//  #if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_read() took %lf ms\n", total_preload_library_time);
-//  #endif
+  #endif
   return res;
 }
 
@@ -3124,29 +2944,16 @@ static long sys_readlink(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, WONT_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_readlink() took %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec kernel_start, kernel_end;
-  clock_gettime(CLOCK_MONOTONIC, &kernel_start);
-#endif
+
   ret = untraced_syscall3(syscallno, path, buf2, bufsiz);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &kernel_end);
-  total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
-  printf("sys_readlink() total kernel %lf ms\n", total_kernel_time);
-#endif
 
   ptr = copy_output_buffer(ret, ptr, buf, buf2);
   long res = commit_raw_syscall(syscallno, ptr, ret);
-//  #if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_readlink() took %lf ms\n", total_preload_library_time);
-//  #endif
+  #if MEASURE_SYSCALL_EXETIME
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
+  printf("sys_readlink() took %lf ms\n", total_preload_library_time);
+  #endif
   return res;
 }
 #endif
@@ -3178,33 +2985,20 @@ static long sys_readlinkat(struct syscall_info* call, int privileged) {
     }
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_readlinkat() took %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec kernel_start, kernel_end;
-  clock_gettime(CLOCK_MONOTONIC, &kernel_start);
-#endif
+
   if (privileged) {
     ret = privileged_untraced_syscall4(syscallno, dirfd, path, buf2, bufsiz);
   } else {
     ret = untraced_syscall4(syscallno, dirfd, path, buf2, bufsiz);
   }
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &kernel_end);
-  total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
-  printf("sys_readlinkat() total kernel %lf ms\n", total_kernel_time);
-#endif
 
   ptr = copy_output_buffer(ret, ptr, buf, buf2);
   long res = commit_raw_syscall(syscallno, ptr, ret);
-//  #if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_readlinkat() took %lf ms\n", total_preload_library_time);
-//  #endif
+  #if MEASURE_SYSCALL_EXETIME
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
+  printf("sys_readlinkat() took %lf ms\n", total_preload_library_time);
+  #endif
   return res;
 }
 
@@ -3711,21 +3505,8 @@ static long sys_time(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, WONT_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_time() took %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec kernel_start, kernel_end;
-  clock_gettime(CLOCK_MONOTONIC, &kernel_start);
-#endif
+
   ret = untraced_syscall1(syscallno, NULL);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &kernel_end);
-  total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
-  printf("sys_time() total kernel %lf ms\n", total_kernel_time);
-#endif
 
   if (tp) {
     /* No error is possible here. */
@@ -3733,11 +3514,11 @@ static long sys_time(struct syscall_info* call) {
   }
 
   long res = commit_raw_syscall(syscallno, ptr, ret);
-//#if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_time() took %lf ms\n", total_preload_library_time);
-//#endif
+#if MEASURE_SYSCALL_EXETIME
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
+  printf("sys_time() took %lf ms\n", total_preload_library_time);
+#endif
   return res;
 }
 #endif
@@ -3771,31 +3552,18 @@ static long sys_xstat64(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, WONT_BLOCK)) {
     return traced_raw_syscall(call);
   }
-#if MEASURE_SYSCALL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-  printf("sys_xstat64() took %lf ms\n", total_preload_library_time);
-#endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec kernel_start, kernel_end;
-  clock_gettime(CLOCK_MONOTONIC, &kernel_start);
-#endif
+
   ret = untraced_syscall2(syscallno, what, buf2);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &kernel_end);
-  total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
-  printf("sys_xstat64() total kernel %lf ms\n", total_kernel_time);
-#endif
 
   if (buf2 && ret >= 0 && !buffer_hdr()->failed_during_preparation) {
     local_memcpy(buf, buf2, sizeof(*buf));
   }
   long res = commit_raw_syscall(syscallno, ptr, ret);
-//  #if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_xstat64() took %lf ms\n", total_preload_library_time);
-//  #endif
+  #if MEASURE_SYSCALL_EXETIME
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
+  printf("sys_xstat64() took %lf ms\n", total_preload_library_time);
+  #endif
   return res;
 }
 
@@ -3906,28 +3674,15 @@ static long sys_write(struct syscall_info* call) {
   if (!start_commit_buffered_syscall(syscallno, ptr, fd_write_blocks(fd))) {
     return traced_raw_syscall(call);
   }
+
+  ret = untraced_syscall3(syscallno, fd, buf, count);
+
+  long res = commit_raw_syscall(syscallno, ptr, ret);
 #if MEASURE_SYSCALL_EXETIME
   clock_gettime(CLOCK_MONOTONIC, &end);
   total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
   printf("sys_write() took %lf ms\n", total_preload_library_time);
 #endif
-#if MEASURE_KERNEL_EXETIME
-  struct timespec kernel_start, kernel_end;
-  clock_gettime(CLOCK_MONOTONIC, &kernel_start);
-#endif
-  ret = untraced_syscall3(syscallno, fd, buf, count);
-#if MEASURE_KERNEL_EXETIME
-  clock_gettime(CLOCK_MONOTONIC, &kernel_end);
-  total_kernel_time += ((kernel_end.tv_sec - kernel_start.tv_sec) * 1000000000 + (kernel_end.tv_nsec - kernel_start.tv_nsec)) / 1000000.0;
-  printf("sys_write() total kernel %lf ms\n", total_kernel_time);
-#endif
-
-  long res = commit_raw_syscall(syscallno, ptr, ret);
-//#if MEASURE_SYSCALL_EXETIME
-//  clock_gettime(CLOCK_MONOTONIC, &end);
-//  total_preload_library_time += ((end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec)) / 1000000.0;
-//  printf("sys_write() took %lf ms\n", total_preload_library_time);
-//#endif
 
   return res;
 }
