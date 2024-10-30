@@ -1492,6 +1492,9 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
      * or just letting the tracee be scheduled to process its pending SIGKILL.
      */
     int raw_status = 0;
+#if XDEBUG_LATENCY
+    auto start = chrono::steady_clock::now();
+#endif
     wait_ret = waitpid(tid, &raw_status, WNOHANG | __WALL);
     #if XDEBUG_WAIT
     // The wait time caused by the above waitpid is very small
@@ -1516,6 +1519,11 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
       ASSERT(this, 0 == wait_ret)
           << "waitpid(" << tid << ", NOHANG) failed with " << wait_ret;
     }
+#if XDEBUG_LATENCY
+    auto end = chrono::steady_clock::now();
+    LOG(debug) << "waitpid2 time cost: " << chrono::duration <double, milli> (end - start).count() << " ms";
+    total_waitpid2_time += chrono::duration <double, milli> (end - start).count();
+#endif
   }
   if (wait_ret > 0 || is_dying()) {
     LOG(debug) << "Task " << tid << " exited unexpectedly";

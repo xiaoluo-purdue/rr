@@ -320,6 +320,7 @@ extern double total_did_waitpid_time;
 extern double total_patching_time;
 extern double total_reset_syscallbuf_time;
 extern double total_flush_syscallbuf_time;
+extern double total_waitpid2_time;
 
 # if XDEBUG_WAIT
 extern int wait1_counter;
