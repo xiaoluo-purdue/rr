@@ -2667,6 +2667,7 @@ RecordSession::RecordResult RecordSession::record_step() {
     }
 
     if (did_enter_syscall && t->ev().type() == EV_SYSCALL) {
+      LOG(debug) << "did_enter_syscall";
       syscall_state_changed(t, &step_state);
     }
   } else if (rescheduled.by_waitpid && handle_signal_event(t, &step_state)) {
@@ -2677,12 +2678,23 @@ RecordSession::RecordResult RecordSession::record_step() {
       return result;
     }
   } else {
+#if XDEBUG_LATENCY
+    auto runnable_state_changed_start = chrono::steady_clock::now();
+#endif
     runnable_state_changed(t, &step_state, &result, rescheduled.by_waitpid);
+#if XDEBUG_LATENCY
+    auto runnable_state_changed_end = chrono::steady_clock::now();
+    LOG(debug) << "runnable_state_changed time cost: " << chrono::duration <double, milli> (runnable_state_changed_end - runnable_state_changed_start).count() << " ms";
+    total_runnable_state_changed_time += chrono::duration <double, milli> (runnable_state_changed_end - runnable_state_changed_start).count();
+#endif
     if (result.status != STEP_CONTINUE ||
         step_state.continue_type == DONT_CONTINUE) {
       return result;
     }
 
+#if XDEBUG_LATENCY
+    auto syscall_state_changed_start = chrono::steady_clock::now();
+#endif
     switch (t->ev().type()) {
       case EV_DESCHED:
         desched_state_changed(t);
@@ -2700,6 +2712,11 @@ RecordSession::RecordResult RecordSession::record_step() {
       default:
         break;
     }
+#if XDEBUG_LATENCY
+    auto syscall_state_changed_end = chrono::steady_clock::now();
+    LOG(debug) << "syscall_state_changed time cost: " << chrono::duration <double, milli> (syscall_state_changed_end - syscall_state_changed_start).count() << " ms";
+    total_syscall_state_changed_time += chrono::duration <double, milli> (syscall_state_changed_end - syscall_state_changed_start).count();
+#endif
   }
 
   t->verify_signal_states();
