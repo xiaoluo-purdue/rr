@@ -845,6 +845,9 @@ static bool is_ptrace_any_singlestep(SupportedArch arch, int command)
 }
 
 void RecordSession::task_continue(const StepState& step_state) {
+#if XDEBUG_LATENCY
+  auto profile2_start = chrono::steady_clock::now();
+#endif
   RecordTask* t = scheduler().current();
 
   ASSERT(t, step_state.continue_type != DONT_CONTINUE);
@@ -958,6 +961,12 @@ void RecordSession::task_continue(const StepState& step_state) {
     }
   }
   #endif
+
+#if XDEBUG_LATENCY
+  auto profile2_end = chrono::steady_clock::now();
+  LOG(debug) << "profile2 time cost: " << chrono::duration <double, milli> (profile2_end - profile2_start).count() << " ms";
+  total_profile2_time += chrono::duration <double, milli> (profile2_end - profile2_start).count();
+#endif
 
   t->resume_execution(resume, RESUME_NONBLOCKING, ticks_request);
   #if XDEBUG_RESUME
@@ -2609,6 +2618,10 @@ RecordSession::RecordResult RecordSession::record_step() {
     is_allow_switch = false;
   }
 #endif
+
+#if XDEBUG_LATENCY
+  auto profile1_start = chrono::steady_clock::now();
+#endif
   // LOG(debug) << "[workflow] scheduling: " << curr_sched_time << " ms";
   if (rescheduled.interrupted_by_signal) {
     // The scheduler was waiting for some task to become active, but was
@@ -2664,6 +2677,12 @@ RecordSession::RecordResult RecordSession::record_step() {
   }
 
   StepState step_state(CONTINUE);
+
+#if XDEBUG_LATENCY
+  auto profile1_end = chrono::steady_clock::now();
+  LOG(debug) << "profile1 time cost: " << chrono::duration <double, milli> (profile1_end - profile1_start).count() << " ms";
+  total_profile1_time += chrono::duration <double, milli> (profile1_end - profile1_start).count();
+#endif
 
   bool did_enter_syscall;
   if (rescheduled.by_waitpid &&
