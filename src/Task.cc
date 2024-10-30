@@ -1421,6 +1421,9 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
   ASSERT(this, session().is_recording() || setup_succeeded);
   if (setup_succeeded) {
     if (tick_period != RESUME_NO_TICKS) {
+#if XDEBUG_LATENCY
+      auto reset_hpc_start = chrono::steady_clock::now();
+#endif
       if (tick_period == RESUME_UNLIMITED_TICKS) {
         hpc.reset(0);
       } else {
@@ -1440,6 +1443,11 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
         #endif
       }
       activate_preload_thread_locals();
+#if XDEBUG_LATENCY
+      auto reset_hpc_end = chrono::steady_clock::now();
+      LOG(debug) << "reset_hpc time cost: " << chrono::duration <double, milli> (reset_hpc_end - reset_hpc_start).count() << " ms";
+      total_reset_hpc_time += chrono::duration <double, milli> (reset_hpc_end - reset_hpc_start).count();
+#endif
     }
 
     LOG(debug) << "resuming execution of " << tid << " with "
