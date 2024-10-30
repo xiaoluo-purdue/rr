@@ -324,6 +324,8 @@ extern double total_waitpid2_time;
 extern double total_reset_hpc_time;
 extern double total_runnable_state_changed_time;
 extern double total_syscall_state_changed_time;
+extern double total_did_enter_syscall_time;
+extern double total_handle_ptrace_event_time;
 
 # if XDEBUG_WAIT
 extern int wait1_counter;

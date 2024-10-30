@@ -112,6 +112,8 @@ double total_waitpid2_time = 0.0;
 double total_reset_hpc_time = 0.0;
 double total_runnable_state_changed_time = 0.0;
 double total_syscall_state_changed_time = 0.0;
+double total_did_enter_syscall_time = 0.0;
+double total_handle_ptrace_event_time = 0.0;
 
 #if XDEBUG_WAIT
 int wait1_counter = 0;
@@ -476,6 +478,8 @@ int main(int argc, char* argv[]) {
     cout << "total_reset_hpc_time: " << total_reset_hpc_time << endl;
     cout << "total_runnable_state_changed_time: " << total_runnable_state_changed_time << endl;
     cout << "total_syscall_state_changed_time: " << total_syscall_state_changed_time << endl;
+    cout << "total_did_waitpid_time: " << total_did_waitpid_time << endl;
+    cout << "total_handle_ptrace_event_time: " << total_handle_ptrace_event_time << endl;
 
     LOG(debug) << "block count: " << block_times.size();
     LOG(debug) << "total blocking time: " << total_blocking << " ms";
@@ -506,6 +510,8 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "total_reset_hpc_time: " << total_reset_hpc_time;
     LOG(debug) << "total_runnable_state_changed_time: " << total_runnable_state_changed_time;
     LOG(debug) << "total_syscall_state_changed_time: " << total_syscall_state_changed_time;
+    LOG(debug) << "total_did_waitpid_time: " << total_did_waitpid_time;
+    LOG(debug) << "total_handle_ptrace_event_time: " << total_handle_ptrace_event_time;
     #endif
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;

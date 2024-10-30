@@ -666,6 +666,9 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
 
   LOG(debug) << "  " << t->tid << ": handle_ptrace_event "
              << ptrace_event_name(event) << ": event " << t->ev();
+#if XDEBUG_LATENCY
+  auto handle_ptrace_event_start = chrono::steady_clock::now();
+#endif
 
   switch (event) {
     case PTRACE_EVENT_SECCOMP_OBSOLETE:
@@ -818,6 +821,11 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
       break;
   }
 
+#if XDEBUG_LATENCY
+  auto handle_ptrace_event_end = chrono::steady_clock::now();
+  LOG(debug) << "handle_ptrace_event time cost: " << chrono::duration <double, milli> (handle_ptrace_event_end - handle_ptrace_event_start).count() << " ms";
+  total_handle_ptrace_event_time += chrono::duration <double, milli> (handle_ptrace_event_end - handle_ptrace_event_start).count();
+#endif
   return true;
 }
 
@@ -2668,7 +2676,15 @@ RecordSession::RecordResult RecordSession::record_step() {
 
     if (did_enter_syscall && t->ev().type() == EV_SYSCALL) {
       LOG(debug) << "did_enter_syscall";
+#if XDEBUG_LATENCY
+      auto did_enter_syscall_start = chrono::steady_clock::now();
+#endif
       syscall_state_changed(t, &step_state);
+#if XDEBUG_LATENCY
+      auto did_enter_syscall_end = chrono::steady_clock::now();
+      LOG(debug) << "did_enter_syscall time cost: " << chrono::duration <double, milli> (did_enter_syscall_end - did_enter_syscall_start).count() << " ms";
+      total_did_enter_syscall_time += chrono::duration <double, milli> (did_enter_syscall_end - did_enter_syscall_start).count();
+#endif
     }
   } else if (rescheduled.by_waitpid && handle_signal_event(t, &step_state)) {
     // Tracee may have exited while processing descheds; handle that.
