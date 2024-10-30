@@ -327,6 +327,9 @@ extern double total_syscall_state_changed_time;
 extern double total_did_enter_syscall_time;
 extern double total_handle_ptrace_event_time;
 extern double total_profile0_time;
+extern double total_profile1_time;
+extern double total_profile2_time;
+extern double total_profile3_time;
 
 # if XDEBUG_WAIT
 extern int wait1_counter;
