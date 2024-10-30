@@ -1203,9 +1203,17 @@ void RecordSession::syscall_state_changed(RecordTask* t,
       debug_exec_state("EXEC_SYSCALL_ENTRY", t);
       ASSERT(t, !t->emulated_stop_pending);
 
+#if XDEBUG_LATENCY
+      auto start = chrono::steady_clock::now();
+#endif
       // Flush syscallbuf now so that anything recorded by
       // rec_prepare_syscall is associated with the syscall event
       t->maybe_flush_syscallbuf();
+#if XDEBUG_LATENCY
+      auto end = chrono::steady_clock::now();
+      LOG(debug) << "flush_syscallbuf time cost: " << chrono::duration <double, milli> (end - start).count() << " ms";
+      total_flush_syscallbuf_time += chrono::duration <double, milli> (end - start).count();
+#endif
 
 #if XDEBUG_LATENCY
       rec_prepare_syscall_start = chrono::steady_clock::now();

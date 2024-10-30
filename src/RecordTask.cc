@@ -1862,7 +1862,15 @@ void RecordTask::maybe_reset_syscallbuf() {
       !delay_syscallbuf_reset_for_seccomp_trap) {
     flushed_syscallbuf = false;
     LOG(debug) << "Syscallbuf reset";
+#if XDEBUG_LATENCY
+    auto start = chrono::steady_clock::now();
+#endif
     reset_syscallbuf();
+#if XDEBUG_LATENCY
+    auto end = chrono::steady_clock::now();
+    LOG(debug) << "reset_syscallbuf time cost: " << chrono::duration <double, milli> (end - start).count() << " ms";
+    total_reset_syscallbuf_time += chrono::duration <double, milli> (end - start).count();
+#endif
     syscallbuf_blocked_sigs_generation = 0;
     record_event(Event::syscallbuf_reset());
   }

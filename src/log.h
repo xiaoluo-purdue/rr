@@ -318,6 +318,8 @@ extern std::chrono::time_point<std::chrono::steady_clock> did_waitpid_end;
 extern double total_did_waitpid_time;
 
 extern double total_patching_time;
+extern double total_reset_syscallbuf_time;
+extern double total_flush_syscallbuf_time;
 
 # if XDEBUG_WAIT
 extern int wait1_counter;
