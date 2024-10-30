@@ -330,6 +330,7 @@ extern double total_profile0_time;
 extern double total_profile1_time;
 extern double total_profile2_time;
 extern double total_profile3_time;
+extern double total_handle_signal_event_time;
 
 # if XDEBUG_WAIT
 extern int wait1_counter;

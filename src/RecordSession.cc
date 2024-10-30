@@ -2705,12 +2705,23 @@ RecordSession::RecordResult RecordSession::record_step() {
       total_did_enter_syscall_time += chrono::duration <double, milli> (did_enter_syscall_end - did_enter_syscall_start).count();
 #endif
     }
-  } else if (rescheduled.by_waitpid && handle_signal_event(t, &step_state)) {
-    // Tracee may have exited while processing descheds; handle that.
-    if (handle_ptrace_exit_event(t)) {
-      // t may have been deleted.
-      last_task_switchable = ALLOW_SWITCH;
-      return result;
+  } else if (rescheduled.by_waitpid) {
+#if XDEBUG_LATENCY
+    auto handle_signal_event_start = chrono::steady_clock::now();
+#endif
+    bool temp = handle_signal_event(t, &step_state);
+#if XDEBUG_LATENCY
+    auto handle_signal_event_end = chrono::steady_clock::now();
+    LOG(debug) << "handle_signal_event time cost: " << chrono::duration <double, milli> (handle_signal_event_end - handle_signal_event_start).count() << " ms";
+    total_handle_signal_event_time += chrono::duration <double, milli> (handle_signal_event_end - handle_signal_event_start).count();
+#endif
+    if (temp) {
+      // Tracee may have exited while processing descheds; handle that.
+      if (handle_ptrace_exit_event(t)) {
+        // t may have been deleted.
+        last_task_switchable = ALLOW_SWITCH;
+        return result;
+      }
     }
   } else {
 #if XDEBUG_LATENCY
