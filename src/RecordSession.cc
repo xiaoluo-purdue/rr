@@ -2735,6 +2735,9 @@ RecordSession::RecordResult RecordSession::record_step() {
 #endif
   }
 
+#if XDEBUG_LATENCY
+  auto profile0_start = chrono::steady_clock::now();
+#endif
   t->verify_signal_states();
 
   // We try to inject a signal if there's one pending; otherwise we continue
@@ -2765,6 +2768,12 @@ RecordSession::RecordResult RecordSession::record_step() {
     #if XDEBUG_RESUME
       task_continue_counter++;
     #endif
+
+#if XDEBUG_LATENCY
+      auto profile0_end = chrono::steady_clock::now();
+      LOG(debug) << "profile0 time cost: " << chrono::duration <double, milli> (profile0_end - profile0_start).count() << " ms";
+      total_profile0_time += chrono::duration <double, milli> (profile0_end - profile0_start).count();
+#endif
     task_continue(step_state);
   }
 
