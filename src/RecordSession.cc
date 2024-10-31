@@ -2628,12 +2628,22 @@ RecordSession::RecordResult RecordSession::record_step() {
     // interrupted by a signal. Yield to our caller now to give the caller
     // a chance to do something triggered by the signal
     // (e.g. terminate the recording).
+#if XDEBUG_LATENCY
+    auto profile1_end = chrono::steady_clock::now();
+    LOG(debug) << "profile1 time cost: " << chrono::duration <double, milli> (profile1_end - profile1_start).count() << " ms";
+    total_profile1_time += chrono::duration <double, milli> (profile1_end - profile1_start).count();
+#endif
     return result;
   }
   RecordTask* t = scheduler().current();
   if (t->waiting_for_reap) {
     // Give it another chance to be reaped
     t->did_reach_zombie();
+#if XDEBUG_LATENCY
+    auto profile1_end = chrono::steady_clock::now();
+    LOG(debug) << "profile1 time cost: " << chrono::duration <double, milli> (profile1_end - profile1_start).count() << " ms";
+    total_profile1_time += chrono::duration <double, milli> (profile1_end - profile1_start).count();
+#endif
     return result;
   }
 
@@ -2673,6 +2683,12 @@ RecordSession::RecordResult RecordSession::record_step() {
       #endif
       after_tracee_exit = true;
     #endif
+
+#if XDEBUG_LATENCY
+      auto profile1_end = chrono::steady_clock::now();
+      LOG(debug) << "profile1 time cost: " << chrono::duration <double, milli> (profile1_end - profile1_start).count() << " ms";
+      total_profile1_time += chrono::duration <double, milli> (profile1_end - profile1_start).count();
+#endif
     return result;
   }
 
