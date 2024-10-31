@@ -118,7 +118,7 @@ double total_profile0_time = 0.0;
 double total_profile1_time = 0.0;
 double total_profile2_time = 0.0;
 double total_profile3_time = 0.0;
-double total_handle_signal_event_time = 0.0;
+double total_profile4_time = 0.0;
 
 #if XDEBUG_WAIT
 int wait1_counter = 0;
@@ -489,7 +489,7 @@ int main(int argc, char* argv[]) {
     cout << "total_profile1_time: " << total_profile1_time << endl;
     cout << "total_profile2_time: " << total_profile2_time << endl;
     cout << "total_profile3_time: " << total_profile3_time << endl;
-    cout << "total_handle_signal_event_time: " << total_handle_signal_event_time << endl;
+    cout << "total_profile4_time: " << total_profile4_time << endl;
 
     LOG(debug) << "block count: " << block_times.size();
     LOG(debug) << "total blocking time: " << total_blocking << " ms";
@@ -526,7 +526,7 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "total_profile1_time: " << total_profile1_time;
     LOG(debug) << "total_profile2_time: " << total_profile2_time;
     LOG(debug) << "total_profile3_time: " << total_profile3_time;
-    LOG(debug) << "total_handle_signal_event_time: " << total_handle_signal_event_time;
+    LOG(debug) << "total_profile4_time: " << total_profile4_time;
     #endif
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;

@@ -2684,12 +2684,21 @@ RecordSession::RecordResult RecordSession::record_step() {
   total_profile1_time += chrono::duration <double, milli> (profile1_end - profile1_start).count();
 #endif
 
+#if XDEBUG_LATENCY
+  auto profile4_start = chrono::steady_clock::now();
+#endif
+
   bool did_enter_syscall;
   if (rescheduled.by_waitpid &&
       handle_ptrace_event(&t, &step_state, &result, &did_enter_syscall)) {
     if (result.status != STEP_CONTINUE ||
         step_state.continue_type == DONT_CONTINUE) {
       last_task_switchable = ALLOW_SWITCH;
+#if XDEBUG_LATENCY
+      auto profile4_end = chrono::steady_clock::now();
+      LOG(debug) << "profile4 time cost: " << chrono::duration <double, milli> (profile4_end - profile4_start).count() << " ms";
+      total_profile4_time += chrono::duration <double, milli> (profile4_end - profile4_start).count();
+#endif
       return result;
     }
 
@@ -2705,23 +2714,17 @@ RecordSession::RecordResult RecordSession::record_step() {
       total_did_enter_syscall_time += chrono::duration <double, milli> (did_enter_syscall_end - did_enter_syscall_start).count();
 #endif
     }
-  } else if (rescheduled.by_waitpid) {
+  } else if (rescheduled.by_waitpid && handle_signal_event(t, &step_state)) {
+    // Tracee may have exited while processing descheds; handle that.
+    if (handle_ptrace_exit_event(t)) {
+      // t may have been deleted.
+      last_task_switchable = ALLOW_SWITCH;
 #if XDEBUG_LATENCY
-    auto handle_signal_event_start = chrono::steady_clock::now();
+      auto profile4_end = chrono::steady_clock::now();
+      LOG(debug) << "profile4 time cost: " << chrono::duration <double, milli> (profile4_end - profile4_start).count() << " ms";
+      total_profile4_time += chrono::duration <double, milli> (profile4_end - profile4_start).count();
 #endif
-    bool temp = handle_signal_event(t, &step_state);
-#if XDEBUG_LATENCY
-    auto handle_signal_event_end = chrono::steady_clock::now();
-    LOG(debug) << "handle_signal_event time cost: " << chrono::duration <double, milli> (handle_signal_event_end - handle_signal_event_start).count() << " ms";
-    total_handle_signal_event_time += chrono::duration <double, milli> (handle_signal_event_end - handle_signal_event_start).count();
-#endif
-    if (temp) {
-      // Tracee may have exited while processing descheds; handle that.
-      if (handle_ptrace_exit_event(t)) {
-        // t may have been deleted.
-        last_task_switchable = ALLOW_SWITCH;
-        return result;
-      }
+      return result;
     }
   } else {
 #if XDEBUG_LATENCY
@@ -2735,6 +2738,11 @@ RecordSession::RecordResult RecordSession::record_step() {
 #endif
     if (result.status != STEP_CONTINUE ||
         step_state.continue_type == DONT_CONTINUE) {
+#if XDEBUG_LATENCY
+      auto profile4_end = chrono::steady_clock::now();
+      LOG(debug) << "profile4 time cost: " << chrono::duration <double, milli> (profile4_end - profile4_start).count() << " ms";
+      total_profile4_time += chrono::duration <double, milli> (profile4_end - profile4_start).count();
+#endif
       return result;
     }
 
@@ -2752,6 +2760,11 @@ RecordSession::RecordResult RecordSession::record_step() {
       case EV_SIGNAL_DELIVERY:
         if (signal_state_changed(t, &step_state)) {
           // t may have been deleted
+#if XDEBUG_LATENCY
+          auto profile4_end = chrono::steady_clock::now();
+          LOG(debug) << "profile4 time cost: " << chrono::duration <double, milli> (profile4_end - profile4_start).count() << " ms";
+          total_profile4_time += chrono::duration <double, milli> (profile4_end - profile4_start).count();
+#endif
           return result;
         }
         break;
@@ -2764,6 +2777,12 @@ RecordSession::RecordResult RecordSession::record_step() {
     total_syscall_state_changed_time += chrono::duration <double, milli> (syscall_state_changed_end - syscall_state_changed_start).count();
 #endif
   }
+
+#if XDEBUG_LATENCY
+  auto profile4_end = chrono::steady_clock::now();
+  LOG(debug) << "profile4 time cost: " << chrono::duration <double, milli> (profile4_end - profile4_start).count() << " ms";
+  total_profile4_time += chrono::duration <double, milli> (profile4_end - profile4_start).count();
+#endif
 
 #if XDEBUG_LATENCY
   auto profile0_start = chrono::steady_clock::now();
