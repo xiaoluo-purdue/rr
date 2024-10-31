@@ -114,11 +114,10 @@ double total_runnable_state_changed_time = 0.0;
 double total_syscall_state_changed_time = 0.0;
 double total_did_enter_syscall_time = 0.0;
 double total_handle_ptrace_event_time = 0.0;
-double total_profile0_time = 0.0;
-double total_profile1_time = 0.0;
-double total_profile2_time = 0.0;
-double total_profile3_time = 0.0;
-double total_profile4_time = 0.0;
+
+double profile_t0_before = 0.0;
+double profile_t0_after = 0.0;
+std::chrono::time_point<std::chrono::steady_clock> profile_t0;
 
 #if XDEBUG_WAIT
 int wait1_counter = 0;
@@ -485,11 +484,8 @@ int main(int argc, char* argv[]) {
     cout << "total_syscall_state_changed_time: " << total_syscall_state_changed_time << endl;
     cout << "total_did_enter_syscall_time: " << total_did_enter_syscall_time << endl;
     cout << "total_handle_ptrace_event_time: " << total_handle_ptrace_event_time << endl;
-    cout << "total_profile0_time: " << total_profile0_time << endl;
-    cout << "total_profile1_time: " << total_profile1_time << endl;
-    cout << "total_profile2_time: " << total_profile2_time << endl;
-    cout << "total_profile3_time: " << total_profile3_time << endl;
-    cout << "total_profile4_time: " << total_profile4_time << endl;
+    cout << "profile_t0_before: " << profile_t0_before << endl;
+    cout << "profile_t0_after: " << profile_t0_after << endl;
 
     LOG(debug) << "block count: " << block_times.size();
     LOG(debug) << "total blocking time: " << total_blocking << " ms";
@@ -522,11 +518,9 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "total_syscall_state_changed_time: " << total_syscall_state_changed_time;
     LOG(debug) << "total_did_enter_syscall_time: " << total_did_enter_syscall_time;
     LOG(debug) << "total_handle_ptrace_event_time: " << total_handle_ptrace_event_time;
-    LOG(debug) << "total_profile0_time: " << total_profile0_time;
-    LOG(debug) << "total_profile1_time: " << total_profile1_time;
-    LOG(debug) << "total_profile2_time: " << total_profile2_time;
-    LOG(debug) << "total_profile3_time: " << total_profile3_time;
-    LOG(debug) << "total_profile4_time: " << total_profile4_time;
+    LOG(debug) << "profile_t0_before: " << profile_t0_before;
+    LOG(debug) << "profile_t0_after: " << profile_t0_after;
+
     #endif
   #if XDEBUG_WAIT
     cout << "wait() call times distribution:" << endl;

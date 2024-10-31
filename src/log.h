@@ -326,11 +326,10 @@ extern double total_runnable_state_changed_time;
 extern double total_syscall_state_changed_time;
 extern double total_did_enter_syscall_time;
 extern double total_handle_ptrace_event_time;
-extern double total_profile0_time;
-extern double total_profile1_time;
-extern double total_profile2_time;
-extern double total_profile3_time;
-extern double total_profile4_time;
+
+extern double profile_t0_before;
+extern double profile_t0_after;
+extern std::chrono::time_point<std::chrono::steady_clock> profile_t0;
 
 # if XDEBUG_WAIT
 extern int wait1_counter;

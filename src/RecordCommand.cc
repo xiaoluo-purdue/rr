@@ -706,6 +706,7 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
 #if XDEBUG_LATENCY
     step_end = chrono::steady_clock::now();
     LOG(debug) << "record step time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (step_end - step_start).count() << " ms";
+    LOG(debug) << "record step time since RR start, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (step_end - RR_start).count() << " ms";
     total_step_counter_time += chrono::duration <double, milli> (step_end - step_start).count();
 #endif
     

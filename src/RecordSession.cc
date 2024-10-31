@@ -845,9 +845,6 @@ static bool is_ptrace_any_singlestep(SupportedArch arch, int command)
 }
 
 void RecordSession::task_continue(const StepState& step_state) {
-#if XDEBUG_LATENCY
-  auto profile2_start = chrono::steady_clock::now();
-#endif
   RecordTask* t = scheduler().current();
 
   ASSERT(t, step_state.continue_type != DONT_CONTINUE);
@@ -961,12 +958,6 @@ void RecordSession::task_continue(const StepState& step_state) {
     }
   }
   #endif
-
-#if XDEBUG_LATENCY
-  auto profile2_end = chrono::steady_clock::now();
-  LOG(debug) << "profile2 time cost: " << chrono::duration <double, milli> (profile2_end - profile2_start).count() << " ms";
-  total_profile2_time += chrono::duration <double, milli> (profile2_end - profile2_start).count();
-#endif
 
   t->resume_execution(resume, RESUME_NONBLOCKING, ticks_request);
   #if XDEBUG_RESUME
@@ -2619,31 +2610,18 @@ RecordSession::RecordResult RecordSession::record_step() {
   }
 #endif
 
-#if XDEBUG_LATENCY
-  auto profile1_start = chrono::steady_clock::now();
-#endif
   // LOG(debug) << "[workflow] scheduling: " << curr_sched_time << " ms";
   if (rescheduled.interrupted_by_signal) {
     // The scheduler was waiting for some task to become active, but was
     // interrupted by a signal. Yield to our caller now to give the caller
     // a chance to do something triggered by the signal
     // (e.g. terminate the recording).
-#if XDEBUG_LATENCY
-    auto profile1_end = chrono::steady_clock::now();
-    LOG(debug) << "profile1 time cost: " << chrono::duration <double, milli> (profile1_end - profile1_start).count() << " ms";
-    total_profile1_time += chrono::duration <double, milli> (profile1_end - profile1_start).count();
-#endif
     return result;
   }
   RecordTask* t = scheduler().current();
   if (t->waiting_for_reap) {
     // Give it another chance to be reaped
     t->did_reach_zombie();
-#if XDEBUG_LATENCY
-    auto profile1_end = chrono::steady_clock::now();
-    LOG(debug) << "profile1 time cost: " << chrono::duration <double, milli> (profile1_end - profile1_start).count() << " ms";
-    total_profile1_time += chrono::duration <double, milli> (profile1_end - profile1_start).count();
-#endif
     return result;
   }
 
@@ -2684,24 +2662,17 @@ RecordSession::RecordResult RecordSession::record_step() {
       after_tracee_exit = true;
     #endif
 
-#if XDEBUG_LATENCY
-      auto profile1_end = chrono::steady_clock::now();
-      LOG(debug) << "profile1 time cost: " << chrono::duration <double, milli> (profile1_end - profile1_start).count() << " ms";
-      total_profile1_time += chrono::duration <double, milli> (profile1_end - profile1_start).count();
-#endif
     return result;
   }
 
   StepState step_state(CONTINUE);
 
 #if XDEBUG_LATENCY
-  auto profile1_end = chrono::steady_clock::now();
-  LOG(debug) << "profile1 time cost: " << chrono::duration <double, milli> (profile1_end - profile1_start).count() << " ms";
-  total_profile1_time += chrono::duration <double, milli> (profile1_end - profile1_start).count();
-#endif
-
-#if XDEBUG_LATENCY
-  auto profile4_start = chrono::steady_clock::now();
+  if (overall_stopped_after_wait) {
+    profile_t0 = chrono::steady_clock::now();
+    LOG(debug) << "overall_stopped - profile0 time cost: " << chrono::duration <double, milli> (profile_t0 - overall_after_wait).count() << " ms";
+    profile_t0_before += chrono::duration <double, milli> (profile_t0 - overall_after_wait).count();
+  }
 #endif
 
   bool did_enter_syscall;
@@ -2710,11 +2681,6 @@ RecordSession::RecordResult RecordSession::record_step() {
     if (result.status != STEP_CONTINUE ||
         step_state.continue_type == DONT_CONTINUE) {
       last_task_switchable = ALLOW_SWITCH;
-#if XDEBUG_LATENCY
-      auto profile4_end = chrono::steady_clock::now();
-      LOG(debug) << "profile4 time cost: " << chrono::duration <double, milli> (profile4_end - profile4_start).count() << " ms";
-      total_profile4_time += chrono::duration <double, milli> (profile4_end - profile4_start).count();
-#endif
       return result;
     }
 
@@ -2735,11 +2701,6 @@ RecordSession::RecordResult RecordSession::record_step() {
     if (handle_ptrace_exit_event(t)) {
       // t may have been deleted.
       last_task_switchable = ALLOW_SWITCH;
-#if XDEBUG_LATENCY
-      auto profile4_end = chrono::steady_clock::now();
-      LOG(debug) << "profile4 time cost: " << chrono::duration <double, milli> (profile4_end - profile4_start).count() << " ms";
-      total_profile4_time += chrono::duration <double, milli> (profile4_end - profile4_start).count();
-#endif
       return result;
     }
   } else {
@@ -2754,11 +2715,6 @@ RecordSession::RecordResult RecordSession::record_step() {
 #endif
     if (result.status != STEP_CONTINUE ||
         step_state.continue_type == DONT_CONTINUE) {
-#if XDEBUG_LATENCY
-      auto profile4_end = chrono::steady_clock::now();
-      LOG(debug) << "profile4 time cost: " << chrono::duration <double, milli> (profile4_end - profile4_start).count() << " ms";
-      total_profile4_time += chrono::duration <double, milli> (profile4_end - profile4_start).count();
-#endif
       return result;
     }
 
@@ -2776,11 +2732,6 @@ RecordSession::RecordResult RecordSession::record_step() {
       case EV_SIGNAL_DELIVERY:
         if (signal_state_changed(t, &step_state)) {
           // t may have been deleted
-#if XDEBUG_LATENCY
-          auto profile4_end = chrono::steady_clock::now();
-          LOG(debug) << "profile4 time cost: " << chrono::duration <double, milli> (profile4_end - profile4_start).count() << " ms";
-          total_profile4_time += chrono::duration <double, milli> (profile4_end - profile4_start).count();
-#endif
           return result;
         }
         break;
@@ -2794,15 +2745,6 @@ RecordSession::RecordResult RecordSession::record_step() {
 #endif
   }
 
-#if XDEBUG_LATENCY
-  auto profile4_end = chrono::steady_clock::now();
-  LOG(debug) << "profile4 time cost: " << chrono::duration <double, milli> (profile4_end - profile4_start).count() << " ms";
-  total_profile4_time += chrono::duration <double, milli> (profile4_end - profile4_start).count();
-#endif
-
-#if XDEBUG_LATENCY
-  auto profile0_start = chrono::steady_clock::now();
-#endif
   t->verify_signal_states();
 
   // We try to inject a signal if there's one pending; otherwise we continue
@@ -2833,12 +2775,6 @@ RecordSession::RecordResult RecordSession::record_step() {
     #if XDEBUG_RESUME
       task_continue_counter++;
     #endif
-
-#if XDEBUG_LATENCY
-      auto profile0_end = chrono::steady_clock::now();
-      LOG(debug) << "profile0 time cost: " << chrono::duration <double, milli> (profile0_end - profile0_start).count() << " ms";
-      total_profile0_time += chrono::duration <double, milli> (profile0_end - profile0_start).count();
-#endif
     task_continue(step_state);
   }
 

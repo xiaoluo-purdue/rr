@@ -1414,9 +1414,6 @@ void Task::work_around_KNL_string_singlestep_bug() {
 
 void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
                             TicksRequest tick_period, int sig) {
-#if XDEBUG_LATENCY
-  auto profile3_start = chrono::steady_clock::now();
-#endif
   bool setup_succeeded = will_resume_execution(how, wait_how, tick_period, sig);
 
   // During record, the process could have died, but otherwise, we control
@@ -1490,11 +1487,6 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
     flush_regs();
   }
 
-#if XDEBUG_LATENCY
-  auto profile3_end = chrono::steady_clock::now();
-  LOG(debug) << "profile3 time cost: " << chrono::duration <double, milli> (profile3_end - profile3_start).count() << " ms";
-  total_profile3_time += chrono::duration <double, milli> (profile3_end - profile3_start).count();
-#endif
 
   pid_t wait_ret = 0;
   if (session().is_recording() && !is_dying()) {
@@ -1554,6 +1546,8 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
       overall_before_resume = chrono::steady_clock::now();
       overall_block_times.push_back(chrono::duration <double, milli> (overall_before_resume - overall_after_wait).count());
       LOG(debug) << "overall_block_times log: " << chrono::duration <double, milli> (overall_before_resume - overall_after_wait).count() << " ms";
+      LOG(debug) << "profile0 - overall_resume time cost: " << chrono::duration <double, milli> (overall_before_resume - profile_t0).count() << " ms";
+      profile_t0_after += chrono::duration <double, milli> (overall_before_resume - profile_t0).count();
       overall_stopped_after_wait = false;
     }
 #endif
