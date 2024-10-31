@@ -1549,6 +1549,18 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
   } else {
     ASSERT(this, setup_succeeded);
     ptrace_if_alive(how, nullptr, (void*)(uintptr_t)sig);
+#if XDEBUG_LATENCY
+    if (overall_stopped_after_wait) {
+      overall_before_resume = chrono::steady_clock::now();
+      overall_block_times.push_back(chrono::duration <double, milli> (overall_before_resume - overall_after_wait).count());
+      LOG(debug) << "overall_block_times log: " << chrono::duration <double, milli> (overall_before_resume - overall_after_wait).count() << " ms";
+      overall_stopped_after_wait = false;
+    }
+#endif
+#if XDEBUG_RESUME
+    overall_resume_counter++;
+#endif
+
     is_stopped = false;
     extra_registers_known = false;
     if (RESUME_WAIT == wait_how) {
@@ -1563,17 +1575,17 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
     }
   }
 
-#if XDEBUG_LATENCY
-  if (overall_stopped_after_wait) {
-    overall_before_resume = chrono::steady_clock::now();
-    overall_block_times.push_back(chrono::duration <double, milli> (overall_before_resume - overall_after_wait).count());
-    LOG(debug) << "overall_block_times log: " << chrono::duration <double, milli> (overall_before_resume - overall_after_wait).count() << " ms";
-    overall_stopped_after_wait = false;
-  }
-#endif
-#if XDEBUG_RESUME
-  overall_resume_counter++;
-#endif
+//#if XDEBUG_LATENCY
+//  if (overall_stopped_after_wait) {
+//    overall_before_resume = chrono::steady_clock::now();
+//    overall_block_times.push_back(chrono::duration <double, milli> (overall_before_resume - overall_after_wait).count());
+//    LOG(debug) << "overall_block_times log: " << chrono::duration <double, milli> (overall_before_resume - overall_after_wait).count() << " ms";
+//    overall_stopped_after_wait = false;
+//  }
+//#endif
+//#if XDEBUG_RESUME
+//  overall_resume_counter++;
+//#endif
 }
 
 void Task::set_regs(const Registers& regs) {
