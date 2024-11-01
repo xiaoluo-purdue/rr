@@ -326,6 +326,7 @@ extern double total_runnable_state_changed_time;
 extern double total_syscall_state_changed_time;
 extern double total_did_enter_syscall_time;
 extern double total_handle_ptrace_event_time;
+extern double total_ptrace_resume_time;
 
 extern double profile_t0_before;
 extern double profile_t0_after;

@@ -114,6 +114,7 @@ double total_runnable_state_changed_time = 0.0;
 double total_syscall_state_changed_time = 0.0;
 double total_did_enter_syscall_time = 0.0;
 double total_handle_ptrace_event_time = 0.0;
+double total_ptrace_resume_time = 0.0;
 
 double profile_t0_before = 0.0;
 double profile_t0_after = 0.0;
@@ -484,6 +485,7 @@ int main(int argc, char* argv[]) {
     cout << "total_syscall_state_changed_time: " << total_syscall_state_changed_time << endl;
     cout << "total_did_enter_syscall_time: " << total_did_enter_syscall_time << endl;
     cout << "total_handle_ptrace_event_time: " << total_handle_ptrace_event_time << endl;
+    cout << "total_ptrace_resume_time: " << total_ptrace_resume_time << endl;
     cout << "profile_t0_before: " << profile_t0_before << endl;
     cout << "profile_t0_after: " << profile_t0_after << endl;
 
@@ -518,6 +520,7 @@ int main(int argc, char* argv[]) {
     LOG(debug) << "total_syscall_state_changed_time: " << total_syscall_state_changed_time;
     LOG(debug) << "total_did_enter_syscall_time: " << total_did_enter_syscall_time;
     LOG(debug) << "total_handle_ptrace_event_time: " << total_handle_ptrace_event_time;
+    LOG(debug) << "total_ptrace_resume_time: " << total_ptrace_resume_time;
     LOG(debug) << "profile_t0_before: " << profile_t0_before;
     LOG(debug) << "profile_t0_after: " << profile_t0_after;
 
