@@ -2667,14 +2667,6 @@ RecordSession::RecordResult RecordSession::record_step() {
 
   StepState step_state(CONTINUE);
 
-#if XDEBUG_LATENCY
-  if (overall_stopped_after_wait) {
-    profile_t0 = chrono::steady_clock::now();
-    LOG(debug) << "overall_stopped - profile0 time cost: " << chrono::duration <double, milli> (profile_t0 - overall_after_wait).count() << " ms";
-    profile_t0_before += chrono::duration <double, milli> (profile_t0 - overall_after_wait).count();
-  }
-#endif
-
   bool did_enter_syscall;
   if (rescheduled.by_waitpid &&
       handle_ptrace_event(&t, &step_state, &result, &did_enter_syscall)) {
@@ -2744,6 +2736,14 @@ RecordSession::RecordResult RecordSession::record_step() {
     total_syscall_state_changed_time += chrono::duration <double, milli> (syscall_state_changed_end - syscall_state_changed_start).count();
 #endif
   }
+
+#if XDEBUG_LATENCY
+  if (overall_stopped_after_wait) {
+    profile_t0 = chrono::steady_clock::now();
+    LOG(debug) << "overall_stopped - profile0 time cost: " << chrono::duration <double, milli> (profile_t0 - overall_after_wait).count() << " ms";
+    profile_t0_before += chrono::duration <double, milli> (profile_t0 - overall_after_wait).count();
+  }
+#endif
 
   t->verify_signal_states();
 
