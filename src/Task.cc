@@ -1416,6 +1416,14 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
                             TicksRequest tick_period, int sig) {
   bool setup_succeeded = will_resume_execution(how, wait_how, tick_period, sig);
 
+#if XDEBUG_LATENCY
+  if (overall_stopped_after_wait) {
+    profile_t0 = chrono::steady_clock::now();
+    LOG(debug) << "overall_stopped - profile0 time cost: " << chrono::duration <double, milli> (profile_t0 - overall_after_wait).count() << " ms";
+    profile_t0_before += chrono::duration <double, milli> (profile_t0 - overall_after_wait).count();
+  }
+#endif
+
   // During record, the process could have died, but otherwise, we control
   // process lifecycles and this should never fail.
   ASSERT(this, session().is_recording() || setup_succeeded);

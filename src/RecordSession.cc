@@ -2737,14 +2737,6 @@ RecordSession::RecordResult RecordSession::record_step() {
 #endif
   }
 
-#if XDEBUG_LATENCY
-  if (overall_stopped_after_wait) {
-    profile_t0 = chrono::steady_clock::now();
-    LOG(debug) << "overall_stopped - profile0 time cost: " << chrono::duration <double, milli> (profile_t0 - overall_after_wait).count() << " ms";
-    profile_t0_before += chrono::duration <double, milli> (profile_t0 - overall_after_wait).count();
-  }
-#endif
-
   t->verify_signal_states();
 
   // We try to inject a signal if there's one pending; otherwise we continue
