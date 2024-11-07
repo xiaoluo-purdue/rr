@@ -1553,7 +1553,7 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
     auto start = chrono::steady_clock::now();
 #endif
     //ptrace_if_alive(how, nullptr, (void*)(uintptr_t)sig);
-    async_ptrace_if_alive(how, nullptr, (void*)(uintptr_t)sig);
+    std::async(std::launch::async, async_ptrace_if_alive, how, nullptr, (void*)(uintptr_t)sig);
 #if XDEBUG_LATENCY
     auto end = chrono::steady_clock::now();
     LOG(debug) << "ptrace resume time cost: " << chrono::duration <double, milli> (end - start).count() << " ms";
@@ -2785,6 +2785,10 @@ long Task::fallible_ptrace(int request, remote_ptr<void> addr, void* data) {
   return ptrace(_ptrace_request(request), tid, addr, data);
 }
 
+long Task::async_fallible_ptrace(int request, remote_ptr<void> addr, void* data) {
+  return ptrace(_ptrace_request(request), tracee_pid, addr, data);
+}
+
 bool Task::open_mem_fd() {
   // Use ptrace to read/write during open_mem_fd
   as->set_mem_fd(ScopedFd());
@@ -3246,14 +3250,14 @@ bool Task::ptrace_if_alive(int request, remote_ptr<void> addr, void* data) {
 
 bool Task::async_ptrace_if_alive(int request, remote_ptr<void> addr, void* data) {
   errno = 0;
-  fallible_ptrace(request, addr, data);
+  async_fallible_ptrace(request, addr, data);
   if (errno == ESRCH) {
-    LOG(debug) << "ptrace_if_alive tid " << tid << " was not alive";
+    LOG(debug) << "ptrace_if_alive tid " << tracee_pid << " was not alive";
     return false;
   }
-  ASSERT(this, !errno) << "ptrace(" << ptrace_req_name<NativeArch>(request) << ", " << tid
-                       << ", addr=" << addr << ", data=" << data
-                       << ") failed with errno " << errno;
+  //ASSERT(this, !errno) << "ptrace(" << ptrace_req_name<NativeArch>(request) << ", " << tid
+  //                    << ", addr=" << addr << ", data=" << data
+  //                     << ") failed with errno " << errno;
   return true;
 }
 

@@ -973,7 +973,7 @@ public:
    */
   bool ptrace_if_alive(int request, remote_ptr<void> addr, void* data);
 
-  bool async_ptrace_if_alive(int request, remote_ptr<void> addr, void* data);
+  bool static async_ptrace_if_alive(int request, remote_ptr<void> addr, void* data);
 
   bool is_dying() const {
     return seen_ptrace_exit_event || detected_unexpected_exit;
@@ -1117,6 +1117,8 @@ protected:
    * the ptrace return value.
    */
   long fallible_ptrace(int request, remote_ptr<void> addr, void* data);
+
+  long static async_fallible_ptrace(int request, remote_ptr<void> addr, void* data);
 
   /**
    * Like |fallible_ptrace()| but completely infallible.
