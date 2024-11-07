@@ -65,12 +65,6 @@ namespace rr {
 static const unsigned int NUM_X86_DEBUG_REGS = 8;
 static const unsigned int NUM_X86_WATCHPOINTS = 4;
 
-bool init_ptrace_cont_ret(bool param) {
-  return param;
-}
-
-std::future<bool> ptrace_cont_ret = std::async(std::launch::async, init_ptrace_cont_ret, true);
-
 Task::Task(Session& session, pid_t _tid, pid_t _rec_tid, uint32_t serial,
            SupportedArch a)
     : scratch_ptr(),
@@ -1559,7 +1553,7 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
     auto start = chrono::steady_clock::now();
 #endif
     //ptrace_if_alive(how, nullptr, (void*)(uintptr_t)sig);
-    ptrace_cont_ret = std::async(std::launch::async, async_ptrace_if_alive, how, nullptr, (void*)(uintptr_t)sig);
+    std::future<bool> ptrace_cont_ret = std::async(std::launch::async, async_ptrace_if_alive, how, nullptr, (void*)(uintptr_t)sig);
 #if XDEBUG_LATENCY
     auto end = chrono::steady_clock::now();
     LOG(debug) << "ptrace resume time cost: " << chrono::duration <double, milli> (end - start).count() << " ms";
@@ -1578,6 +1572,8 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
 #if XDEBUG_RESUME
     overall_resume_counter++;
 #endif
+
+    bool ptrace_cont_ret_temp = ptrace_cont_ret.get();
 
     is_stopped = false;
     extra_registers_known = false;
@@ -2031,8 +2027,6 @@ void Task::wait(double interrupt_after_elapsed) {
       setitimer(ITIMER_REAL, &timer, nullptr);
     }
     siginfo_t info;
-
-    bool temp_ret = ptrace_cont_ret.get();
 
     ret = waitid(P_PID, tid, &info, WSTOPPED);
     #if XDEBUG_LATENCY

@@ -24,8 +24,6 @@ using namespace std;
 
 namespace rr {
 
-extern std::future<bool> ptrace_cont_ret;
-
 /**
  * Stores the table of signal dispositions and metadata for an
  * arbitrary set of tasks.  Each of those tasks must own one one of
@@ -2129,8 +2127,6 @@ bool RecordTask::try_wait() {
   WaitStatus status;
   siginfo_t info;
   memset(&info, 0, sizeof(siginfo_t));
-
-  bool ptrace_cont_ret_temp = ptrace_cont_ret.get();
 
   #if XDEBUG_LATENCY
     auto start_time = chrono::steady_clock::now();
