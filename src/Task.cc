@@ -28,6 +28,7 @@
 #include <sstream>
 #include <chrono>
 
+#include <future>
 #include <rr/rr.h>
 
 #include "Task.h"
@@ -3231,7 +3232,8 @@ void Task::xptrace(int request, remote_ptr<void> addr, void* data) {
 
 bool Task::ptrace_if_alive(int request, remote_ptr<void> addr, void* data) {
   errno = 0;
-  fallible_ptrace(request, addr, data);
+  //fallible_ptrace(request, addr, data);
+  std::async(std::launch::async, fallible_ptrace, request, addr, data);
   if (errno == ESRCH) {
     LOG(debug) << "ptrace_if_alive tid " << tid << " was not alive";
     return false;

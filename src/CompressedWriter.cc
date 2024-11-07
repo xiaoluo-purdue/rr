@@ -258,9 +258,16 @@ void CompressedWriter::close(Sync sync) {
 #endif
 
   if (sync == SYNC) {
+#if XDEBUG_LATENCY
+    LOG(debug) << "Going into fsync";
+#endif
     if (fsync(fd) < 0) {
       error = true;
     }
+  } else {
+#if XDEBUG_LATENCY
+    LOG(debug) << "No fsync";
+#endif
   }
 
   if (write_error) {

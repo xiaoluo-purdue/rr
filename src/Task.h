@@ -1114,7 +1114,7 @@ protected:
    * Make the ptrace |request| with |addr| and |data|, return
    * the ptrace return value.
    */
-  long fallible_ptrace(int request, remote_ptr<void> addr, void* data);
+  long static fallible_ptrace(int request, remote_ptr<void> addr, void* data);
 
   /**
    * Like |fallible_ptrace()| but completely infallible.
