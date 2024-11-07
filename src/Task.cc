@@ -1552,7 +1552,8 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
 #if XDEBUG_LATENCY
     auto start = chrono::steady_clock::now();
 #endif
-    ptrace_if_alive(how, nullptr, (void*)(uintptr_t)sig);
+    //ptrace_if_alive(how, nullptr, (void*)(uintptr_t)sig);
+    async_ptrace_if_alive(how, nullptr, (void*)(uintptr_t)sig);
 #if XDEBUG_LATENCY
     auto end = chrono::steady_clock::now();
     LOG(debug) << "ptrace resume time cost: " << chrono::duration <double, milli> (end - start).count() << " ms";
@@ -2781,7 +2782,7 @@ long Task::stored_record_size(
 }
 
 long Task::fallible_ptrace(int request, remote_ptr<void> addr, void* data) {
-  return ptrace(_ptrace_request(request), tracee_pid, addr, data);
+  return ptrace(_ptrace_request(request), tid, addr, data);
 }
 
 bool Task::open_mem_fd() {
@@ -3232,8 +3233,20 @@ void Task::xptrace(int request, remote_ptr<void> addr, void* data) {
 
 bool Task::ptrace_if_alive(int request, remote_ptr<void> addr, void* data) {
   errno = 0;
-  //fallible_ptrace(request, addr, data);
-  std::async(std::launch::async, fallible_ptrace, request, addr, data);
+  fallible_ptrace(request, addr, data);
+  if (errno == ESRCH) {
+    LOG(debug) << "ptrace_if_alive tid " << tid << " was not alive";
+    return false;
+  }
+  ASSERT(this, !errno) << "ptrace(" << ptrace_req_name<NativeArch>(request) << ", " << tid
+                       << ", addr=" << addr << ", data=" << data
+                       << ") failed with errno " << errno;
+  return true;
+}
+
+bool Task::async_ptrace_if_alive(int request, remote_ptr<void> addr, void* data) {
+  errno = 0;
+  fallible_ptrace(request, addr, data);
   if (errno == ESRCH) {
     LOG(debug) << "ptrace_if_alive tid " << tid << " was not alive";
     return false;
