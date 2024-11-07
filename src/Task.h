@@ -888,7 +888,7 @@ public:
   PerfCounters hpc;
 
   /* This is always the "real" tid of the tracee. */
-  pid_t tid;
+  static pid_t tid;
   /* This is always the recorded tid of the tracee.  During
    * recording, it's synonymous with |tid|, and during replay
    * it's the tid that was recorded. */
