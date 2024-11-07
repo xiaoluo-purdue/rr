@@ -65,7 +65,11 @@ namespace rr {
 static const unsigned int NUM_X86_DEBUG_REGS = 8;
 static const unsigned int NUM_X86_WATCHPOINTS = 4;
 
-extern std::future<bool> ptrace_cont_ret;
+bool init_ptrace_cont_ret(bool param) {
+  return param;
+}
+
+std::future<bool> ptrace_cont_ret = std::async(std::launch::async, init_ptrace_cont_ret, true);
 
 Task::Task(Session& session, pid_t _tid, pid_t _rec_tid, uint32_t serial,
            SupportedArch a)
