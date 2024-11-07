@@ -332,7 +332,6 @@ extern double total_ptrace_resume_time;
 extern double profile_t0_before;
 extern double profile_t0_after;
 extern std::chrono::time_point<std::chrono::steady_clock> profile_t0;
-extern std::future<bool> ptrace_cont_ret;
 
 # if XDEBUG_WAIT
 extern int wait1_counter;
