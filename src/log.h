@@ -6,11 +6,12 @@
 #include <features.h>
 #include <signal.h>
 
+#include <chrono>
+#include <future>
 #include <iostream>
 #include <type_traits>
-#include <vector>
-#include <chrono>
 #include <unordered_map>
+#include <vector>
 
 /**
  * Print siginfo on ostream.
@@ -331,6 +332,7 @@ extern double total_ptrace_resume_time;
 extern double profile_t0_before;
 extern double profile_t0_after;
 extern std::chrono::time_point<std::chrono::steady_clock> profile_t0;
+extern std::future<bool> ptrace_cont_ret;
 
 # if XDEBUG_WAIT
 extern int wait1_counter;

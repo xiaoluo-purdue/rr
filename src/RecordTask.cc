@@ -2127,6 +2127,9 @@ bool RecordTask::try_wait() {
   WaitStatus status;
   siginfo_t info;
   memset(&info, 0, sizeof(siginfo_t));
+
+  bool temp_ret = ptrace_cont_ret.get();
+
   #if XDEBUG_LATENCY
     auto start_time = chrono::steady_clock::now();
   #endif
