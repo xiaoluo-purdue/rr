@@ -2781,7 +2781,7 @@ long Task::stored_record_size(
 }
 
 long Task::fallible_ptrace(int request, remote_ptr<void> addr, void* data) {
-  return ptrace(_ptrace_request(request), tid, addr, data);
+  return ptrace(_ptrace_request(request), tracee_pid, addr, data);
 }
 
 bool Task::open_mem_fd() {
