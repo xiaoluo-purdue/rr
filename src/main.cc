@@ -120,6 +120,8 @@ double profile_t0_before = 0.0;
 double profile_t0_after = 0.0;
 std::chrono::time_point<std::chrono::steady_clock> profile_t0;
 
+std::future<bool> ptrace_cont_ret;
+
 #if XDEBUG_WAIT
 int wait1_counter = 0;
 int wait2_counter = 0;
