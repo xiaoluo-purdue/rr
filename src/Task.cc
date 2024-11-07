@@ -1573,8 +1573,6 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
     overall_resume_counter++;
 #endif
 
-    bool ptrace_cont_ret_temp = ptrace_cont_ret.get();
-
     is_stopped = false;
     extra_registers_known = false;
     if (RESUME_WAIT == wait_how) {
