@@ -1552,8 +1552,8 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
 #if XDEBUG_LATENCY
     auto start = chrono::steady_clock::now();
 #endif
-    //ptrace_if_alive(how, nullptr, (void*)(uintptr_t)sig);
-    std::future<bool> ptrace_cont_ret = std::async(std::launch::async, async_ptrace_if_alive, how, nullptr, (void*)(uintptr_t)sig);
+    ptrace_if_alive(how, nullptr, (void*)(uintptr_t)sig);
+    //std::future<bool> ptrace_cont_ret = std::async(std::launch::async, async_ptrace_if_alive, how, nullptr, (void*)(uintptr_t)sig);
 #if XDEBUG_LATENCY
     auto end = chrono::steady_clock::now();
     LOG(debug) << "ptrace resume time cost: " << chrono::duration <double, milli> (end - start).count() << " ms";
@@ -1572,8 +1572,6 @@ void Task::resume_execution(ResumeRequest how, WaitRequest wait_how,
 #if XDEBUG_RESUME
     overall_resume_counter++;
 #endif
-
-    bool ptrace_cont_ret_temp = ptrace_cont_ret.get();
 
     is_stopped = false;
     extra_registers_known = false;
