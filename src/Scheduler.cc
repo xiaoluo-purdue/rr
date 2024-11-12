@@ -673,7 +673,8 @@ Scheduler::Rescheduled Scheduler::reschedule(Switchable switchable) {
           #if XDEBUG_LATENCY
           auto start_time = chrono::steady_clock::now();
           #endif
-          current_->wait(timeout);
+          //current_->wait(timeout);
+          current_->wait(0.001);
           #if XDEBUG_LATENCY
             stopped_after_wait = true;
             after_wait = chrono::steady_clock::now();
