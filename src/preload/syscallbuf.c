@@ -1361,10 +1361,10 @@ static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
     /* Clear the return value that rr puts there during replay */
     rec->ret = 0;
   } else {
-    rec->ret = ret;
+    //rec->ret = ret;
     // Finish 'rec' first before updating num_rec_bytes, since
     // rr might read the record anytime after this update.
-    hdr->num_rec_bytes += stored_record_size(rec->size);
+    //hdr->num_rec_bytes += stored_record_size(rec->size);
     call_breakpoint = 1;
   }
 
@@ -1392,7 +1392,6 @@ static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
      * recorded for the SIGKILL will be less than or equal to the number of ticks reported
      * when the replay hits do_breakpoint.
      */
-    return ret;
     force_tick();
   }
 
