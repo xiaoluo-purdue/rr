@@ -435,7 +435,6 @@ static long untraced_syscall_full(int syscallno, long a0, long a1, long a2,
                                   long a3, long a4, long a5,
                                   void* syscall_instruction,
                                   long stack_param_1, long stack_param_2) {
-  return 0;
   struct syscallbuf_record* rec = (struct syscallbuf_record*)buffer_last();
   /* Ensure tools analyzing the replay can find the pending syscall result */
   thread_locals->pending_untraced_syscall_result = &rec->ret;
@@ -1318,6 +1317,13 @@ static void __attribute__((noinline)) do_breakpoint(size_t value)
  * returned directly by the kernel syscall hook.
  */
 static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
+  struct syscallbuf_hdr* hdr = buffer_hdr();
+  do_breakpoint(hdr->num_rec_bytes/8);
+  force_tick();
+  return ret;
+}
+
+static long commit_raw_syscall_bak(int syscallno, void* record_end, long ret) {
   void* record_start = buffer_last();
   struct syscallbuf_record* rec = record_start;
   struct syscallbuf_hdr* hdr = buffer_hdr();
