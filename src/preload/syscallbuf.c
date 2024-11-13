@@ -1317,7 +1317,6 @@ static void __attribute__((noinline)) do_breakpoint(size_t value)
  * returned directly by the kernel syscall hook.
  */
 static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
-  return ret;
   void* record_start = buffer_last();
   struct syscallbuf_record* rec = record_start;
   struct syscallbuf_hdr* hdr = buffer_hdr();
@@ -1381,6 +1380,7 @@ static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
   buffer_hdr()->locked &= ~SYSCALLBUF_LOCKED_TRACEE;
 
   if (call_breakpoint) {
+    return ret;
     /* Call the breakpoint function corresponding to the record we just
      * committed. This function just returns, but during replay it gives rr
      * a chance to set a breakpoint for when a specific syscallbuf record
