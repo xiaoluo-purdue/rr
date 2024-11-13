@@ -1380,7 +1380,6 @@ static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
   buffer_hdr()->locked &= ~SYSCALLBUF_LOCKED_TRACEE;
 
   if (call_breakpoint) {
-    return ret;
     /* Call the breakpoint function corresponding to the record we just
      * committed. This function just returns, but during replay it gives rr
      * a chance to set a breakpoint for when a specific syscallbuf record
@@ -1393,6 +1392,7 @@ static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
      * recorded for the SIGKILL will be less than or equal to the number of ticks reported
      * when the replay hits do_breakpoint.
      */
+    return ret;
     force_tick();
   }
 
