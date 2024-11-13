@@ -1413,7 +1413,7 @@ static void* copy_output_buffer(long ret_size, void* ptr, void* buf,
   if (ret_size <= 0 || buffer_hdr()->failed_during_preparation) {
     return buf2;
   }
-  //local_memcpy(buf, buf2, ret_size);
+  local_memcpy(buf, buf2, ret_size);
   return buf2 + ret_size;
 }
 
