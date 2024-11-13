@@ -1317,6 +1317,7 @@ static void __attribute__((noinline)) do_breakpoint(size_t value)
  * returned directly by the kernel syscall hook.
  */
 static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
+  return ret;
   void* record_start = buffer_last();
   struct syscallbuf_record* rec = record_start;
   struct syscallbuf_hdr* hdr = buffer_hdr();
