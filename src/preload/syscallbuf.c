@@ -1172,7 +1172,6 @@ static int fd_write_blocks(int fd) {
 
 static int start_commit_buffered_syscall(int syscallno, void* record_end,
                                          int blockness) {
-  return 0;
   void* record_start;
   void* stored_end;
   struct syscallbuf_record* rec;
@@ -4124,7 +4123,7 @@ RR_HIDDEN long syscall_hook(struct syscall_info* call) {
   thread_locals->original_syscall_parameters = call;
 
   if (impose_syscall_delay) {
-    do_delay();
+    //do_delay();
   }
 
   long result = syscall_hook_internal(call);
