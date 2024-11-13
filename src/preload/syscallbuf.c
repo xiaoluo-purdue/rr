@@ -1172,6 +1172,7 @@ static int fd_write_blocks(int fd) {
 
 static int start_commit_buffered_syscall(int syscallno, void* record_end,
                                          int blockness) {
+  return 0;
   void* record_start;
   void* stored_end;
   struct syscallbuf_record* rec;
@@ -1317,13 +1318,6 @@ static void __attribute__((noinline)) do_breakpoint(size_t value)
  * returned directly by the kernel syscall hook.
  */
 static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
-  struct syscallbuf_hdr* hdr = buffer_hdr();
-  do_breakpoint(hdr->num_rec_bytes/8);
-  force_tick();
-  return ret;
-}
-
-static long commit_raw_syscall_bak(int syscallno, void* record_end, long ret) {
   void* record_start = buffer_last();
   struct syscallbuf_record* rec = record_start;
   struct syscallbuf_hdr* hdr = buffer_hdr();
