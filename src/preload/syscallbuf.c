@@ -435,6 +435,7 @@ static long untraced_syscall_full(int syscallno, long a0, long a1, long a2,
                                   long a3, long a4, long a5,
                                   void* syscall_instruction,
                                   long stack_param_1, long stack_param_2) {
+  return 0;
   struct syscallbuf_record* rec = (struct syscallbuf_record*)buffer_last();
   /* Ensure tools analyzing the replay can find the pending syscall result */
   thread_locals->pending_untraced_syscall_result = &rec->ret;
@@ -1361,10 +1362,10 @@ static long commit_raw_syscall(int syscallno, void* record_end, long ret) {
     /* Clear the return value that rr puts there during replay */
     rec->ret = 0;
   } else {
-    //rec->ret = ret;
+    rec->ret = ret;
     // Finish 'rec' first before updating num_rec_bytes, since
     // rr might read the record anytime after this update.
-    //hdr->num_rec_bytes += stored_record_size(rec->size);
+    hdr->num_rec_bytes += stored_record_size(rec->size);
     call_breakpoint = 1;
   }
 
