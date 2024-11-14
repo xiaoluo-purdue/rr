@@ -4111,27 +4111,6 @@ static void do_delay(void) {
  * _syscall_hook_trampoline without doing all sorts of special PIC handling.
  */
 RR_HIDDEN long syscall_hook(struct syscall_info* call) {
-#if defined(__i386__) || defined(__x86_64__)
-  __asm__ __volatile__(
-      "do_breakpoint_fault_addr:\n\t"
-      ".global do_breakpoint_fault_addr\n\t"
-  );
-#elif defined(__aarch64__)
-  __asm__ __volatile__("ldr %1, [%1]\n\t"
-                       "cmp %0, %1\n\t"
-                       "csel %0, %3, %2, eq\n\t"
-                       "do_breakpoint_fault_addr:\n\t"
-                       ".global do_breakpoint_fault_addr\n\t"
-                       "ldr %0, [%0]\n\t"
-                       "subs %0, xzr, xzr\n\t"
-                       "mov %1, xzr\n\t"
-                       : "+r"(value), "+r"(breakpoint_value_addr),
-                         "+r"(safe_value), "+r"(unsafe_value)
-                       :
-                       : "cc", "memory");
-#else
-#error Unknown architecture
-#endif
   return 0;
   // Initialize thread-local state if this is the first syscall for this
   // thread.
