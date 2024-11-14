@@ -731,7 +731,7 @@ static void __attribute__((constructor)) init_process(void) {
   extern char _syscallbuf_final_exit_instruction;
   extern char _syscallbuf_code_start;
   extern char _syscallbuf_code_end;
-//  extern char do_breakpoint_fault_addr;
+  extern char do_breakpoint_fault_addr;
 
 #if defined(__i386__)
   extern RR_HIDDEN void __morestack(void);
@@ -996,7 +996,7 @@ static void __attribute__((constructor)) init_process(void) {
 
   globals.breakpoint_value = (uint64_t)-1;
   globals.fdt_uniform = 1;
-//  params.breakpoint_instr_addr = &do_breakpoint_fault_addr;
+  params.breakpoint_instr_addr = &do_breakpoint_fault_addr;
   params.breakpoint_mode_sentinel = -1;
   params.syscallbuf_syscall_hook = (void*)syscall_hook;
 
@@ -3923,10 +3923,6 @@ static long sys_rrcall_rdtsc(struct syscall_info* call) {
 }
 
 static long syscall_hook_internal(struct syscall_info* call) {
-//  struct syscallbuf_hdr* hdr = buffer_hdr();
-//  do_breakpoint(hdr->num_rec_bytes/8);
-//  force_tick();
-  return 0;
   switch (call->no) {
 #define CASE(syscallname)                                                      \
   case SYS_##syscallname:                                                      \
@@ -4115,6 +4111,7 @@ static void do_delay(void) {
  * _syscall_hook_trampoline without doing all sorts of special PIC handling.
  */
 RR_HIDDEN long syscall_hook(struct syscall_info* call) {
+  return 0;
   // Initialize thread-local state if this is the first syscall for this
   // thread.
   init_thread();
