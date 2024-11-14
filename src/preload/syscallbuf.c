@@ -4123,7 +4123,7 @@ RR_HIDDEN long syscall_hook(struct syscall_info* call) {
   thread_locals->original_syscall_parameters = call;
 
   if (impose_syscall_delay) {
-    //do_delay();
+    do_delay();
   }
 
   long result = syscall_hook_internal(call);
