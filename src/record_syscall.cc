@@ -6828,7 +6828,7 @@ static void rec_process_syscall_arch(RecordTask* t,
       break;
 
     case SYS_rrcall_init_preload: {
-      t->at_preload_init();
+//      t->at_preload_init();
       break;
     }
 
