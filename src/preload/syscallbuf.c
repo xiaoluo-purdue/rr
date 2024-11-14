@@ -3923,9 +3923,9 @@ static long sys_rrcall_rdtsc(struct syscall_info* call) {
 }
 
 static long syscall_hook_internal(struct syscall_info* call) {
-  struct syscallbuf_hdr* hdr = buffer_hdr();
-  do_breakpoint(hdr->num_rec_bytes/8);
-  force_tick();
+//  struct syscallbuf_hdr* hdr = buffer_hdr();
+//  do_breakpoint(hdr->num_rec_bytes/8);
+//  force_tick();
   return 0;
   switch (call->no) {
 #define CASE(syscallname)                                                      \

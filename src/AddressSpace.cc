@@ -802,7 +802,7 @@ template <typename Arch> void AddressSpace::at_preload_init_arch(Task* t) {
         << "abled";
   } else {
     if (params.breakpoint_table_entry_size == -1) {
-      do_breakpoint_fault_addr_ = params.breakpoint_instr_addr.rptr().as_int();
+//      do_breakpoint_fault_addr_ = params.breakpoint_instr_addr.rptr().as_int();
     } else {
       stopping_breakpoint_table_ = params.breakpoint_table.rptr().as_int();
       stopping_breakpoint_table_entry_size_ =
