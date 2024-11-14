@@ -4111,7 +4111,44 @@ static void do_delay(void) {
  * _syscall_hook_trampoline without doing all sorts of special PIC handling.
  */
 RR_HIDDEN long syscall_hook(struct syscall_info* call) {
-  do_breakpoint(0);
+  char *unsafe_value = ((char*)-1)-0xf;
+  char **safe_value = &unsafe_value;
+  uint64_t *breakpoint_value_addr = &globals.breakpoint_value;
+#if defined(__i386__) || defined(__x86_64__)
+  __asm__ __volatile__(
+      "mov (%1),%1\n\t"
+      "cmp %0,%1\n\t"
+      "cmove %3,%2\n\t"
+      // This will segfault if `value` matches
+      // the `breakpoint_value` set by rr. We
+      // detect this segfault and treat it
+      // specially.
+      "do_breakpoint_fault_addr:\n\t"
+      ".global do_breakpoint_fault_addr\n\t"
+      "mov (%2),%2\n\t"
+      "xor %1,%1\n\t"
+      "xor %2,%2\n\t"
+      "xor %3,%3\n\t"
+      : "+a"(safe_value), "+D"(breakpoint_value_addr),
+        "+S"(safe_value), "+c"(unsafe_value)
+      :
+      : "cc", "memory");
+#elif defined(__aarch64__)
+  __asm__ __volatile__("ldr %1, [%1]\n\t"
+                       "cmp %0, %1\n\t"
+                       "csel %0, %3, %2, eq\n\t"
+                       "do_breakpoint_fault_addr:\n\t"
+                       ".global do_breakpoint_fault_addr\n\t"
+                       "ldr %0, [%0]\n\t"
+                       "subs %0, xzr, xzr\n\t"
+                       "mov %1, xzr\n\t"
+                       : "+r"(value), "+r"(breakpoint_value_addr),
+                         "+r"(safe_value), "+r"(unsafe_value)
+                       :
+                       : "cc", "memory");
+#else
+#error Unknown architecture
+#endif
   return 0;
   // Initialize thread-local state if this is the first syscall for this
   // thread.
