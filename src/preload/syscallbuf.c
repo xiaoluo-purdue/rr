@@ -3923,6 +3923,9 @@ static long sys_rrcall_rdtsc(struct syscall_info* call) {
 }
 
 static long syscall_hook_internal(struct syscall_info* call) {
+  struct syscallbuf_hdr* hdr = buffer_hdr();
+  do_breakpoint(hdr->num_rec_bytes/8);
+  force_tick();
   return 0;
   switch (call->no) {
 #define CASE(syscallname)                                                      \
@@ -4124,7 +4127,7 @@ RR_HIDDEN long syscall_hook(struct syscall_info* call) {
   thread_locals->original_syscall_parameters = call;
 
   if (impose_syscall_delay) {
-    do_delay();
+    //do_delay();
   }
 
   long result = syscall_hook_internal(call);
