@@ -731,7 +731,7 @@ static void __attribute__((constructor)) init_process(void) {
   extern char _syscallbuf_final_exit_instruction;
   extern char _syscallbuf_code_start;
   extern char _syscallbuf_code_end;
-  extern char do_breakpoint_fault_addr;
+//  extern char do_breakpoint_fault_addr;
 
 #if defined(__i386__)
   extern RR_HIDDEN void __morestack(void);
@@ -996,7 +996,7 @@ static void __attribute__((constructor)) init_process(void) {
 
   globals.breakpoint_value = (uint64_t)-1;
   globals.fdt_uniform = 1;
-  params.breakpoint_instr_addr = &do_breakpoint_fault_addr;
+//  params.breakpoint_instr_addr = &do_breakpoint_fault_addr;
   params.breakpoint_mode_sentinel = -1;
   params.syscallbuf_syscall_hook = (void*)syscall_hook;
 
