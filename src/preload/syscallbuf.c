@@ -4111,7 +4111,6 @@ static void do_delay(void) {
  * _syscall_hook_trampoline without doing all sorts of special PIC handling.
  */
 RR_HIDDEN long syscall_hook(struct syscall_info* call) {
-  return 0;
   // Initialize thread-local state if this is the first syscall for this
   // thread.
   init_thread();
