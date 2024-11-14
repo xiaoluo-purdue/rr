@@ -584,7 +584,7 @@ void AddressSpace::post_exec_syscall(Task* t) {
   traced_syscall_ip_ = find_syscall_instruction(t);
   privileged_traced_syscall_ip_ = nullptr;
 
-  do_breakpoint_fault_addr_ = nullptr;
+//  do_breakpoint_fault_addr_ = nullptr;
   stopping_breakpoint_table_ = nullptr;
   stopping_breakpoint_table_entry_size_ = 0;
 
@@ -1662,7 +1662,7 @@ AddressSpace::AddressSpace(Task* t, const string& exe, uint32_t exec_count)
       monkeypatch_state(t->session().is_recording() ? new Monkeypatcher()
                                                     : nullptr),
       syscallbuf_enabled_(false),
-      do_breakpoint_fault_addr_(nullptr),
+//      do_breakpoint_fault_addr_(nullptr),
       stopping_breakpoint_table_(nullptr),
       stopping_breakpoint_table_entry_size_(0),
       first_run_event_(0) {
