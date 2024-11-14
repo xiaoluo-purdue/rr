@@ -828,7 +828,7 @@ public:
   bool is_stap_semaphore(remote_ptr<uint16_t> addr);
 
   bool legacy_breakpoint_mode() { return stopping_breakpoint_table_ != nullptr; }
-//  remote_code_ptr do_breakpoint_fault_addr() { return do_breakpoint_fault_addr_; }
+  remote_code_ptr do_breakpoint_fault_addr() { return do_breakpoint_fault_addr_; }
   remote_code_ptr stopping_breakpoint_table() { return stopping_breakpoint_table_; }
   int stopping_breakpoint_table_entry_size() { return stopping_breakpoint_table_entry_size_; }
 
@@ -1137,7 +1137,7 @@ private:
   remote_code_ptr privileged_traced_syscall_ip_;
   bool syscallbuf_enabled_;
 
-//  remote_code_ptr do_breakpoint_fault_addr_;
+  remote_code_ptr do_breakpoint_fault_addr_;
   // These fields are deprecated and have been replaced by the
   // breakpoint_value mechanism. They are retained for replayability
   // of old traces.
