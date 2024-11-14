@@ -2010,36 +2010,36 @@ void Task::wait(double interrupt_after_elapsed) {
   bool sent_wait_interrupt = false;
   int ret;
   while (true) {
-//    if (interrupt_after_elapsed == 0 && !sent_wait_interrupt) {
-//      do_ptrace_interrupt();
-//      if (session().is_recording()) {
-//        // Force this timeslice to end
-//        session().as_record()->scheduler().expire_timeslice();
-//      }
-//      sent_wait_interrupt = true;
-//    }
-//
-//    if (interrupt_after_elapsed > 0) {
-//      struct itimerval timer = { { 0, 0 },
-//                                 to_timeval(interrupt_after_elapsed) };
-//      setitimer(ITIMER_REAL, &timer, nullptr);
-//    }
+    if (interrupt_after_elapsed == 0 && !sent_wait_interrupt) {
+      do_ptrace_interrupt();
+      if (session().is_recording()) {
+        // Force this timeslice to end
+        session().as_record()->scheduler().expire_timeslice();
+      }
+      sent_wait_interrupt = true;
+    }
+
+    if (interrupt_after_elapsed > 0) {
+      struct itimerval timer = { { 0, 0 },
+                                 to_timeval(interrupt_after_elapsed) };
+      setitimer(ITIMER_REAL, &timer, nullptr);
+    }
     siginfo_t info;
 
     ret = waitid(P_PID, tid, &info, WSTOPPED);
-//    #if XDEBUG_LATENCY
-//      auto wait_t1 = chrono::steady_clock::now();
-//      wait_phase_1.push_back(chrono::duration <double, milli> (wait_t1 - wait_t0).count());
-//    #endif
-//    DEBUG_ASSERT(ret == 0 || ret == -1);
-//    if (ret == -1) {
-//      ret = -errno;
-//    }
-//    if (interrupt_after_elapsed > 0) {
-//      struct itimerval timer = { { 0, 0 }, { 0, 0 } };
-//      setitimer(ITIMER_REAL, &timer, nullptr);
-//      interrupt_after_elapsed = 0;
-//    }
+    #if XDEBUG_LATENCY
+      auto wait_t1 = chrono::steady_clock::now();
+      wait_phase_1.push_back(chrono::duration <double, milli> (wait_t1 - wait_t0).count());
+    #endif
+    DEBUG_ASSERT(ret == 0 || ret == -1);
+    if (ret == -1) {
+      ret = -errno;
+    }
+    if (interrupt_after_elapsed > 0) {
+      struct itimerval timer = { { 0, 0 }, { 0, 0 } };
+      setitimer(ITIMER_REAL, &timer, nullptr);
+      interrupt_after_elapsed = 0;
+    }
 
     if (ret == 0) {
       status = WaitStatus(info);
@@ -2049,8 +2049,8 @@ void Task::wait(double interrupt_after_elapsed) {
       overall_stopped_after_wait = true;
       overall_after_wait = chrono::steady_clock::now();
 
-//      auto wait_t2 = chrono::steady_clock::now();
-//      wait_phase_2.push_back(chrono::duration <double, milli> (wait_t2 - wait_t1).count());
+      auto wait_t2 = chrono::steady_clock::now();
+      wait_phase_2.push_back(chrono::duration <double, milli> (wait_t2 - wait_t1).count());
     #endif
     #if XDEBUG_WAIT
       overall_wait_counter++;

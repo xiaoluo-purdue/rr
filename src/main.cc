@@ -31,6 +31,7 @@ using namespace std;
 namespace rr {
 
 int step_counter = 0;
+std::chrono::time_point<std::chrono::steady_clock> origin_time;
 #if XDEBUG_LATENCY
 // Used in calc latency added by RR record
 std::chrono::time_point<std::chrono::steady_clock> RR_start;
@@ -371,7 +372,7 @@ using namespace rr;
 
 int main(int argc, char* argv[]) {
 
-  std::chrono::time_point<std::chrono::steady_clock> origin_time = chrono::steady_clock::now();
+  origin_time = chrono::steady_clock::now();
   #if XDEBUG_LATENCY
     RR_start = chrono::steady_clock::now();
     LOG(debug) << "RR_start: " << chrono::duration <double, milli> (RR_start - origin_time).count() << " ms";
@@ -421,6 +422,8 @@ int main(int argc, char* argv[]) {
   }
   int res = command->run(args);
 
+  std::chrono::time_point<std::chrono::steady_clock> terminate_time = chrono::steady_clock::now();
+  cout << "origin - terminate: " << chrono::duration <double, milli> (terminate_time - origin_time).count() << " ms" << endl;
   #if XDEBUG_LATENCY
     RR_exit = chrono::steady_clock::now();
     #if LATENCY_OUTPUT

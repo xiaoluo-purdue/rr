@@ -696,6 +696,10 @@ bool RecordSession::handle_ptrace_event(RecordTask** t_ptr,
         LOG(debug) << "  traced syscall entered: "
                    << syscall_name(syscallno, t->arch());
         handle_seccomp_traced_syscall(t, step_state, result, did_enter_syscall);
+        if (syscall_name(syscallno, t->arch()) == "write") {
+          auto write_syscall = chrono::steady_clock::now();
+          cout << "origin - write: " << chrono::duration <double, milli> (write_syscall - origin_time).count() << " ms" << endl;
+        }
 #if XDEBUG_LATENCY
         ptrace_event_seccomp_end = chrono::steady_clock::now();
         LOG(debug) << "ptrace_event_seccomp time cost, step_counter: " << step_counter << ",  " << chrono::duration <double, milli> (ptrace_event_seccomp_end - ptrace_event_seccomp_start).count() << " ms";
