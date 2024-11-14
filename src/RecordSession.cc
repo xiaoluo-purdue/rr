@@ -2610,6 +2610,8 @@ RecordSession::RecordResult RecordSession::record_step() {
   }
 #endif
 
+  return result;
+
   // LOG(debug) << "[workflow] scheduling: " << curr_sched_time << " ms";
   if (rescheduled.interrupted_by_signal) {
     // The scheduler was waiting for some task to become active, but was
