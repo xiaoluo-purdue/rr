@@ -61,6 +61,7 @@ CompressedWriter::CompressedWriter(const string& filename, size_t block_size,
     error = true;
     return;
   }
+  return;
 
   // Hold the lock so threads don't inspect the 'threads' array
   // until we've finished initializing it.
@@ -148,7 +149,6 @@ void CompressedWriter::update_reservation(WaitFlag wait_flag) {
 }
 
 void CompressedWriter::compression_thread() {
-  return;
   pthread_mutex_lock(&mutex);
 
   int thread_index;
