@@ -61,7 +61,6 @@ CompressedWriter::CompressedWriter(const string& filename, size_t block_size,
     error = true;
     return;
   }
-  return;
 
   // Hold the lock so threads don't inspect the 'threads' array
   // until we've finished initializing it.
