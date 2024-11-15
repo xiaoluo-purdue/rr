@@ -148,6 +148,7 @@ void CompressedWriter::update_reservation(WaitFlag wait_flag) {
 }
 
 void CompressedWriter::compression_thread() {
+  return;
   pthread_mutex_lock(&mutex);
 
   int thread_index;
