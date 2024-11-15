@@ -747,7 +747,10 @@ static WaitStatus record(const vector<string>& args, const RecordFlags& flags) {
     #endif
   #endif
 
+    auto before_close_trace_writer = chrono::steady_clock::now();
   session->close_trace_writer(TraceWriter::CLOSE_OK);
+  auto after_close_trace_writer = chrono::steady_clock::now();
+  cout << "close trace writer: " << chrono::duration <double, milli> (after_close_trace_writer - before_close_trace_writer).count() << " ms" << endl;
 
   #if XDEBUG_LATENCY
     #if LATENCY_OUTPUT
