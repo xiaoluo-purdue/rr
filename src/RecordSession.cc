@@ -2820,6 +2820,7 @@ void RecordSession::term_detached_tasks() {
 }
 
 void RecordSession::close_trace_writer(TraceWriter::CloseStatus status) {
+  return;
   trace_out.close(status, trace_id.get());
 }
 
