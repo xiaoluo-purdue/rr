@@ -71,8 +71,8 @@ static SubstreamData substreams[TraceStream::SUBSTREAM_COUNT] = {
 
 static const SubstreamData& substream(TraceStream::Substream s) {
   if (!substreams[TraceStream::RAW_DATA].threads) {
-    substreams[TraceStream::RAW_DATA].threads = min(8, get_num_cpus());
-//    substreams[TraceStream::RAW_DATA].threads = min(0, get_num_cpus());
+//    substreams[TraceStream::RAW_DATA].threads = min(8, get_num_cpus());
+    substreams[TraceStream::RAW_DATA].threads = min(0, get_num_cpus());
   }
   return substreams[s];
 }
