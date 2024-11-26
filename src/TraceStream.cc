@@ -55,24 +55,24 @@ struct SubstreamData {
   int threads;
 };
 
-//static SubstreamData substreams[TraceStream::SUBSTREAM_COUNT] = {
-//  { "events", 1024 * 1024, 1 },
-//  { "data", 1024 * 1024, 0 },
-//  { "mmaps", 64 * 1024, 1 },
-//  { "tasks", 64 * 1024, 1 },
-//};
-
 static SubstreamData substreams[TraceStream::SUBSTREAM_COUNT] = {
-  { "events", 1024 * 1024, 0 },
+  { "events", 1024 * 1024, 1 },
   { "data", 1024 * 1024, 0 },
-  { "mmaps", 64 * 1024, 0 },
-  { "tasks", 64 * 1024, 0 },
+  { "mmaps", 64 * 1024, 1 },
+  { "tasks", 64 * 1024, 1 },
 };
+
+//static SubstreamData substreams[TraceStream::SUBSTREAM_COUNT] = {
+//  { "events", 1024 * 1024, 0 },
+//  { "data", 1024 * 1024, 0 },
+//  { "mmaps", 64 * 1024, 0 },
+//  { "tasks", 64 * 1024, 0 },
+//};
 
 static const SubstreamData& substream(TraceStream::Substream s) {
   if (!substreams[TraceStream::RAW_DATA].threads) {
-//    substreams[TraceStream::RAW_DATA].threads = min(8, get_num_cpus());
-    substreams[TraceStream::RAW_DATA].threads = min(0, get_num_cpus());
+    substreams[TraceStream::RAW_DATA].threads = min(8, get_num_cpus());
+//    substreams[TraceStream::RAW_DATA].threads = min(0, get_num_cpus());
   }
   return substreams[s];
 }
