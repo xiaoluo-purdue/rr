@@ -2178,6 +2178,7 @@ void Task::did_waitpid(WaitStatus status) {
   // any group-stop could be one induced by PTRACE_INTERRUPT
   bool siginfo_overriden = false;
   if (account_for_potential_ptrace_interrupt_stop(status)) {
+    LOG(debug) << "This is ptrace interrupt";
     // Assume this was PTRACE_INTERRUPT and thus treat this as
     // TIME_SLICE_SIGNAL instead.
     status = WaitStatus::for_stop_sig(PerfCounters::TIME_SLICE_SIGNAL);

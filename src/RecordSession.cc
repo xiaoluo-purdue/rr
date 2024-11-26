@@ -1960,7 +1960,9 @@ bool RecordSession::handle_signal_event(RecordTask* t, StepState* step_state) {
   // sigmask effects.
   t->invalidate_sigmask();
   if (sig == PerfCounters::TIME_SLICE_SIGNAL) {
+    LOG(debug) << "The signal is TIME_SLICE_SIGNAL";
     if (t->next_pmc_interrupt_is_for_user) {
+      LOG(debug) << "The signal is next_pmc_interrupt_is_for_user";
       auto vpmc =
           VirtualPerfCounterMonitor::interrupting_virtual_pmc_for_task(t);
       ASSERT(t, vpmc);

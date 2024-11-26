@@ -756,6 +756,7 @@ SignalHandled handle_signal(RecordTask* t, siginfo_t* si,
     }
 
     if (sig == PerfCounters::TIME_SLICE_SIGNAL) {
+      LOG(debug) << "The sig is TIME_SLICE_SIGNAL";
       t->push_event(Event::sched());
       return SIGNAL_HANDLED;
     }
